@@ -18,10 +18,10 @@
       <button class="nav-item active" data-section="inicio"><span class="icon">📊</span><span>Inicio</span></button>
       <button class="nav-item" data-section="clientes"><span class="icon">👥</span><span>Clientes</span></button>
       <button class="nav-item" data-section="plazas"><span class="icon">🗓</span><span>Plazas</span></button>
-      <button class="nav-item" data-section="ventas"><span class="icon">💰</span><span>Ventas / Caja</span></button>
+      <button class="nav-item" data-section="ventas"><span class="icon">💰</span><span>Ventas</span></button>
+      <button class="nav-item" data-section="caja"><span class="icon">🏧</span><span>Control Caja</span></button>
       <button class="nav-item" data-section="leads"><span class="icon">📢</span><span>Leads</span></button>
       <button class="nav-item" data-section="espera"><span class="icon">⏳</span><span>Lista espera</span></button>
-      <button class="nav-item" data-section="pruebas"><span class="icon">🎯</span><span>Clases prueba</span></button>
       <button class="nav-item" data-section="avisos"><span class="icon">📋</span><span>Avisos</span></button>
       <button class="nav-item admin-only" data-section="config"><span class="icon">⚙</span><span>Configuración</span></button>
     </nav>
@@ -65,21 +65,22 @@
       <div class="plazas-grid" id="plazas-grid"></div>
     </div>
 
-    <!-- VENTAS / CAJA -->
+    <!-- VENTAS -->
     <div class="section" id="sec-ventas">
-      <div class="main-header"><h1>Ventas y Caja</h1></div>
-      <div style="display:flex;gap:.5rem;margin-bottom:1rem">
+      <div class="main-header">
+        <h1>Ventas</h1>
         <button class="btn btn-primary" onclick="abrirModalVenta()">+ Nueva venta</button>
-        <button class="btn btn-outline" onclick="abrirModalCaja()">+ Arqueo de caja</button>
       </div>
-      <div class="panel">
-        <div class="panel-header"><h3>Ventas</h3></div>
-        <div class="panel-body"><div class="table-wrapper" id="tabla-ventas"></div></div>
+      <div class="panel"><div class="panel-body"><div class="table-wrapper" id="tabla-ventas"></div></div></div>
+    </div>
+
+    <!-- CONTROL CAJA -->
+    <div class="section" id="sec-caja">
+      <div class="main-header">
+        <h1>Control de Caja</h1>
+        <button class="btn btn-primary" onclick="abrirModalCaja()">+ Arqueo de caja</button>
       </div>
-      <div class="panel">
-        <div class="panel-header"><h3>Arqueos de Caja</h3></div>
-        <div class="panel-body"><div class="table-wrapper" id="tabla-caja"></div></div>
-      </div>
+      <div class="panel"><div class="panel-body"><div class="table-wrapper" id="tabla-caja"></div></div></div>
     </div>
 
     <!-- LEADS -->
@@ -98,15 +99,6 @@
         <button class="btn btn-primary" onclick="abrirModalEspera()">+ Añadir</button>
       </div>
       <div class="panel"><div class="panel-body"><div class="table-wrapper" id="tabla-espera"></div></div></div>
-    </div>
-
-    <!-- CLASES PRUEBA -->
-    <div class="section" id="sec-pruebas">
-      <div class="main-header">
-        <h1>Clases de Prueba</h1>
-        <button class="btn btn-primary" onclick="abrirModalPrueba()">+ Nueva prueba</button>
-      </div>
-      <div class="panel"><div class="panel-body"><div class="table-wrapper" id="tabla-pruebas"></div></div></div>
     </div>
 
     <!-- AVISOS / INCIDENCIAS -->

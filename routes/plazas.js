@@ -8,7 +8,15 @@ router.use(verificarToken);
 router.get('/', async (req, res) => {
   try {
     // Obtener grupos configurados
-    const { rows: grupos } = await query("SELECT * FROM kaluna_grupos ORDER BY dia, hora");
+    const { rows: grupos } = await query(`SELECT * FROM kaluna_grupos ORDER BY
+      CASE dia
+        WHEN 'Lunes' THEN 1
+        WHEN 'Martes' THEN 2
+        WHEN 'Miércoles' THEN 3
+        WHEN 'Jueves' THEN 4
+        WHEN 'Viernes' THEN 5
+        ELSE 6
+      END, LPAD(hora, 5, '0')`);
 
     // Obtener clientes activos
     const { rows: clientes } = await query(

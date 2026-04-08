@@ -30,7 +30,7 @@ function setupNav() {
       btn.classList.add('active');
       const sec = btn.dataset.section;
       $(`sec-${sec}`).classList.add('active');
-      const loaders = { inicio: cargarInicio, clientes: cargarClientes, plazas: cargarPlazas, ventas: cargarVentas, leads: cargarLeads, espera: cargarEspera, pruebas: cargarPruebas, avisos: cargarAvisos, config: cargarConfig };
+      const loaders = { inicio: cargarInicio, clientes: cargarClientes, plazas: cargarPlazas, ventas: cargarSoloVentas, caja: cargarSoloCaja, leads: cargarLeads, espera: cargarEspera, avisos: cargarAvisos, config: cargarConfig };
       if (loaders[sec]) loaders[sec]();
     });
   });
@@ -205,8 +205,10 @@ async function guardarGrupo(e) {
 }
 
 // ==================== VENTAS / CAJA ====================
-async function cargarVentas() {
-  const [ventas, cajas] = await Promise.all([API('/api/ventas'), API('/api/caja')]);
+async function cargarVentas() { await cargarSoloVentas(); await cargarSoloCaja(); }
+
+async function cargarSoloVentas() {
+  const ventas = await API('/api/ventas');
   $('tabla-ventas').innerHTML = ventas.length ? `<table><thead><tr>
     <th>Fecha</th><th>Cliente</th><th>Artículo</th><th>Precio</th><th>Pago</th><th>Trabajadora</th><th>Notas</th><th></th>
   </tr></thead><tbody>
@@ -221,7 +223,10 @@ async function cargarVentas() {
       <td><button class="btn btn-sm btn-danger" onclick="eliminarVenta(${v.id})">X</button></td>
     </tr>`).join('')}
   </tbody></table>` : '<p style="color:var(--text-light)">Sin ventas</p>';
+}
 
+async function cargarSoloCaja() {
+  const cajas = await API('/api/caja');
   $('tabla-caja').innerHTML = cajas.length ? `<table><thead><tr>
     <th>Fecha</th><th>Trabajadora</th><th>Efectivo total</th><th>Monedas</th><th>Billetes</th><th>Notas</th>
   </tr></thead><tbody>
@@ -269,9 +274,9 @@ function abrirModalCaja() {
     </form>`);
 }
 
-async function guardarVenta(e) { e.preventDefault(); await POST('/api/ventas', Object.fromEntries(new FormData(e.target))); cerrarModal(); cargarVentas(); }
-async function guardarCaja(e) { e.preventDefault(); await POST('/api/caja', Object.fromEntries(new FormData(e.target))); cerrarModal(); cargarVentas(); }
-async function eliminarVenta(id) { if (confirm('¿Eliminar venta?')) { await DEL(`/api/ventas/${id}`); cargarVentas(); } }
+async function guardarVenta(e) { e.preventDefault(); await POST('/api/ventas', Object.fromEntries(new FormData(e.target))); cerrarModal(); cargarSoloVentas(); }
+async function guardarCaja(e) { e.preventDefault(); await POST('/api/caja', Object.fromEntries(new FormData(e.target))); cerrarModal(); cargarSoloCaja(); }
+async function eliminarVenta(id) { if (confirm('¿Eliminar venta?')) { await DEL(`/api/ventas/${id}`); cargarSoloVentas(); } }
 
 // ==================== LEADS ====================
 const LEAD_ESTADOS = [
