@@ -41,11 +41,13 @@ router.get('/', async (req, res) => {
 // Crear entrada
 router.post('/', async (req, res) => {
   try {
-    const { contenido, fecha } = req.body;
+    const { contenido } = req.body;
+    // Siempre fecha de hoy - no se puede rellenar días atrasados
+    const hoy = new Date().toISOString().split('T')[0];
     const { rows } = await query(
       `INSERT INTO kaluna_diario (usuario_id, fecha, contenido)
        VALUES ($1, $2, $3) RETURNING *`,
-      [req.user.id, fecha || new Date().toISOString().split('T')[0], contenido]
+      [req.user.id, hoy, contenido]
     );
     res.json(rows[0]);
   } catch (err) {

@@ -218,9 +218,12 @@ async function cargarSoloVentas() {
     const d = v.fecha ? new Date(v.fecha) : null;
     const key = d ? `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}` : '0000-00';
     const label = d ? `${meses[d.getMonth()+1]} ${d.getFullYear()}` : 'Sin fecha';
-    if (!grupos[key]) grupos[key] = { label, total: 0, count: 0, items: [] };
+    if (!grupos[key]) grupos[key] = { label, total: 0, efectivo: 0, tarjeta: 0, count: 0, items: [] };
     grupos[key].items.push(v);
-    grupos[key].total += parseFloat(v.precio || 0);
+    const p = parseFloat(v.precio || 0);
+    grupos[key].total += p;
+    if (v.metodo_pago === 'Efectivo') grupos[key].efectivo += p;
+    else grupos[key].tarjeta += p;
     grupos[key].count++;
   });
 
@@ -232,6 +235,7 @@ async function cargarSoloVentas() {
     tabs += `<button class="btn ${i===0?'btn-primary':'btn-outline'} ventas-tab" data-mes="${k}" onclick="mostrarMesVentas('${k}')" style="flex-direction:column;line-height:1.3;padding:.5rem 1rem">
       <span>${g.label}</span>
       <span style="font-size:.75rem;opacity:.8">${g.count} ventas · ${g.total.toFixed(0)}€</span>
+      <span style="font-size:.65rem;opacity:.6">💵${g.efectivo.toFixed(0)}€ 💳${g.tarjeta.toFixed(0)}€</span>
     </button>`;
   });
   tabs += '</div>';
@@ -241,7 +245,7 @@ async function cargarSoloVentas() {
   keys.forEach((k, i) => {
     const g = grupos[k];
     content += `<div class="ventas-mes-content" id="ventas-mes-${k}" style="${i>0?'display:none':''}">
-      <div class="panel"><div class="panel-header"><h3>${g.label}</h3><span style="font-weight:700;color:var(--primary)">${g.count} ventas · ${g.total.toFixed(2)}€</span></div><div class="panel-body"><table><thead><tr>
+      <div class="panel"><div class="panel-header"><h3>${g.label}</h3><div style="text-align:right"><div style="font-weight:700;color:var(--primary)">${g.total.toFixed(2)}€ total</div><div style="font-size:.8rem;color:var(--text-light)">💵 Efectivo: ${g.efectivo.toFixed(2)}€ · 💳 Tarjeta: ${g.tarjeta.toFixed(2)}€</div></div></div><div class="panel-body"><table><thead><tr>
         <th>Fecha</th><th>Cliente</th><th>Artículo</th><th>Precio</th><th>Pago</th><th>Trabajadora</th><th>Notas</th><th></th>
       </tr></thead><tbody>
         ${g.items.map(v => { const d = v.fecha ? new Date(v.fecha) : null; return `<tr>
@@ -558,7 +562,9 @@ async function eliminarPrueba(id) { if (confirm('¿Eliminar?')) { await DEL(`/ap
 
 // ==================== DIARIO ====================
 async function cargarDiario() {
-  $('diario-fecha').value = new Date().toISOString().split('T')[0];
+  const hoy = new Date();
+  $('diario-fecha').value = hoy.toISOString().split('T')[0];
+  $('diario-fecha-label').textContent = hoy.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
   if (currentUser?.rol === 'admin') {
     // Admin ve todo + puede filtrar por trabajadora

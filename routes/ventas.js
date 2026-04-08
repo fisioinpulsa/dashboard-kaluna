@@ -13,6 +13,8 @@ router.get('/', async (req, res) => {
     if (mes && año) {
       sql += ` WHERE EXTRACT(MONTH FROM v.fecha) = $1 AND EXTRACT(YEAR FROM v.fecha) = $2`;
       params.push(mes, año);
+    } else {
+      sql += ` WHERE EXTRACT(YEAR FROM v.fecha) = 2026 OR v.fecha IS NULL`;
     }
     sql += ' ORDER BY v.fecha DESC, v.created_at DESC';
     const { rows } = await query(sql, params);

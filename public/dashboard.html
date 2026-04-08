@@ -111,7 +111,8 @@
         <div class="panel-header"><h3>Escribe tu informe de hoy</h3></div>
         <div class="panel-body">
           <form id="form-diario" onsubmit="guardarDiario(event)">
-            <div class="form-group"><label>Fecha</label><input type="date" id="diario-fecha" name="fecha"></div>
+            <input type="hidden" id="diario-fecha" name="fecha">
+            <div class="form-group"><label id="diario-fecha-label" style="font-size:1rem;font-weight:700;color:var(--primary-dark)"></label></div>
             <div class="form-group" style="margin-top:.5rem"><label>¿Qué ha pasado hoy?</label><textarea name="contenido" rows="5" placeholder="Escribe aquí el resumen del día: incidencias, notas sobre clientes, cosas pendientes..." required></textarea></div>
             <div class="form-actions"><button class="btn btn-primary" type="submit">Guardar entrada</button></div>
           </form>
