@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kalüna - Dashboard</title>
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <h2>Kalüna</h2>
+      <small>Centro de Pilates</small>
+    </div>
+    <nav class="sidebar-nav">
+      <button class="nav-item active" data-section="inicio"><span class="icon">📊</span><span>Inicio</span></button>
+      <button class="nav-item" data-section="clientes"><span class="icon">👥</span><span>Clientes</span></button>
+      <button class="nav-item" data-section="plazas"><span class="icon">🗓</span><span>Plazas</span></button>
+      <button class="nav-item" data-section="ventas"><span class="icon">💰</span><span>Ventas / Caja</span></button>
+      <button class="nav-item" data-section="leads"><span class="icon">📢</span><span>Leads</span></button>
+      <button class="nav-item" data-section="espera"><span class="icon">⏳</span><span>Lista espera</span></button>
+      <button class="nav-item" data-section="pruebas"><span class="icon">🎯</span><span>Clases prueba</span></button>
+      <button class="nav-item admin-only" data-section="config"><span class="icon">⚙</span><span>Configuración</span></button>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-info" id="user-info"></div>
+      <button class="btn-logout" id="btn-logout">Cerrar sesión</button>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main">
+
+    <!-- INICIO -->
+    <div class="section active" id="sec-inicio">
+      <div class="main-header"><h1>Panel de Control</h1><span id="fecha-hoy"></span></div>
+      <div class="stats-grid" id="stats-grid"></div>
+      <div class="panel">
+        <div class="panel-header"><h3>Resumen de ventas (últimos meses)</h3></div>
+        <div class="panel-body"><div class="table-wrapper" id="ventas-resumen-tabla"></div></div>
+      </div>
+    </div>
+
+    <!-- CLIENTES -->
+    <div class="section" id="sec-clientes">
+      <div class="main-header">
+        <h1>Clientes</h1>
+        <div style="display:flex;gap:.5rem;align-items:center">
+          <select id="filtro-clientes" class="btn btn-outline" style="padding:.45rem .8rem"><option value="activo">Activos</option><option value="baja">Bajas</option><option value="todos">Todos</option></select>
+          <button class="btn btn-primary" onclick="abrirModalCliente()">+ Nuevo cliente</button>
+        </div>
+      </div>
+      <div class="panel"><div class="panel-body"><div class="table-wrapper" id="tabla-clientes"></div></div></div>
+    </div>
+
+    <!-- PLAZAS -->
+    <div class="section" id="sec-plazas">
+      <div class="main-header">
+        <h1>Control de Plazas</h1>
+        <button class="btn btn-primary admin-only" onclick="abrirModalGrupo()">+ Nuevo grupo</button>
+      </div>
+      <div class="plazas-grid" id="plazas-grid"></div>
+    </div>
+
+    <!-- VENTAS / CAJA -->
+    <div class="section" id="sec-ventas">
+      <div class="main-header"><h1>Ventas y Caja</h1></div>
+      <div style="display:flex;gap:.5rem;margin-bottom:1rem">
+        <button class="btn btn-primary" onclick="abrirModalVenta()">+ Nueva venta</button>
+        <button class="btn btn-outline" onclick="abrirModalCaja()">+ Arqueo de caja</button>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><h3>Ventas</h3></div>
+        <div class="panel-body"><div class="table-wrapper" id="tabla-ventas"></div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><h3>Arqueos de Caja</h3></div>
+        <div class="panel-body"><div class="table-wrapper" id="tabla-caja"></div></div>
+      </div>
+    </div>
+
+    <!-- LEADS -->
+    <div class="section" id="sec-leads">
+      <div class="main-header">
+        <h1>Leads / Contactos</h1>
+        <button class="btn btn-primary" onclick="abrirModalLead()">+ Nuevo lead</button>
+      </div>
+      <div class="pipeline" id="pipeline-leads"></div>
+    </div>
+
+    <!-- LISTA DE ESPERA -->
+    <div class="section" id="sec-espera">
+      <div class="main-header">
+        <h1>Lista de Espera</h1>
+        <button class="btn btn-primary" onclick="abrirModalEspera()">+ Añadir</button>
+      </div>
+      <div class="panel"><div class="panel-body"><div class="table-wrapper" id="tabla-espera"></div></div></div>
+    </div>
+
+    <!-- CLASES PRUEBA -->
+    <div class="section" id="sec-pruebas">
+      <div class="main-header">
+        <h1>Clases de Prueba</h1>
+        <button class="btn btn-primary" onclick="abrirModalPrueba()">+ Nueva prueba</button>
+      </div>
+      <div class="panel"><div class="panel-body"><div class="table-wrapper" id="tabla-pruebas"></div></div></div>
+    </div>
+
+    <!-- CONFIGURACIÓN -->
+    <div class="section admin-only" id="sec-config">
+      <div class="main-header"><h1>Configuración</h1></div>
+      <div class="panel">
+        <div class="panel-header"><h3>Trabajadoras</h3><button class="btn btn-primary btn-sm" onclick="abrirModalTrabajadora()">+ Nueva</button></div>
+        <div class="panel-body"><div class="table-wrapper" id="tabla-trabajadoras"></div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><h3>Cambiar contraseña admin</h3></div>
+        <div class="panel-body">
+          <form id="form-password" style="display:flex;gap:.5rem;max-width:400px">
+            <input type="password" id="new-password" placeholder="Nueva contraseña" style="flex:1;padding:.5rem;border:2px solid var(--border);border-radius:8px">
+            <button class="btn btn-primary" type="submit">Guardar</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- MODAL GENÉRICO -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal" id="modal-content"></div>
+</div>
+
+<script src="/js/app.js"></script>
+</body>
+</html>
