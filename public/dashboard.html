@@ -22,6 +22,7 @@
       <button class="nav-item" data-section="leads"><span class="icon">📢</span><span>Leads</span></button>
       <button class="nav-item" data-section="espera"><span class="icon">⏳</span><span>Lista espera</span></button>
       <button class="nav-item" data-section="pruebas"><span class="icon">🎯</span><span>Clases prueba</span></button>
+      <button class="nav-item" data-section="avisos"><span class="icon">📋</span><span>Avisos</span></button>
       <button class="nav-item admin-only" data-section="config"><span class="icon">⚙</span><span>Configuración</span></button>
     </nav>
     <div class="sidebar-footer">
@@ -106,6 +107,20 @@
         <button class="btn btn-primary" onclick="abrirModalPrueba()">+ Nueva prueba</button>
       </div>
       <div class="panel"><div class="panel-body"><div class="table-wrapper" id="tabla-pruebas"></div></div></div>
+    </div>
+
+    <!-- AVISOS / INCIDENCIAS -->
+    <div class="section" id="sec-avisos">
+      <div class="main-header">
+        <h1>Avisos e Incidencias</h1>
+        <button class="btn btn-primary" onclick="abrirModalAviso()">+ Nuevo aviso</button>
+      </div>
+      <div style="display:flex;gap:.5rem;margin-bottom:1rem">
+        <button class="btn btn-outline btn-sm filtro-avisos active" data-filtro="pendientes" onclick="filtrarAvisos('pendientes')">Pendientes</button>
+        <button class="btn btn-outline btn-sm filtro-avisos" data-filtro="resueltos" onclick="filtrarAvisos('resueltos')">Resueltos</button>
+        <button class="btn btn-outline btn-sm filtro-avisos" data-filtro="todos" onclick="filtrarAvisos('todos')">Todos</button>
+      </div>
+      <div id="lista-avisos"></div>
     </div>
 
     <!-- CONFIGURACIÓN -->

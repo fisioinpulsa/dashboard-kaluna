@@ -145,6 +145,21 @@ tr:hover { background: rgba(124,111,156,.03); }
 .modal h3 { margin-bottom: 1rem; color: var(--primary-dark); }
 .modal-close { float: right; background: none; border: none; font-size: 1.3rem; cursor: pointer; color: var(--text-light); }
 
+/* AVISOS */
+.aviso-card { background: var(--card); border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: .75rem; box-shadow: var(--shadow); border-left: 4px solid var(--border); }
+.aviso-card.tipo-error { border-left-color: var(--danger); }
+.aviso-card.tipo-aviso { border-left-color: var(--warning); }
+.aviso-card.tipo-mejora { border-left-color: var(--info); }
+.aviso-card.tipo-urgente { border-left-color: #9c27b0; }
+.aviso-card.resuelto { opacity: .6; }
+.aviso-card .aviso-header { display: flex; justify-content: space-between; align-items: flex-start; gap: .5rem; }
+.aviso-card .aviso-titulo { font-weight: 700; font-size: 1rem; }
+.aviso-card .aviso-meta { font-size: .8rem; color: var(--text-light); margin-top: .3rem; }
+.aviso-card .aviso-desc { margin-top: .5rem; font-size: .9rem; color: var(--text); line-height: 1.5; white-space: pre-wrap; }
+.aviso-card .aviso-actions { margin-top: .75rem; display: flex; gap: .5rem; }
+.aviso-card .aviso-resuelto-info { margin-top: .5rem; font-size: .8rem; color: var(--success); font-style: italic; }
+.filtro-avisos.active { background: var(--primary); color: white; border-color: var(--primary); }
+
 /* RESPONSIVE */
 @media (max-width: 768px) {
   .sidebar { width: 60px; }

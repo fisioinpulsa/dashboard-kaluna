@@ -30,7 +30,7 @@ function setupNav() {
       btn.classList.add('active');
       const sec = btn.dataset.section;
       $(`sec-${sec}`).classList.add('active');
-      const loaders = { inicio: cargarInicio, clientes: cargarClientes, plazas: cargarPlazas, ventas: cargarVentas, leads: cargarLeads, espera: cargarEspera, pruebas: cargarPruebas, config: cargarConfig };
+      const loaders = { inicio: cargarInicio, clientes: cargarClientes, plazas: cargarPlazas, ventas: cargarVentas, leads: cargarLeads, espera: cargarEspera, pruebas: cargarPruebas, avisos: cargarAvisos, config: cargarConfig };
       if (loaders[sec]) loaders[sec]();
     });
   });
@@ -297,6 +297,26 @@ async function cargarLeads() {
 }
 
 function abrirModalLead(l) {
+  let historialHtml = '';
+  if (l) {
+    let historial = [];
+    try { historial = JSON.parse(l.historial_notas || '[]'); } catch {}
+    if (historial.length) {
+      historialHtml = `<div style="margin-top:1rem;border-top:1px solid var(--border);padding-top:.75rem">
+        <label style="font-size:.8rem;font-weight:600;color:var(--text-light);text-transform:uppercase">Historial de notas</label>
+        <div style="max-height:200px;overflow-y:auto;margin-top:.5rem">
+          ${historial.slice().reverse().map(n => {
+            const f = new Date(n.fecha).toLocaleString('es-ES', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+            return `<div style="padding:.4rem 0;border-bottom:1px solid var(--border);font-size:.85rem">
+              <span style="color:var(--primary);font-weight:600">${n.autor}</span>
+              <span style="color:var(--text-light);font-size:.75rem;margin-left:.5rem">${f}</span>
+              <div style="margin-top:.2rem">${n.texto}</div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+    }
+  }
   abrirModal(`<button class="modal-close" onclick="cerrarModal()">✕</button>
     <h3>${l ? 'Editar' : 'Nuevo'} Lead</h3>
     <form onsubmit="guardarLead(event, ${l?.id || 'null'})">
@@ -311,7 +331,10 @@ function abrirModalLead(l) {
         </div>
         <div class="form-group"><label>Horario preferencia</label><input name="horario_preferencia" value="${l?.horario_preferencia || ''}"></div>
       </div>
-      <div class="form-group" style="margin-top:1rem"><label>Notas</label><textarea name="notas" rows="2">${l?.notas || ''}</textarea></div>
+      ${l ? `<div class="form-group" style="margin-top:1rem"><label>Añadir nueva nota (se guardará con fecha y hora)</label><textarea id="nueva-nota-lead" rows="2" placeholder="Escribe una nota..."></textarea>
+        <button class="btn btn-sm btn-primary" type="button" style="margin-top:.5rem" onclick="añadirNotaLead(${l.id})">Añadir nota</button></div>`
+      : `<div class="form-group" style="margin-top:1rem"><label>Notas</label><textarea name="notas" rows="2"></textarea></div>`}
+      ${historialHtml}
       <div class="form-actions">
         ${l ? `<button class="btn btn-danger" type="button" onclick="eliminarLead(${l.id})">Eliminar</button>` : ''}
         <button class="btn btn-outline" type="button" onclick="cerrarModal()">Cancelar</button>
@@ -322,6 +345,17 @@ function abrirModalLead(l) {
 
 function editarLead(l) { abrirModalLead(l); }
 async function guardarLead(e, id) { e.preventDefault(); const body = Object.fromEntries(new FormData(e.target)); if (id) await PUT(`/api/leads/${id}`, body); else await POST('/api/leads', body); cerrarModal(); cargarLeads(); }
+async function añadirNotaLead(id) {
+  const texto = document.getElementById('nueva-nota-lead').value.trim();
+  if (!texto) return;
+  await POST(`/api/leads/${id}/nota`, { texto });
+  cerrarModal();
+  cargarLeads();
+  // Recargar el lead actualizado y reabrir modal
+  const leads = await API('/api/leads');
+  const lead = leads.find(l => l.id === id);
+  if (lead) abrirModalLead(lead);
+}
 async function eliminarLead(id) { if (confirm('¿Eliminar lead?')) { await DEL(`/api/leads/${id}`); cerrarModal(); cargarLeads(); } }
 
 // ==================== LISTA DE ESPERA ====================
@@ -403,6 +437,61 @@ function abrirModalPrueba() {
 async function guardarPrueba(e) { e.preventDefault(); await POST('/api/pruebas', Object.fromEntries(new FormData(e.target))); cerrarModal(); cargarPruebas(); }
 async function marcarRecordatorio(id) { await PUT(`/api/pruebas/${id}/recordatorio`, {}); cargarPruebas(); }
 async function eliminarPrueba(id) { if (confirm('¿Eliminar?')) { await DEL(`/api/pruebas/${id}`); cargarPruebas(); } }
+
+// ==================== AVISOS / INCIDENCIAS ====================
+let filtroAvisosActual = 'pendientes';
+
+async function cargarAvisos() {
+  const avisos = await API('/api/avisos');
+  const filtrados = filtroAvisosActual === 'todos' ? avisos :
+    filtroAvisosActual === 'resueltos' ? avisos.filter(a => a.resuelto) : avisos.filter(a => !a.resuelto);
+
+  $('lista-avisos').innerHTML = filtrados.length ? filtrados.map(a => {
+    const fecha = new Date(a.created_at).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    return `<div class="aviso-card tipo-${a.tipo} ${a.resuelto ? 'resuelto' : ''}">
+      <div class="aviso-header">
+        <div>
+          <span class="badge badge-${a.tipo==='error'?'danger':a.tipo==='urgente'?'purple':a.tipo==='aviso'?'warning':'info'}">${a.tipo.toUpperCase()}</span>
+          <span class="aviso-titulo" style="margin-left:.5rem">${a.titulo}</span>
+        </div>
+        <span class="aviso-meta">${fecha}</span>
+      </div>
+      <div class="aviso-meta">Por: ${a.autor || 'Sistema'}</div>
+      ${a.descripcion ? `<div class="aviso-desc">${a.descripcion}</div>` : ''}
+      ${a.resuelto ? `<div class="aviso-resuelto-info">Resuelto por ${a.resuelto_por_nombre || '?'} el ${new Date(a.resuelto_fecha).toLocaleString('es-ES', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div>` : ''}
+      <div class="aviso-actions">
+        ${!a.resuelto ? `<button class="btn btn-sm btn-success" onclick="resolverAviso(${a.id})">Marcar resuelto</button>` : ''}
+        ${currentUser?.rol === 'admin' ? `<button class="btn btn-sm btn-danger" onclick="eliminarAviso(${a.id})">Eliminar</button>` : ''}
+      </div>
+    </div>`;
+  }).join('') : '<p style="color:var(--text-light);padding:1rem">No hay avisos</p>';
+}
+
+function filtrarAvisos(filtro) {
+  filtroAvisosActual = filtro;
+  document.querySelectorAll('.filtro-avisos').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.filtro-avisos[data-filtro="${filtro}"]`).classList.add('active');
+  cargarAvisos();
+}
+
+function abrirModalAviso() {
+  abrirModal(`<button class="modal-close" onclick="cerrarModal()">✕</button>
+    <h3>Nuevo Aviso / Incidencia</h3>
+    <form onsubmit="guardarAviso(event)">
+      <div class="form-grid">
+        <div class="form-group"><label>Tipo</label>
+          <select name="tipo"><option value="error">Error</option><option value="aviso">Aviso</option><option value="mejora">Mejora</option><option value="urgente">Urgente</option></select>
+        </div>
+        <div class="form-group"><label>Título</label><input name="titulo" required placeholder="Resumen breve del aviso"></div>
+      </div>
+      <div class="form-group" style="margin-top:1rem"><label>Descripción detallada</label><textarea name="descripcion" rows="4" placeholder="Describe qué ha pasado, quién estaba, qué se ha hecho..."></textarea></div>
+      <div class="form-actions"><button class="btn btn-outline" type="button" onclick="cerrarModal()">Cancelar</button><button class="btn btn-primary" type="submit">Crear aviso</button></div>
+    </form>`);
+}
+
+async function guardarAviso(e) { e.preventDefault(); await POST('/api/avisos', Object.fromEntries(new FormData(e.target))); cerrarModal(); cargarAvisos(); }
+async function resolverAviso(id) { await PUT(`/api/avisos/${id}/resolver`, {}); cargarAvisos(); }
+async function eliminarAviso(id) { if (confirm('¿Eliminar aviso?')) { await DEL(`/api/avisos/${id}`); cargarAvisos(); } }
 
 // ==================== CONFIGURACIÓN ====================
 async function cargarConfig() {
