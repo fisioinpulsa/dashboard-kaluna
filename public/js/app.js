@@ -326,89 +326,155 @@ async function eliminarVenta(id) { if (confirm('¿Eliminar venta?')) { await DEL
 // ==================== LEADS ====================
 const LEAD_ESTADOS = [
   { key: 'nuevo', label: 'Nuevos', color: 'info' },
-  { key: 'agendada', label: 'Agendadas', color: 'success' },
+  { key: 'agendada', label: 'Agendada', color: 'success' },
   { key: 'contactado_sin_respuesta', label: 'Sin respuesta', color: 'warning' },
   { key: 'contactado_a_espera', label: 'A la espera', color: 'purple' },
   { key: 'no_agenda', label: 'No agenda', color: 'danger' },
-  { key: 'convertido', label: 'Convertidos', color: 'success' }
+  { key: 'convertido', label: 'Convertido', color: 'success' }
 ];
+let leadsData = [];
 
 async function cargarLeads() {
-  const leads = await API('/api/leads');
-  $('pipeline-leads').innerHTML = LEAD_ESTADOS.map(est => {
-    const items = leads.filter(l => l.estado === est.key);
-    return `<div class="pipeline-col">
-      <h4>${est.label} <span class="badge badge-${est.color}">${items.length}</span></h4>
-      ${items.map(l => `<div class="pipeline-card" onclick='editarLead(${JSON.stringify(l).replace(/'/g,"&#39;")})'>
-        <div class="name">${l.nombre}</div>
-        <div class="phone">${l.telefono || ''}</div>
-        ${l.notas ? `<div class="note">${l.notas}</div>` : ''}
-      </div>`).join('')}
-    </div>`;
-  }).join('');
+  leadsData = await API('/api/leads');
+  const estadoColor = e => { const m = LEAD_ESTADOS.find(x => x.key === e); return m ? m.color : 'gray'; };
+  const estadoLabel = e => { const m = LEAD_ESTADOS.find(x => x.key === e); return m ? m.label : e; };
+
+  $('pipeline-leads').innerHTML = leadsData.length ? `<table><thead><tr>
+    <th>Nombre</th><th>Teléfono</th><th>Estado</th><th>Trabajadora</th><th>Notas</th><th></th>
+  </tr></thead><tbody>
+    ${leadsData.map(l => {
+      const numNotas = (() => { try { return JSON.parse(l.historial_notas || '[]').length; } catch { return 0; } })();
+      return `<tr style="cursor:pointer" onclick="toggleFichaLead(${l.id})">
+        <td><b>${l.nombre}</b></td>
+        <td>${l.telefono || ''}</td>
+        <td><span class="badge badge-${estadoColor(l.estado)}">${estadoLabel(l.estado)}</span></td>
+        <td>${l.trabajadora_nombre || ''}</td>
+        <td style="max-width:250px;font-size:.8rem;color:var(--text-light)">${l.notas || ''}</td>
+        <td style="white-space:nowrap">
+          ${numNotas ? `<span class="badge badge-gray">${numNotas} notas</span>` : ''}
+          <span style="font-size:.7rem;color:var(--text-light);margin-left:.3rem">▼</span>
+        </td>
+      </tr>
+      <tr id="ficha-lead-${l.id}" style="display:none">
+        <td colspan="6" style="padding:0;background:var(--bg)">
+          <div style="padding:1rem 1.25rem" id="ficha-content-${l.id}"></div>
+        </td>
+      </tr>`;
+    }).join('')}
+  </tbody></table>` : '<p style="color:var(--text-light)">No hay leads</p>';
 }
 
-function abrirModalLead(l) {
-  let historialHtml = '';
-  if (l) {
-    let historial = [];
-    try { historial = JSON.parse(l.historial_notas || '[]'); } catch {}
-    if (historial.length) {
-      historialHtml = `<div style="margin-top:1rem;border-top:1px solid var(--border);padding-top:.75rem">
-        <label style="font-size:.8rem;font-weight:600;color:var(--text-light);text-transform:uppercase">Historial de notas</label>
-        <div style="max-height:200px;overflow-y:auto;margin-top:.5rem">
-          ${historial.slice().reverse().map(n => {
+function toggleFichaLead(id) {
+  const fila = document.getElementById(`ficha-lead-${id}`);
+  if (!fila) return;
+  const visible = fila.style.display !== 'none';
+  // Cerrar todas las fichas abiertas
+  document.querySelectorAll('[id^="ficha-lead-"]').forEach(el => el.style.display = 'none');
+  if (!visible) {
+    fila.style.display = 'table-row';
+    renderFichaLead(id);
+  }
+}
+
+function renderFichaLead(id) {
+  const l = leadsData.find(x => x.id === id);
+  if (!l) return;
+  let historial = [];
+  try { historial = JSON.parse(l.historial_notas || '[]'); } catch {}
+
+  const estadoColor = e => { const m = LEAD_ESTADOS.find(x => x.key === e); return m ? m.color : 'gray'; };
+
+  document.getElementById(`ficha-content-${id}`).innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
+      <div>
+        <h4 style="margin-bottom:.75rem;color:var(--primary-dark)">Datos del contacto</h4>
+        <div class="form-grid" style="grid-template-columns:1fr 1fr">
+          <div class="form-group"><label>Nombre</label><input id="lead-${id}-nombre" value="${l.nombre}" style="padding:.4rem .6rem;border:2px solid var(--border);border-radius:6px;font-size:.85rem"></div>
+          <div class="form-group"><label>Teléfono</label><input id="lead-${id}-telefono" value="${l.telefono || ''}" style="padding:.4rem .6rem;border:2px solid var(--border);border-radius:6px;font-size:.85rem"></div>
+          <div class="form-group"><label>Estado</label><select id="lead-${id}-estado" style="padding:.4rem .6rem;border:2px solid var(--border);border-radius:6px;font-size:.85rem">${LEAD_ESTADOS.map(e => `<option value="${e.key}" ${l.estado===e.key?'selected':''}>${e.label}</option>`).join('')}</select></div>
+          <div class="form-group"><label>Origen</label><select id="lead-${id}-origen" style="padding:.4rem .6rem;border:2px solid var(--border);border-radius:6px;font-size:.85rem"><option ${l.origen==='anuncio'?'selected':''}>anuncio</option><option ${l.origen==='clase'?'selected':''}>clase</option><option ${l.origen==='referido'?'selected':''}>referido</option></select></div>
+          <div class="form-group"><label>Horario preferencia</label><input id="lead-${id}-horario" value="${l.horario_preferencia || ''}" style="padding:.4rem .6rem;border:2px solid var(--border);border-radius:6px;font-size:.85rem"></div>
+        </div>
+        <div style="margin-top:.75rem;display:flex;gap:.5rem">
+          <button class="btn btn-primary btn-sm" onclick="guardarFichaLead(${id})">Guardar cambios</button>
+          <button class="btn btn-danger btn-sm" onclick="eliminarLead(${id})">Eliminar</button>
+        </div>
+      </div>
+      <div>
+        <h4 style="margin-bottom:.75rem;color:var(--primary-dark)">Historial de llamadas / notas</h4>
+        <div style="display:flex;gap:.5rem;margin-bottom:.75rem">
+          <textarea id="nueva-nota-${id}" rows="2" placeholder="Añadir nota de llamada..." style="flex:1;padding:.4rem .6rem;border:2px solid var(--border);border-radius:6px;font-size:.85rem;font-family:inherit;resize:vertical"></textarea>
+          <button class="btn btn-primary btn-sm" onclick="añadirNotaLead(${id})" style="align-self:flex-end">Añadir</button>
+        </div>
+        <div style="max-height:250px;overflow-y:auto">
+          ${historial.length ? historial.slice().reverse().map(n => {
             const f = new Date(n.fecha).toLocaleString('es-ES', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
-            return `<div style="padding:.4rem 0;border-bottom:1px solid var(--border);font-size:.85rem">
-              <span style="color:var(--primary);font-weight:600">${n.autor}</span>
-              <span style="color:var(--text-light);font-size:.75rem;margin-left:.5rem">${f}</span>
+            return `<div style="padding:.5rem;margin-bottom:.4rem;background:white;border-radius:6px;border-left:3px solid var(--primary);font-size:.85rem">
+              <div><span style="font-weight:600;color:var(--primary)">${n.autor}</span> <span style="color:var(--text-light);font-size:.75rem">${f}</span></div>
               <div style="margin-top:.2rem">${n.texto}</div>
             </div>`;
-          }).join('')}
+          }).join('') : '<p style="color:var(--text-light);font-size:.85rem">Sin notas aún. Añade una nota de llamada arriba.</p>'}
         </div>
-      </div>`;
-    }
-  }
+      </div>
+    </div>`;
+}
+
+async function guardarFichaLead(id) {
+  const body = {
+    nombre: document.getElementById(`lead-${id}-nombre`).value,
+    telefono: document.getElementById(`lead-${id}-telefono`).value,
+    estado: document.getElementById(`lead-${id}-estado`).value,
+    origen: document.getElementById(`lead-${id}-origen`).value,
+    horario_preferencia: document.getElementById(`lead-${id}-horario`).value,
+    notas: leadsData.find(l => l.id === id)?.notas || ''
+  };
+  await PUT(`/api/leads/${id}`, body);
+  cargarLeads();
+}
+
+function abrirModalLead() {
   abrirModal(`<button class="modal-close" onclick="cerrarModal()">✕</button>
-    <h3>${l ? 'Editar' : 'Nuevo'} Lead</h3>
-    <form onsubmit="guardarLead(event, ${l?.id || 'null'})">
+    <h3>Nuevo Lead</h3>
+    <form onsubmit="guardarLeadNuevo(event)">
       <div class="form-grid">
-        <div class="form-group"><label>Nombre</label><input name="nombre" value="${l?.nombre || ''}" required></div>
-        <div class="form-group"><label>Teléfono</label><input name="telefono" value="${l?.telefono || ''}"></div>
+        <div class="form-group"><label>Nombre</label><input name="nombre" required></div>
+        <div class="form-group"><label>Teléfono</label><input name="telefono"></div>
         <div class="form-group"><label>Estado</label>
-          <select name="estado">${LEAD_ESTADOS.map(e => `<option value="${e.key}" ${l?.estado===e.key?'selected':''}>${e.label}</option>`).join('')}</select>
+          <select name="estado">${LEAD_ESTADOS.map(e => `<option value="${e.key}">${e.label}</option>`).join('')}</select>
         </div>
         <div class="form-group"><label>Origen</label>
-          <select name="origen"><option ${l?.origen==='anuncio'?'selected':''}>anuncio</option><option ${l?.origen==='clase'?'selected':''}>clase</option><option ${l?.origen==='referido'?'selected':''}>referido</option></select>
+          <select name="origen"><option>anuncio</option><option>clase</option><option>referido</option></select>
         </div>
-        <div class="form-group"><label>Horario preferencia</label><input name="horario_preferencia" value="${l?.horario_preferencia || ''}"></div>
+        <div class="form-group"><label>Horario preferencia</label><input name="horario_preferencia"></div>
       </div>
-      ${l ? `<div class="form-group" style="margin-top:1rem"><label>Añadir nueva nota (se guardará con fecha y hora)</label><textarea id="nueva-nota-lead" rows="2" placeholder="Escribe una nota..."></textarea>
-        <button class="btn btn-sm btn-primary" type="button" style="margin-top:.5rem" onclick="añadirNotaLead(${l.id})">Añadir nota</button></div>`
-      : `<div class="form-group" style="margin-top:1rem"><label>Notas</label><textarea name="notas" rows="2"></textarea></div>`}
-      ${historialHtml}
-      <div class="form-actions">
-        ${l ? `<button class="btn btn-danger" type="button" onclick="eliminarLead(${l.id})">Eliminar</button>` : ''}
-        <button class="btn btn-outline" type="button" onclick="cerrarModal()">Cancelar</button>
-        <button class="btn btn-primary" type="submit">Guardar</button>
-      </div>
+      <div class="form-group" style="margin-top:1rem"><label>Notas</label><textarea name="notas" rows="2"></textarea></div>
+      <div class="form-actions"><button class="btn btn-outline" type="button" onclick="cerrarModal()">Cancelar</button><button class="btn btn-primary" type="submit">Crear</button></div>
     </form>`);
 }
 
-function editarLead(l) { abrirModalLead(l); }
-async function guardarLead(e, id) { e.preventDefault(); const body = Object.fromEntries(new FormData(e.target)); if (id) await PUT(`/api/leads/${id}`, body); else await POST('/api/leads', body); cerrarModal(); cargarLeads(); }
+async function guardarLeadNuevo(e) { e.preventDefault(); await POST('/api/leads', Object.fromEntries(new FormData(e.target))); cerrarModal(); cargarLeads(); }
+
 async function añadirNotaLead(id) {
-  const texto = document.getElementById('nueva-nota-lead').value.trim();
+  const textarea = document.getElementById(`nueva-nota-${id}`);
+  const texto = textarea.value.trim();
   if (!texto) return;
-  await POST(`/api/leads/${id}/nota`, { texto });
-  cerrarModal();
-  cargarLeads();
-  // Recargar el lead actualizado y reabrir modal
-  const leads = await API('/api/leads');
-  const lead = leads.find(l => l.id === id);
-  if (lead) abrirModalLead(lead);
+  const result = await POST(`/api/leads/${id}/nota`, { texto });
+  // Actualizar datos locales y re-renderizar la ficha
+  const idx = leadsData.findIndex(l => l.id === id);
+  if (idx >= 0) {
+    leadsData[idx] = result;
+    renderFichaLead(id);
+  }
+  cargarLeads().then(() => {
+    // Reabrir ficha
+    const fila = document.getElementById(`ficha-lead-${id}`);
+    if (fila) { fila.style.display = 'table-row'; renderFichaLead(id); }
+  });
 }
-async function eliminarLead(id) { if (confirm('¿Eliminar lead?')) { await DEL(`/api/leads/${id}`); cerrarModal(); cargarLeads(); } }
+
+async function eliminarLead(id) {
+  if (confirm('¿Eliminar lead?')) { await DEL(`/api/leads/${id}`); cerrarModal(); cargarLeads(); }
+}
 
 // ==================== LISTA DE ESPERA ====================
 async function cargarEspera() {
