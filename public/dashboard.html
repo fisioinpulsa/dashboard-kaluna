@@ -21,6 +21,7 @@
       <button class="nav-item" data-section="ventas"><span class="icon">💰</span><span>Ventas</span></button>
       <button class="nav-item" data-section="caja"><span class="icon">🏧</span><span>Control Caja</span></button>
       <button class="nav-item" data-section="leads"><span class="icon">📢</span><span>Leads</span></button>
+      <button class="nav-item" data-section="lesiones"><span class="icon">🩺</span><span>Lesiones</span></button>
       <button class="nav-item" data-section="espera"><span class="icon">⏳</span><span>Lista espera</span></button>
       <button class="nav-item" data-section="diario"><span class="icon">📝</span><span>Diario</span></button>
       <button class="nav-item" data-section="avisos"><span class="icon">📋</span><span>Avisos</span></button>
@@ -91,6 +92,18 @@
         <button class="btn btn-primary" onclick="abrirModalLead()">+ Nuevo lead</button>
       </div>
       <div class="panel"><div class="panel-body"><div class="table-wrapper" id="pipeline-leads"></div></div></div>
+    </div>
+
+    <!-- CONTROL LESIONES -->
+    <div class="section" id="sec-lesiones">
+      <div class="main-header">
+        <h1>Control de Lesiones</h1>
+        <button class="btn btn-primary" onclick="abrirModalLesion()">+ Nueva ficha</button>
+      </div>
+      <div class="panel"><div class="panel-body">
+        <input type="text" id="buscar-lesion" placeholder="Buscar paciente..." style="width:100%;max-width:400px;padding:.5rem .8rem;border:2px solid var(--border);border-radius:8px;margin-bottom:1rem;font-size:.9rem">
+        <div id="lista-lesiones"></div>
+      </div></div>
     </div>
 
     <!-- LISTA DE ESPERA -->

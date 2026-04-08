@@ -4,10 +4,9 @@ const { verificarToken } = require('../middleware/auth');
 
 router.use(verificarToken);
 
-// Obtener mapa de plazas (calculado desde clientes activos)
+// Obtener mapa de plazas (lectura directa de asignaciones)
 router.get('/', async (req, res) => {
   try {
-    // Obtener grupos configurados
     const { rows: grupos } = await query(`SELECT * FROM kaluna_grupos ORDER BY
       CASE dia
         WHEN 'Lunes' THEN 1
@@ -18,27 +17,21 @@ router.get('/', async (req, res) => {
         ELSE 6
       END, LPAD(hora, 5, '0')`);
 
-    // Obtener clientes activos
-    const { rows: clientes } = await query(
-      "SELECT id, nombre_completo, dias, horario, horario2 FROM kaluna_clientes WHERE estado = 'activo'"
+    const { rows: ocupantes } = await query(
+      "SELECT * FROM kaluna_plaza_ocupantes ORDER BY id"
     );
 
-    // Montar mapa de plazas
     const mapa = grupos.map(g => {
-      const ocupantes = clientes.filter(c => {
-        const diasCliente = (c.dias || '').toLowerCase();
-        const diaGrupo = g.dia.toLowerCase();
-        const horaGrupo = g.hora;
-        const matchDia = diasCliente.includes(diaGrupo);
-        const matchHora = c.horario === horaGrupo || c.horario2 === horaGrupo;
-        return matchDia && matchHora;
-      });
+      const asignados = ocupantes.filter(o => o.grupo_id === g.id);
+      const personas = asignados.filter(o => !o.es_vacio);
+      const esPrueba = asignados.some(o => o.nombre === 'CLASE DE PRUEBA');
       return {
         ...g,
-        ocupantes,
-        ocupadas: ocupantes.length,
-        libres: g.max_plazas - ocupantes.length,
-        lleno: ocupantes.length >= g.max_plazas
+        es_prueba: esPrueba,
+        ocupantes: personas.map(o => ({ id: o.id, nombre_completo: o.nombre })),
+        ocupadas: personas.length,
+        libres: g.max_plazas - personas.length,
+        lleno: personas.length >= g.max_plazas
       };
     });
 
@@ -61,6 +54,30 @@ router.post('/grupo', async (req, res) => {
       [nombre, dia, hora, max_plazas || 5]
     );
     res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Añadir persona a un grupo
+router.post('/ocupante', async (req, res) => {
+  try {
+    const { grupo_id, nombre } = req.body;
+    const { rows } = await query(
+      'INSERT INTO kaluna_plaza_ocupantes (grupo_id, nombre, es_vacio) VALUES ($1, $2, false) RETURNING *',
+      [grupo_id, nombre]
+    );
+    res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Quitar persona de un grupo
+router.delete('/ocupante/:id', async (req, res) => {
+  try {
+    await query('DELETE FROM kaluna_plaza_ocupantes WHERE id = $1', [req.params.id]);
+    res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

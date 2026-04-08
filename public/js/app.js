@@ -30,7 +30,7 @@ function setupNav() {
       btn.classList.add('active');
       const sec = btn.dataset.section;
       $(`sec-${sec}`).classList.add('active');
-      const loaders = { inicio: cargarInicio, clientes: cargarClientes, plazas: cargarPlazas, ventas: cargarSoloVentas, caja: cargarSoloCaja, leads: cargarLeads, espera: cargarEspera, diario: cargarDiario, avisos: cargarAvisos, config: cargarConfig };
+      const loaders = { inicio: cargarInicio, clientes: cargarClientes, plazas: cargarPlazas, ventas: cargarSoloVentas, caja: cargarSoloCaja, leads: cargarLeads, lesiones: cargarLesiones, espera: cargarEspera, diario: cargarDiario, avisos: cargarAvisos, config: cargarConfig };
       if (loaders[sec]) loaders[sec]();
     });
   });
@@ -161,22 +161,90 @@ async function darBaja(id) {
 }
 
 // ==================== PLAZAS ====================
+let plazasData = [];
+
 async function cargarPlazas() {
-  const plazas = await API('/api/plazas');
-  if (!plazas.length) {
-    $('plazas-grid').innerHTML = '<p style="color:var(--text-light);padding:2rem">No hay grupos configurados. Crea uno con "+ Nuevo grupo".</p>';
+  plazasData = await API('/api/plazas');
+  if (!plazasData.length) {
+    $('plazas-grid').innerHTML = '<p style="color:var(--text-light);padding:2rem">No hay grupos configurados.</p>';
     return;
   }
-  $('plazas-grid').innerHTML = plazas.map(p => {
+  $('plazas-grid').innerHTML = plazasData.map(p => {
+    if (p.es_prueba) {
+      return `<div class="plaza-card" style="border-color:var(--info);background:#f0f7ff;cursor:pointer" onclick="togglePlazaDetalle(${p.id})">
+        <h4>${p.nombre}</h4>
+        <span class="badge badge-info">CLASE DE PRUEBA</span>
+        <div id="plaza-detalle-${p.id}" style="display:none"></div>
+      </div>`;
+    }
     const pct = (p.ocupadas / p.max_plazas) * 100;
     const fillClass = pct >= 100 ? 'full' : pct >= 60 ? 'mid' : 'ok';
-    return `<div class="plaza-card ${p.lleno ? 'lleno' : 'libre'}">
+    return `<div class="plaza-card ${p.lleno ? 'lleno' : 'libre'}" style="cursor:pointer" onclick="togglePlazaDetalle(${p.id})">
       <h4>${p.nombre} <span class="plaza-count">${p.ocupadas}/${p.max_plazas}</span></h4>
       <div class="plaza-bar"><div class="plaza-bar-fill ${fillClass}" style="width:${Math.min(pct,100)}%"></div></div>
       ${p.lleno ? '<span class="badge badge-danger">LLENO</span>' : `<span class="badge badge-success">${p.libres} libre${p.libres!==1?'s':''}</span>`}
       <div style="margin-top:.5rem">${p.ocupantes.map(o => `<div class="ocupante">- ${o.nombre_completo}</div>`).join('')}</div>
+      <div id="plaza-detalle-${p.id}" style="display:none"></div>
     </div>`;
   }).join('');
+}
+
+function togglePlazaDetalle(grupoId) {
+  const div = document.getElementById(`plaza-detalle-${grupoId}`);
+  if (!div) return;
+  if (div.style.display !== 'none') { div.style.display = 'none'; return; }
+  div.style.display = 'block';
+  renderPlazaDetalle(grupoId);
+}
+
+function renderPlazaDetalle(grupoId) {
+  const p = plazasData.find(x => x.id === grupoId);
+  if (!p) return;
+  const div = document.getElementById(`plaza-detalle-${grupoId}`);
+
+  // Mostrar las max_plazas slots
+  let slots = '';
+  for (let i = 0; i < p.max_plazas; i++) {
+    const ocupante = p.ocupantes[i];
+    if (ocupante) {
+      slots += `<div style="display:flex;align-items:center;gap:.5rem;padding:.4rem 0;border-bottom:1px solid var(--border)">
+        <span style="width:20px;text-align:center;font-weight:700;color:var(--primary)">${i+1}</span>
+        <span style="flex:1;font-size:.85rem">${ocupante.nombre_completo}</span>
+        <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();quitarOcupante(${ocupante.id})" style="padding:.15rem .4rem;font-size:.7rem">X</button>
+      </div>`;
+    } else {
+      slots += `<div style="display:flex;align-items:center;gap:.5rem;padding:.4rem 0;border-bottom:1px solid var(--border)">
+        <span style="width:20px;text-align:center;font-weight:700;color:var(--text-light)">${i+1}</span>
+        <span style="flex:1;font-size:.85rem;color:var(--text-light);font-style:italic">VACÍO</span>
+      </div>`;
+    }
+  }
+
+  div.innerHTML = `<div onclick="event.stopPropagation()" style="margin-top:.75rem;padding-top:.75rem;border-top:2px solid var(--border)">
+    ${slots}
+    <div style="margin-top:.5rem;display:flex;gap:.3rem">
+      <input id="nuevo-ocupante-${grupoId}" placeholder="Nombre..." style="flex:1;padding:.3rem .5rem;border:1px solid var(--border);border-radius:6px;font-size:.8rem">
+      <button class="btn btn-sm btn-primary" onclick="añadirOcupante(${grupoId})">Añadir</button>
+    </div>
+  </div>`;
+}
+
+async function añadirOcupante(grupoId) {
+  const input = document.getElementById(`nuevo-ocupante-${grupoId}`);
+  const nombre = input.value.trim();
+  if (!nombre) return;
+  await POST('/api/plazas/ocupante', { grupo_id: grupoId, nombre });
+  input.value = '';
+  await cargarPlazas();
+  // Reabrir detalle
+  const div = document.getElementById(`plaza-detalle-${grupoId}`);
+  if (div) { div.style.display = 'block'; renderPlazaDetalle(grupoId); }
+}
+
+async function quitarOcupante(ocupanteId) {
+  if (!confirm('¿Quitar esta persona del grupo?')) return;
+  await DEL(`/api/plazas/ocupante/${ocupanteId}`);
+  cargarPlazas();
 }
 
 function abrirModalGrupo() {
@@ -479,6 +547,100 @@ async function añadirNotaLead(id) {
 async function eliminarLead(id) {
   if (confirm('¿Eliminar lead?')) { await DEL(`/api/leads/${id}`); cerrarModal(); cargarLeads(); }
 }
+
+// ==================== CONTROL LESIONES ====================
+let lesionesData = [];
+
+async function cargarLesiones() {
+  lesionesData = await API('/api/lesiones');
+  renderLesiones(lesionesData);
+  const buscar = $('buscar-lesion');
+  buscar.oninput = () => {
+    const q = buscar.value.toLowerCase();
+    renderLesiones(q ? lesionesData.filter(l => l.cliente_nombre.toLowerCase().includes(q)) : lesionesData);
+  };
+}
+
+function renderLesiones(fichas) {
+  $('lista-lesiones').innerHTML = fichas.length ? `<table><thead><tr>
+    <th>Paciente</th><th>Fecha</th><th>Ejercicios no recomendados</th><th></th>
+  </tr></thead><tbody>
+    ${fichas.map(f => `<tr style="cursor:pointer" onclick="toggleFichaLesion(${f.id})">
+      <td><b>${f.cliente_nombre}</b></td>
+      <td>${f.fecha ? new Date(f.fecha).toLocaleDateString('es-ES') : ''}</td>
+      <td style="max-width:300px;font-size:.8rem;color:var(--text-light);white-space:pre-wrap">${(f.ejercicios_no_recomendados || '').substring(0, 80)}${(f.ejercicios_no_recomendados||'').length > 80 ? '...' : ''}</td>
+      <td><span style="font-size:.7rem;color:var(--text-light)">▼</span></td>
+    </tr>
+    <tr id="ficha-lesion-${f.id}" style="display:none">
+      <td colspan="4" style="padding:0;background:var(--bg)">
+        <div style="padding:1.25rem" id="ficha-lesion-content-${f.id}"></div>
+      </td>
+    </tr>`).join('')}
+  </tbody></table>` : '<p style="color:var(--text-light)">No hay fichas de lesiones. Crea una con "+ Nueva ficha".</p>';
+}
+
+function toggleFichaLesion(id) {
+  const fila = document.getElementById(`ficha-lesion-${id}`);
+  if (!fila) return;
+  const visible = fila.style.display !== 'none';
+  document.querySelectorAll('[id^="ficha-lesion-"]').forEach(el => { if (el.id.includes('content')) return; el.style.display = 'none'; });
+  if (!visible) { fila.style.display = 'table-row'; renderFichaLesion(id); }
+}
+
+function renderFichaLesion(id) {
+  const f = lesionesData.find(x => x.id === id);
+  if (!f) return;
+  document.getElementById(`ficha-lesion-content-${id}`).innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem">
+      <div>
+        <h4 style="color:var(--danger);margin-bottom:.5rem">Ejercicios NO recomendados</h4>
+        <textarea id="lesion-${id}-ejercicios" rows="8" style="width:100%;padding:.5rem;border:2px solid var(--border);border-radius:8px;font-size:.85rem;font-family:inherit;resize:vertical">${f.ejercicios_no_recomendados || ''}</textarea>
+      </div>
+      <div>
+        <h4 style="color:var(--primary);margin-bottom:.5rem">Notas Pilates (Alessandra)</h4>
+        <textarea id="lesion-${id}-pilates" rows="8" style="width:100%;padding:.5rem;border:2px solid var(--primary);border-radius:8px;font-size:.85rem;font-family:inherit;resize:vertical">${f.notas_pilates || ''}</textarea>
+      </div>
+      <div>
+        <h4 style="color:var(--info);margin-bottom:.5rem">Notas Fisio (Maria)</h4>
+        <textarea id="lesion-${id}-fisio" rows="8" style="width:100%;padding:.5rem;border:2px solid var(--info);border-radius:8px;font-size:.85rem;font-family:inherit;resize:vertical">${f.notas_fisio || ''}</textarea>
+      </div>
+    </div>
+    <div style="margin-top:.75rem;display:flex;gap:.5rem">
+      <button class="btn btn-primary btn-sm" onclick="guardarFichaLesion(${id})">Guardar cambios</button>
+      ${currentUser?.rol === 'admin' ? `<button class="btn btn-danger btn-sm" onclick="eliminarLesion(${id})">Eliminar ficha</button>` : ''}
+    </div>`;
+}
+
+async function guardarFichaLesion(id) {
+  const f = lesionesData.find(x => x.id === id);
+  await PUT(`/api/lesiones/${id}`, {
+    cliente_nombre: f.cliente_nombre,
+    fecha: f.fecha,
+    ejercicios_no_recomendados: document.getElementById(`lesion-${id}-ejercicios`).value,
+    notas_pilates: document.getElementById(`lesion-${id}-pilates`).value,
+    notas_fisio: document.getElementById(`lesion-${id}-fisio`).value
+  });
+  alert('Ficha guardada');
+  cargarLesiones();
+}
+
+function abrirModalLesion() {
+  abrirModal(`<button class="modal-close" onclick="cerrarModal()">✕</button>
+    <h3>Nueva Ficha de Lesión</h3>
+    <form onsubmit="crearLesion(event)">
+      <div class="form-grid">
+        <div class="form-group"><label>Nombre del paciente</label><input name="cliente_nombre" required></div>
+        <div class="form-group"><label>Fecha valoración</label><input type="date" name="fecha"></div>
+      </div>
+      <div class="form-group" style="margin-top:.75rem"><label>Ejercicios NO recomendados</label><textarea name="ejercicios_no_recomendados" rows="3"></textarea></div>
+      <div class="form-group" style="margin-top:.5rem"><label>Notas Pilates</label><textarea name="notas_pilates" rows="3"></textarea></div>
+      <div class="form-group" style="margin-top:.5rem"><label>Notas Fisio</label><textarea name="notas_fisio" rows="3"></textarea></div>
+      <div class="form-actions"><button class="btn btn-outline" type="button" onclick="cerrarModal()">Cancelar</button><button class="btn btn-primary" type="submit">Crear ficha</button></div>
+    </form>`);
+}
+
+async function crearLesion(e) { e.preventDefault(); await POST('/api/lesiones', Object.fromEntries(new FormData(e.target))); cerrarModal(); cargarLesiones(); }
+async function eliminarLesion(id) { if (confirm('¿Eliminar ficha?')) { await DEL(`/api/lesiones/${id}`); cargarLesiones(); } }
 
 // ==================== LISTA DE ESPERA ====================
 async function cargarEspera() {
