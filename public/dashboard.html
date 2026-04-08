@@ -22,6 +22,7 @@
       <button class="nav-item" data-section="caja"><span class="icon">🏧</span><span>Control Caja</span></button>
       <button class="nav-item" data-section="leads"><span class="icon">📢</span><span>Leads</span></button>
       <button class="nav-item" data-section="espera"><span class="icon">⏳</span><span>Lista espera</span></button>
+      <button class="nav-item" data-section="diario"><span class="icon">📝</span><span>Diario</span></button>
       <button class="nav-item" data-section="avisos"><span class="icon">📋</span><span>Avisos</span></button>
       <button class="nav-item admin-only" data-section="config"><span class="icon">⚙</span><span>Configuración</span></button>
     </nav>
@@ -99,6 +100,36 @@
         <button class="btn btn-primary" onclick="abrirModalEspera()">+ Añadir</button>
       </div>
       <div class="panel"><div class="panel-body"><div class="table-wrapper" id="tabla-espera"></div></div></div>
+    </div>
+
+    <!-- DIARIO -->
+    <div class="section" id="sec-diario">
+      <div class="main-header">
+        <h1>Diario del Día</h1>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><h3>Escribe tu informe de hoy</h3></div>
+        <div class="panel-body">
+          <form id="form-diario" onsubmit="guardarDiario(event)">
+            <div class="form-group"><label>Fecha</label><input type="date" id="diario-fecha" name="fecha"></div>
+            <div class="form-group" style="margin-top:.5rem"><label>¿Qué ha pasado hoy?</label><textarea name="contenido" rows="5" placeholder="Escribe aquí el resumen del día: incidencias, notas sobre clientes, cosas pendientes..." required></textarea></div>
+            <div class="form-actions"><button class="btn btn-primary" type="submit">Guardar entrada</button></div>
+          </form>
+        </div>
+      </div>
+      <div class="panel admin-only">
+        <div class="panel-header">
+          <h3>Historial de diarios</h3>
+          <select id="filtro-diario-trabajadora" style="padding:.4rem .8rem;border:2px solid var(--border);border-radius:8px;font-size:.85rem">
+            <option value="">Todas las trabajadoras</option>
+          </select>
+        </div>
+        <div class="panel-body"><div id="lista-diario"></div></div>
+      </div>
+      <div class="panel trabajadora-only">
+        <div class="panel-header"><h3>Mis entradas anteriores</h3></div>
+        <div class="panel-body"><div id="lista-diario-propio"></div></div>
+      </div>
     </div>
 
     <!-- AVISOS / INCIDENCIAS -->

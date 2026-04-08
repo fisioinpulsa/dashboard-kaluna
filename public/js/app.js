@@ -30,7 +30,7 @@ function setupNav() {
       btn.classList.add('active');
       const sec = btn.dataset.section;
       $(`sec-${sec}`).classList.add('active');
-      const loaders = { inicio: cargarInicio, clientes: cargarClientes, plazas: cargarPlazas, ventas: cargarSoloVentas, caja: cargarSoloCaja, leads: cargarLeads, espera: cargarEspera, avisos: cargarAvisos, config: cargarConfig };
+      const loaders = { inicio: cargarInicio, clientes: cargarClientes, plazas: cargarPlazas, ventas: cargarSoloVentas, caja: cargarSoloCaja, leads: cargarLeads, espera: cargarEspera, diario: cargarDiario, avisos: cargarAvisos, config: cargarConfig };
       if (loaders[sec]) loaders[sec]();
     });
   });
@@ -209,11 +209,22 @@ async function cargarVentas() { await cargarSoloVentas(); await cargarSoloCaja()
 
 async function cargarSoloVentas() {
   const ventas = await API('/api/ventas');
-  $('tabla-ventas').innerHTML = ventas.length ? `<table><thead><tr>
-    <th>Fecha</th><th>Cliente</th><th>Artículo</th><th>Precio</th><th>Pago</th><th>Trabajadora</th><th>Notas</th><th></th>
-  </tr></thead><tbody>
-    ${ventas.map(v => `<tr>
-      <td>${v.fecha ? new Date(v.fecha).toLocaleDateString('es-ES') : ''}</td>
+  if (!ventas.length) { $('tabla-ventas').innerHTML = '<p style="color:var(--text-light)">Sin ventas</p>'; return; }
+  const meses = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  let lastMes = null;
+  let html = '';
+  ventas.forEach(v => {
+    const d = v.fecha ? new Date(v.fecha) : null;
+    const mesKey = d ? `${meses[d.getMonth()+1]} ${d.getFullYear()}` : 'Sin fecha';
+    if (mesKey !== lastMes) {
+      if (lastMes) html += '</tbody></table></div></div>';
+      lastMes = mesKey;
+      html += `<div class="panel" style="margin-bottom:1rem"><div class="panel-header"><h3>${mesKey}</h3></div><div class="panel-body"><table><thead><tr>
+        <th>Fecha</th><th>Cliente</th><th>Artículo</th><th>Precio</th><th>Pago</th><th>Trabajadora</th><th>Notas</th><th></th>
+      </tr></thead><tbody>`;
+    }
+    html += `<tr>
+      <td>${d ? d.toLocaleDateString('es-ES') : ''}</td>
       <td>${v.cliente_nombre || ''}</td>
       <td><span class="badge ${v.articulo?.includes('Suscripción') ? 'badge-purple' : v.articulo?.includes('Bebida') ? 'badge-info' : 'badge-gray'}">${v.articulo || ''}</span></td>
       <td><b>${parseFloat(v.precio || 0).toFixed(2)}€</b></td>
@@ -221,8 +232,10 @@ async function cargarSoloVentas() {
       <td>${v.trabajadora_nombre || ''}</td>
       <td style="font-size:.8rem">${v.notas || ''}</td>
       <td><button class="btn btn-sm btn-danger" onclick="eliminarVenta(${v.id})">X</button></td>
-    </tr>`).join('')}
-  </tbody></table>` : '<p style="color:var(--text-light)">Sin ventas</p>';
+    </tr>`;
+  });
+  html += '</tbody></table></div></div>';
+  $('tabla-ventas').innerHTML = html;
 }
 
 async function cargarSoloCaja() {
@@ -444,6 +457,71 @@ function abrirModalPrueba() {
 async function guardarPrueba(e) { e.preventDefault(); await POST('/api/pruebas', Object.fromEntries(new FormData(e.target))); cerrarModal(); cargarPruebas(); }
 async function marcarRecordatorio(id) { await PUT(`/api/pruebas/${id}/recordatorio`, {}); cargarPruebas(); }
 async function eliminarPrueba(id) { if (confirm('¿Eliminar?')) { await DEL(`/api/pruebas/${id}`); cargarPruebas(); } }
+
+// ==================== DIARIO ====================
+async function cargarDiario() {
+  $('diario-fecha').value = new Date().toISOString().split('T')[0];
+
+  if (currentUser?.rol === 'admin') {
+    // Admin ve todo + puede filtrar por trabajadora
+    const select = $('filtro-diario-trabajadora');
+    if (select.options.length <= 1) {
+      const trabajadoras = await API('/api/auth/trabajadoras');
+      trabajadoras.filter(t => t.activo).forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t.id; opt.textContent = t.nombre;
+        select.appendChild(opt);
+      });
+      select.addEventListener('change', cargarDiarioEntradas);
+    }
+    document.querySelectorAll('.trabajadora-only').forEach(el => el.style.display = 'none');
+    await cargarDiarioEntradas();
+  } else {
+    // Trabajadora ve solo lo suyo
+    document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+    const entradas = await API('/api/diario');
+    renderDiarioEntradas(entradas, 'lista-diario-propio');
+  }
+}
+
+async function cargarDiarioEntradas() {
+  const filtro = $('filtro-diario-trabajadora')?.value;
+  const url = filtro ? `/api/diario?usuario_id=${filtro}` : '/api/diario';
+  const entradas = await API(url);
+  renderDiarioEntradas(entradas, 'lista-diario');
+}
+
+function renderDiarioEntradas(entradas, containerId) {
+  const container = $(containerId);
+  if (!entradas.length) { container.innerHTML = '<p style="color:var(--text-light)">Sin entradas</p>'; return; }
+
+  let lastFecha = null;
+  container.innerHTML = entradas.map(e => {
+    const fecha = new Date(e.fecha).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    const hora = new Date(e.created_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+    let header = '';
+    if (fecha !== lastFecha) { lastFecha = fecha; header = `<div style="margin-top:1rem;padding:.5rem 0;border-bottom:2px solid var(--primary);font-weight:700;color:var(--primary-dark);font-size:.95rem">${fecha}</div>`; }
+    return `${header}<div class="aviso-card" style="border-left-color:var(--primary)">
+      <div class="aviso-header">
+        <div><span style="font-weight:700;color:var(--primary)">${e.autor || 'Sistema'}</span><span class="aviso-meta" style="margin-left:.5rem">${hora}</span></div>
+        <button class="btn btn-sm btn-danger" onclick="eliminarDiario(${e.id})">X</button>
+      </div>
+      <div class="aviso-desc">${e.contenido}</div>
+    </div>`;
+  }).join('');
+}
+
+async function guardarDiario(e) {
+  e.preventDefault();
+  const body = Object.fromEntries(new FormData(e.target));
+  await POST('/api/diario', body);
+  e.target.querySelector('textarea').value = '';
+  cargarDiario();
+}
+
+async function eliminarDiario(id) {
+  if (confirm('¿Eliminar entrada?')) { await DEL(`/api/diario/${id}`); cargarDiario(); }
+}
 
 // ==================== AVISOS / INCIDENCIAS ====================
 let filtroAvisosActual = 'pendientes';
