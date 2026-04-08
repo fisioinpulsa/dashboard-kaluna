@@ -380,15 +380,61 @@ function abrirModalCaja() {
   abrirModal(`<button class="modal-close" onclick="cerrarModal()">✕</button>
     <h3>Arqueo de Caja</h3>
     <form onsubmit="guardarCaja(event)">
-      <div class="form-grid">
-        <div class="form-group"><label>Fecha</label><input type="date" name="fecha" value="${new Date().toISOString().split('T')[0]}"></div>
-        <div class="form-group"><label>Efectivo total (€)</label><input type="number" name="efectivo_total" step="0.01" required></div>
-        <div class="form-group"><label>Monedas (€)</label><input type="number" name="monedas" step="0.01"></div>
-        <div class="form-group"><label>Billetes (desglose)</label><input name="billetes" placeholder="2x50+10+5x2"></div>
+      <div class="form-group"><label>Fecha</label><input type="date" name="fecha" value="${new Date().toISOString().split('T')[0]}"></div>
+      <div style="margin-top:1rem;padding:1rem;background:var(--bg);border-radius:10px">
+        <label style="font-weight:700;color:var(--primary-dark);margin-bottom:.75rem;display:block">Billetes</label>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem">
+          ${[50,20,10,5].map(b => `<div style="text-align:center">
+            <div style="font-weight:700;font-size:1.1rem;color:var(--primary)">${b}€</div>
+            <input type="number" id="caja-b${b}" min="0" value="0" oninput="calcularCaja()" style="width:60px;text-align:center;padding:.3rem;border:2px solid var(--border);border-radius:6px;font-size:1rem">
+          </div>`).join('')}
+        </div>
+        <div style="margin-top:.5rem;font-size:.85rem;color:var(--text-light)">Total billetes: <b id="caja-total-billetes">0.00€</b></div>
       </div>
+      <div style="margin-top:.75rem;padding:1rem;background:var(--bg);border-radius:10px">
+        <label style="font-weight:700;color:var(--primary-dark);margin-bottom:.75rem;display:block">Monedas</label>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem">
+          ${[2,1,0.5,0.2,0.1,0.05,0.02,0.01].map(m => `<div style="text-align:center">
+            <div style="font-weight:600;font-size:.9rem">${m}€</div>
+            <input type="number" id="caja-m${String(m).replace('.','_')}" min="0" value="0" oninput="calcularCaja()" style="width:60px;text-align:center;padding:.3rem;border:2px solid var(--border);border-radius:6px;font-size:.9rem">
+          </div>`).join('')}
+        </div>
+        <div style="margin-top:.5rem;font-size:.85rem;color:var(--text-light)">Total monedas: <b id="caja-total-monedas">0.00€</b></div>
+      </div>
+      <div style="margin-top:.75rem;padding:.75rem;background:var(--primary);color:white;border-radius:10px;text-align:center">
+        <div style="font-size:.85rem">TOTAL EFECTIVO EN CAJA</div>
+        <div style="font-size:1.8rem;font-weight:700" id="caja-total-efectivo">0.00€</div>
+      </div>
+      <input type="hidden" name="efectivo_total" id="caja-input-total">
+      <input type="hidden" name="monedas" id="caja-input-monedas">
+      <input type="hidden" name="billetes" id="caja-input-billetes">
       <div class="form-group" style="margin-top:1rem"><label>Notas</label><textarea name="notas" rows="2"></textarea></div>
       <div class="form-actions"><button class="btn btn-outline" type="button" onclick="cerrarModal()">Cancelar</button><button class="btn btn-primary" type="submit">Guardar</button></div>
     </form>`);
+}
+
+function calcularCaja() {
+  let totalBilletes = 0;
+  let desglose = [];
+  [50,20,10,5].forEach(b => {
+    const n = parseInt(document.getElementById(`caja-b${b}`)?.value || 0);
+    if (n > 0) { totalBilletes += n * b; desglose.push(`${n}x${b}`); }
+  });
+
+  let totalMonedas = 0;
+  [2,1,0.5,0.2,0.1,0.05,0.02,0.01].forEach(m => {
+    const id = `caja-m${String(m).replace('.','_')}`;
+    const n = parseInt(document.getElementById(id)?.value || 0);
+    if (n > 0) totalMonedas += n * m;
+  });
+
+  const total = totalBilletes + totalMonedas;
+  document.getElementById('caja-total-billetes').textContent = totalBilletes.toFixed(2) + '€';
+  document.getElementById('caja-total-monedas').textContent = totalMonedas.toFixed(2) + '€';
+  document.getElementById('caja-total-efectivo').textContent = total.toFixed(2) + '€';
+  document.getElementById('caja-input-total').value = total.toFixed(2);
+  document.getElementById('caja-input-monedas').value = totalMonedas.toFixed(2);
+  document.getElementById('caja-input-billetes').value = desglose.join('+') || '0';
 }
 
 async function guardarVenta(e) { e.preventDefault(); await POST('/api/ventas', Object.fromEntries(new FormData(e.target))); cerrarModal(); cargarSoloVentas(); }
