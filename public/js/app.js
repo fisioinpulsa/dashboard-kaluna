@@ -211,31 +211,63 @@ async function cargarSoloVentas() {
   const ventas = await API('/api/ventas');
   if (!ventas.length) { $('tabla-ventas').innerHTML = '<p style="color:var(--text-light)">Sin ventas</p>'; return; }
   const meses = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-  let lastMes = null;
-  let html = '';
+
+  // Agrupar ventas por mes
+  const grupos = {};
   ventas.forEach(v => {
     const d = v.fecha ? new Date(v.fecha) : null;
-    const mesKey = d ? `${meses[d.getMonth()+1]} ${d.getFullYear()}` : 'Sin fecha';
-    if (mesKey !== lastMes) {
-      if (lastMes) html += '</tbody></table></div></div>';
-      lastMes = mesKey;
-      html += `<div class="panel" style="margin-bottom:1rem"><div class="panel-header"><h3>${mesKey}</h3></div><div class="panel-body"><table><thead><tr>
-        <th>Fecha</th><th>Cliente</th><th>Artículo</th><th>Precio</th><th>Pago</th><th>Trabajadora</th><th>Notas</th><th></th>
-      </tr></thead><tbody>`;
-    }
-    html += `<tr>
-      <td>${d ? d.toLocaleDateString('es-ES') : ''}</td>
-      <td>${v.cliente_nombre || ''}</td>
-      <td><span class="badge ${v.articulo?.includes('Suscripción') ? 'badge-purple' : v.articulo?.includes('Bebida') ? 'badge-info' : 'badge-gray'}">${v.articulo || ''}</span></td>
-      <td><b>${parseFloat(v.precio || 0).toFixed(2)}€</b></td>
-      <td><span class="badge ${v.metodo_pago === 'Efectivo' ? 'badge-success' : 'badge-info'}">${v.metodo_pago || ''}</span></td>
-      <td>${v.trabajadora_nombre || ''}</td>
-      <td style="font-size:.8rem">${v.notas || ''}</td>
-      <td><button class="btn btn-sm btn-danger" onclick="eliminarVenta(${v.id})">X</button></td>
-    </tr>`;
+    const key = d ? `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}` : '0000-00';
+    const label = d ? `${meses[d.getMonth()+1]} ${d.getFullYear()}` : 'Sin fecha';
+    if (!grupos[key]) grupos[key] = { label, total: 0, count: 0, items: [] };
+    grupos[key].items.push(v);
+    grupos[key].total += parseFloat(v.precio || 0);
+    grupos[key].count++;
   });
-  html += '</tbody></table></div></div>';
-  $('tabla-ventas').innerHTML = html;
+
+  // Pestañas de meses
+  const keys = Object.keys(grupos).sort().reverse();
+  let tabs = '<div style="display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1rem">';
+  keys.forEach((k, i) => {
+    const g = grupos[k];
+    tabs += `<button class="btn ${i===0?'btn-primary':'btn-outline'} ventas-tab" data-mes="${k}" onclick="mostrarMesVentas('${k}')" style="flex-direction:column;line-height:1.3;padding:.5rem 1rem">
+      <span>${g.label}</span>
+      <span style="font-size:.75rem;opacity:.8">${g.count} ventas · ${g.total.toFixed(0)}€</span>
+    </button>`;
+  });
+  tabs += '</div>';
+
+  // Contenido de cada mes (solo el primero visible)
+  let content = '';
+  keys.forEach((k, i) => {
+    const g = grupos[k];
+    content += `<div class="ventas-mes-content" id="ventas-mes-${k}" style="${i>0?'display:none':''}">
+      <div class="panel"><div class="panel-header"><h3>${g.label}</h3><span style="font-weight:700;color:var(--primary)">${g.count} ventas · ${g.total.toFixed(2)}€</span></div><div class="panel-body"><table><thead><tr>
+        <th>Fecha</th><th>Cliente</th><th>Artículo</th><th>Precio</th><th>Pago</th><th>Trabajadora</th><th>Notas</th><th></th>
+      </tr></thead><tbody>
+        ${g.items.map(v => { const d = v.fecha ? new Date(v.fecha) : null; return `<tr>
+          <td>${d ? d.toLocaleDateString('es-ES') : ''}</td>
+          <td>${v.cliente_nombre || ''}</td>
+          <td><span class="badge ${v.articulo?.includes('Suscripción') ? 'badge-purple' : v.articulo?.includes('Bebida') ? 'badge-info' : 'badge-gray'}">${v.articulo || ''}</span></td>
+          <td><b>${parseFloat(v.precio || 0).toFixed(2)}€</b></td>
+          <td><span class="badge ${v.metodo_pago === 'Efectivo' ? 'badge-success' : 'badge-info'}">${v.metodo_pago || ''}</span></td>
+          <td>${v.trabajadora_nombre || ''}</td>
+          <td style="font-size:.8rem">${v.notas || ''}</td>
+          <td><button class="btn btn-sm btn-danger" onclick="eliminarVenta(${v.id})">X</button></td>
+        </tr>`; }).join('')}
+      </tbody></table></div></div>
+    </div>`;
+  });
+
+  $('tabla-ventas').innerHTML = tabs + content;
+}
+
+function mostrarMesVentas(key) {
+  document.querySelectorAll('.ventas-mes-content').forEach(el => el.style.display = 'none');
+  document.querySelectorAll('.ventas-tab').forEach(b => { b.classList.remove('btn-primary'); b.classList.add('btn-outline'); });
+  const panel = document.getElementById(`ventas-mes-${key}`);
+  const tab = document.querySelector(`.ventas-tab[data-mes="${key}"]`);
+  if (panel) panel.style.display = 'block';
+  if (tab) { tab.classList.add('btn-primary'); tab.classList.remove('btn-outline'); }
 }
 
 async function cargarSoloCaja() {
