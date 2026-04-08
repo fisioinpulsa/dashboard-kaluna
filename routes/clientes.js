@@ -8,9 +8,21 @@ router.use(verificarToken);
 router.get('/', async (req, res) => {
   try {
     const estado = req.query.estado || 'activo';
+    const orden = `ORDER BY
+      CASE dias
+        WHEN 'Lunes y Miercoles' THEN 1
+        WHEN 'Lunes' THEN 2
+        WHEN 'Martes y Jueves' THEN 3
+        WHEN 'Martes' THEN 4
+        WHEN 'Miércoles' THEN 5
+        WHEN 'Jueves' THEN 6
+        WHEN 'Sin fijo' THEN 7
+        WHEN 'clase suelta' THEN 8
+        ELSE 9
+      END, LPAD(COALESCE(horario,'99:00'), 5, '0') ASC, nombre_completo`;
     const sql = estado === 'todos'
-      ? "SELECT * FROM kaluna_clientes ORDER BY nombre_completo"
-      : "SELECT * FROM kaluna_clientes WHERE estado = $1 ORDER BY nombre_completo";
+      ? `SELECT * FROM kaluna_clientes ${orden}`
+      : `SELECT * FROM kaluna_clientes WHERE estado = $1 ${orden}`;
     const { rows } = estado === 'todos' ? await query(sql) : await query(sql, [estado]);
     res.json(rows);
   } catch (err) {

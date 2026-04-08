@@ -78,10 +78,19 @@ async function cargarInicio() {
 async function cargarClientes() {
   const estado = $('filtro-clientes').value;
   const clientes = await API(`/api/clientes?estado=${estado}`);
-  $('tabla-clientes').innerHTML = clientes.length ? `<table><thead><tr>
-    <th>Nombre</th><th>Teléfono</th><th>Días</th><th>Horario</th><th>Días/sem</th><th>Inicio</th><th>Estado</th><th>Notas</th><th></th>
-  </tr></thead><tbody>
-    ${clientes.map(c => `<tr>
+  if (!clientes.length) {
+    $('tabla-clientes').innerHTML = '<p style="color:var(--text-light)">No hay clientes</p>';
+    return;
+  }
+  // Agrupar por días
+  let lastDias = null;
+  let rows = '';
+  clientes.forEach(c => {
+    if (c.dias !== lastDias) {
+      lastDias = c.dias;
+      rows += `<tr><td colspan="9" style="background:var(--primary);color:white;font-weight:700;padding:.6rem 1rem;font-size:.9rem">${c.dias || 'Sin asignar'}</td></tr>`;
+    }
+    rows += `<tr>
       <td><b>${c.nombre_completo}</b></td>
       <td>${c.telefono || ''}</td>
       <td><span class="badge badge-purple">${c.dias || ''}</span></td>
@@ -94,8 +103,11 @@ async function cargarClientes() {
         <button class="btn btn-sm btn-outline" onclick='editarCliente(${JSON.stringify(c).replace(/'/g,"&#39;")})'>Editar</button>
         ${c.estado === 'activo' ? `<button class="btn btn-sm btn-danger" onclick="darBaja(${c.id})">Baja</button>` : ''}
       </td>
-    </tr>`).join('')}
-  </tbody></table>` : '<p style="color:var(--text-light)">No hay clientes</p>';
+    </tr>`;
+  });
+  $('tabla-clientes').innerHTML = `<table><thead><tr>
+    <th>Nombre</th><th>Teléfono</th><th>Días</th><th>Horario</th><th>Días/sem</th><th>Inicio</th><th>Estado</th><th>Notas</th><th></th>
+  </tr></thead><tbody>${rows}</tbody></table>`;
 }
 
 function abrirModalCliente(c) {
