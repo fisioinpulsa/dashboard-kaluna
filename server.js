@@ -24,6 +24,7 @@ app.use('/api/dashboard', require('./routes/dashboard'));
 app.use('/api/avisos', require('./routes/avisos'));
 app.use('/api/diario', require('./routes/diario'));
 app.use('/api/lesiones', require('./routes/lesiones'));
+app.use('/api/cambios', require('./routes/cambios'));
 
 // SPA fallback
 app.get('/dashboard', (req, res) => res.sendFile(path.join(__dirname, 'public', 'dashboard.html')));

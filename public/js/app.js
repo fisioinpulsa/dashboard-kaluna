@@ -30,7 +30,7 @@ function setupNav() {
       btn.classList.add('active');
       const sec = btn.dataset.section;
       $(`sec-${sec}`).classList.add('active');
-      const loaders = { inicio: cargarInicio, clientes: cargarClientes, plazas: cargarPlazas, ventas: cargarSoloVentas, caja: cargarSoloCaja, leads: cargarLeads, lesiones: cargarLesiones, espera: cargarEspera, diario: cargarDiario, avisos: cargarAvisos, config: cargarConfig };
+      const loaders = { inicio: cargarInicio, clientes: cargarClientes, plazas: cargarPlazas, ventas: cargarSoloVentas, caja: cargarSoloCaja, leads: cargarLeads, lesiones: cargarLesiones, cambios: cargarCambios, espera: cargarEspera, diario: cargarDiario, avisos: cargarAvisos, config: cargarConfig };
       if (loaders[sec]) loaders[sec]();
     });
   });
@@ -687,6 +687,69 @@ function abrirModalLesion() {
 
 async function crearLesion(e) { e.preventDefault(); await POST('/api/lesiones', Object.fromEntries(new FormData(e.target))); cerrarModal(); cargarLesiones(); }
 async function eliminarLesion(id) { if (confirm('¿Eliminar ficha?')) { await DEL(`/api/lesiones/${id}`); cargarLesiones(); } }
+
+// ==================== CAMBIOS / BAJAS ====================
+let filtroCambiosActual = 'pendientes';
+
+async function cargarCambios() {
+  const cambios = await API('/api/cambios');
+  const filtrados = filtroCambiosActual === 'todos' ? cambios :
+    filtroCambiosActual === 'gestionados' ? cambios.filter(c => c.estado === 'gestionado') : cambios.filter(c => c.estado === 'pendiente');
+
+  const tipoIcon = { cambio: '🔄', baja: '📉', alta: '📈', otro: '📌' };
+  $('tabla-cambios').innerHTML = filtrados.length ? `<table><thead><tr>
+    <th>Tipo</th><th>Cliente</th><th>Cambio</th><th>Trabajadora</th><th>Fecha</th><th>Estado</th><th></th>
+  </tr></thead><tbody>
+    ${filtrados.map(c => {
+      const fecha = new Date(c.created_at).toLocaleDateString('es-ES');
+      return `<tr>
+        <td>${tipoIcon[c.tipo] || '📌'} <span class="badge badge-${c.tipo==='baja'?'danger':c.tipo==='alta'?'success':'info'}">${c.tipo}</span></td>
+        <td><b>${c.cliente_nombre}</b></td>
+        <td style="max-width:300px;font-size:.85rem;white-space:pre-wrap">${c.descripcion}</td>
+        <td>${c.trabajadora_nombre || ''}</td>
+        <td>${fecha}</td>
+        <td>${c.estado === 'gestionado' ? '<span class="badge badge-success">Gestionado</span>' : '<span class="badge badge-warning">Pendiente</span>'}</td>
+        <td style="white-space:nowrap">
+          ${c.estado === 'pendiente' ? `<button class="btn btn-sm btn-success" onclick="gestionarCambio(${c.id})">Gestionar</button>` : ''}
+          ${currentUser?.rol === 'admin' ? `<button class="btn btn-sm btn-danger" onclick="eliminarCambio(${c.id})">X</button>` : ''}
+        </td>
+      </tr>`;
+    }).join('')}
+  </tbody></table>` : '<p style="color:var(--text-light)">No hay cambios</p>';
+}
+
+function filtrarCambios(filtro) {
+  filtroCambiosActual = filtro;
+  document.querySelectorAll('.filtro-cambios').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.filtro-cambios[data-filtro="${filtro}"]`).classList.add('active');
+  cargarCambios();
+}
+
+function abrirModalCambio() {
+  abrirModal(`<button class="modal-close" onclick="cerrarModal()">✕</button>
+    <h3>Nuevo Cambio / Baja</h3>
+    <form onsubmit="guardarCambio(event)">
+      <div class="form-grid">
+        <div class="form-group"><label>Tipo</label>
+          <select name="tipo"><option value="cambio">Cambio de plaza</option><option value="baja">Baja</option><option value="alta">Alta</option><option value="otro">Otro</option></select>
+        </div>
+        <div class="form-group"><label>Cliente</label><input name="cliente_nombre" required></div>
+      </div>
+      <div class="form-group" style="margin-top:.75rem"><label>Descripción del cambio</label><textarea name="descripcion" rows="3" required placeholder="Ej: cambia a martes y jueves a las 21, baja en mayo, etc."></textarea></div>
+      <div class="form-actions"><button class="btn btn-outline" type="button" onclick="cerrarModal()">Cancelar</button><button class="btn btn-primary" type="submit">Crear</button></div>
+    </form>`);
+}
+
+async function guardarCambio(e) { e.preventDefault(); await POST('/api/cambios', Object.fromEntries(new FormData(e.target))); cerrarModal(); cargarCambios(); }
+
+async function gestionarCambio(id) {
+  const notas = prompt('Nota de gestión (opcional):');
+  if (notas === null) return;
+  await PUT(`/api/cambios/${id}/gestionar`, { notas: notas || 'OK' });
+  cargarCambios();
+}
+
+async function eliminarCambio(id) { if (confirm('¿Eliminar?')) { await DEL(`/api/cambios/${id}`); cargarCambios(); } }
 
 // ==================== LISTA DE ESPERA ====================
 async function cargarEspera() {

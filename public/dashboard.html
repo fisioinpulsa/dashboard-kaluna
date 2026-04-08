@@ -22,6 +22,7 @@
       <button class="nav-item" data-section="caja"><span class="icon">🏧</span><span>Control Caja</span></button>
       <button class="nav-item" data-section="leads"><span class="icon">📢</span><span>Leads</span></button>
       <button class="nav-item" data-section="lesiones"><span class="icon">🩺</span><span>Lesiones</span></button>
+      <button class="nav-item" data-section="cambios"><span class="icon">🔄</span><span>Cambios/Bajas</span></button>
       <button class="nav-item" data-section="espera"><span class="icon">⏳</span><span>Lista espera</span></button>
       <button class="nav-item" data-section="diario"><span class="icon">📝</span><span>Diario</span></button>
       <button class="nav-item" data-section="avisos"><span class="icon">📋</span><span>Avisos</span></button>
@@ -104,6 +105,20 @@
         <input type="text" id="buscar-lesion" placeholder="Buscar paciente..." style="width:100%;max-width:400px;padding:.5rem .8rem;border:2px solid var(--border);border-radius:8px;margin-bottom:1rem;font-size:.9rem">
         <div id="lista-lesiones"></div>
       </div></div>
+    </div>
+
+    <!-- CAMBIOS / BAJAS -->
+    <div class="section" id="sec-cambios">
+      <div class="main-header">
+        <h1>Cambios y Bajas</h1>
+        <button class="btn btn-primary" onclick="abrirModalCambio()">+ Nuevo cambio</button>
+      </div>
+      <div style="display:flex;gap:.5rem;margin-bottom:1rem">
+        <button class="btn btn-outline btn-sm filtro-cambios active" data-filtro="pendientes" onclick="filtrarCambios('pendientes')">Pendientes</button>
+        <button class="btn btn-outline btn-sm filtro-cambios" data-filtro="gestionados" onclick="filtrarCambios('gestionados')">Gestionados</button>
+        <button class="btn btn-outline btn-sm filtro-cambios" data-filtro="todos" onclick="filtrarCambios('todos')">Todos</button>
+      </div>
+      <div class="panel"><div class="panel-body"><div class="table-wrapper" id="tabla-cambios"></div></div></div>
     </div>
 
     <!-- LISTA DE ESPERA -->
