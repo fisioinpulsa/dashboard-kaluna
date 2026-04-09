@@ -27,6 +27,7 @@ app.use('/api/lesiones', require('./routes/lesiones'));
 app.use('/api/cambios', require('./routes/cambios'));
 
 // SPA fallback
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 app.get('/dashboard', (req, res) => res.sendFile(path.join(__dirname, 'public', 'dashboard.html')));
 
 async function start() {
