@@ -96,4 +96,38 @@ router.post('/registrar', authFichaje, async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+// === ADMIN: consultar fichajes (usa auth del dashboard, no del fichaje) ===
+const { verificarToken, soloAdmin } = require('../middleware/auth');
+
+// Lista empleados del fichaje
+router.get('/admin/empleados', verificarToken, soloAdmin, async (req, res) => {
+  try {
+    const { rows } = await query("SELECT id, nombre, apellidos FROM usuarios WHERE rol = 'empleado' AND activo = 1 ORDER BY nombre");
+    res.json(rows);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Consultar fichajes filtrados
+router.get('/admin/registros', verificarToken, soloAdmin, async (req, res) => {
+  try {
+    const { usuario_id, mes, año } = req.query;
+    let sql = `SELECT f.*, u.nombre || ' ' || u.apellidos as empleado_nombre
+               FROM fichajes f LEFT JOIN usuarios u ON f.usuario_id = u.id`;
+    const params = [];
+    const conds = [];
+
+    if (usuario_id) { conds.push(`f.usuario_id = $${params.length + 1}`); params.push(usuario_id); }
+    if (mes && año) {
+      conds.push(`EXTRACT(MONTH FROM f.fecha) = $${params.length + 1}`); params.push(mes);
+      conds.push(`EXTRACT(YEAR FROM f.fecha) = $${params.length + 1}`); params.push(año);
+    }
+
+    if (conds.length) sql += ' WHERE ' + conds.join(' AND ');
+    sql += ' ORDER BY f.fecha DESC, f.hora DESC LIMIT 200';
+
+    const { rows } = await query(sql, params);
+    res.json(rows);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 module.exports = router;

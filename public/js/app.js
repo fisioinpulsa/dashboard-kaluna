@@ -38,7 +38,7 @@ function setupNav() {
       btn.classList.add('active');
       const sec = btn.dataset.section;
       $(`sec-${sec}`).classList.add('active');
-      const loaders = { inicio: cargarInicio, clientes: cargarClientes, plazas: cargarPlazas, ventas: cargarSoloVentas, caja: cargarSoloCaja, leads: cargarLeads, lesiones: cargarLesiones, cambios: cargarCambios, espera: cargarEspera, diario: cargarDiario, avisos: cargarAvisos, config: cargarConfig };
+      const loaders = { inicio: cargarInicio, clientes: cargarClientes, plazas: cargarPlazas, ventas: cargarSoloVentas, caja: cargarSoloCaja, leads: cargarLeads, lesiones: cargarLesiones, cambios: cargarCambios, espera: cargarEspera, diario: cargarDiario, avisos: cargarAvisos, fichajes: cargarFichajesAdmin, config: cargarConfig };
       if (loaders[sec]) loaders[sec]();
     });
   });
@@ -1012,6 +1012,74 @@ function abrirModalTrabajadora() {
 }
 
 async function guardarTrabajadora(e) { e.preventDefault(); await POST('/api/auth/trabajadoras', Object.fromEntries(new FormData(e.target))); cerrarModal(); cargarConfig(); }
+
+// ==================== FICHAJES ADMIN ====================
+let fichajesEmpleadosCargados = false;
+
+async function cargarFichajesAdmin() {
+  // Cargar empleados en el select (solo la primera vez)
+  if (!fichajesEmpleadosCargados) {
+    const empleados = await API('/api/fichaje/admin/empleados');
+    const select = $('fichaje-filtro-empleado');
+    empleados.forEach(e => {
+      const opt = document.createElement('option');
+      opt.value = e.id;
+      opt.textContent = `${e.nombre} ${e.apellidos}`;
+      select.appendChild(opt);
+    });
+
+    // Llenar meses (últimos 6)
+    const selectMes = $('fichaje-filtro-mes');
+    const meses = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    const ahora = new Date();
+    for (let i = 0; i < 6; i++) {
+      const d = new Date(ahora.getFullYear(), ahora.getMonth() - i, 1);
+      const opt = document.createElement('option');
+      opt.value = `${d.getMonth()+1}-${d.getFullYear()}`;
+      opt.textContent = `${meses[d.getMonth()+1]} ${d.getFullYear()}`;
+      if (i === 0) opt.selected = true;
+      selectMes.appendChild(opt);
+    }
+    fichajesEmpleadosCargados = true;
+  }
+
+  await cargarFichajes();
+}
+
+async function cargarFichajes() {
+  const empleadoId = $('fichaje-filtro-empleado').value;
+  const mesAño = $('fichaje-filtro-mes').value.split('-');
+  const mes = mesAño[0]; const año = mesAño[1];
+
+  let url = `/api/fichaje/admin/registros?mes=${mes}&año=${año}`;
+  if (empleadoId) url += `&usuario_id=${empleadoId}`;
+
+  const registros = await API(url);
+
+  if (!registros.length) {
+    $('tabla-fichajes').innerHTML = '<p style="color:var(--text-light)">Sin fichajes en este periodo</p>';
+    return;
+  }
+
+  // Agrupar por día
+  let lastFecha = null;
+  let html = '<table><thead><tr><th>Empleado</th><th>Tipo</th><th>Hora</th><th>Firma</th></tr></thead><tbody>';
+  registros.forEach(f => {
+    const fecha = new Date(f.fecha).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
+    if (fecha !== lastFecha) {
+      lastFecha = fecha;
+      html += `<tr><td colspan="4" style="background:var(--primary);color:white;font-weight:700;padding:.5rem 1rem;text-transform:capitalize">${fecha}</td></tr>`;
+    }
+    html += `<tr>
+      <td><b>${f.empleado_nombre || ''}</b></td>
+      <td>${f.tipo === 'entrada' ? '<span class="badge badge-success">Entrada</span>' : '<span class="badge badge-danger">Salida</span>'}</td>
+      <td>${f.hora ? f.hora.substring(0, 5) : ''}</td>
+      <td>${f.firma ? '<span style="color:var(--success);font-size:.8rem">✓ Firmado</span>' : ''}</td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  $('tabla-fichajes').innerHTML = html;
+}
 
 // INIT
 init();
