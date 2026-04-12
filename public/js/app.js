@@ -186,33 +186,44 @@ async function cargarPlazas() {
 
   const ordenDias = ['Lunes','Martes','Miércoles','Jueves','Viernes'];
 
-  function renderChip(p) {
+  function renderCard(p) {
+    const borderColor = p.es_prueba ? 'var(--info)' : p.lleno ? 'var(--danger)' : 'var(--success)';
+    const bg = p.es_prueba ? '#f0f7ff' : 'white';
+    let personas = '';
     if (p.es_prueba) {
-      return `<div onclick="abrirModalPlaza(${p.id})" style="cursor:pointer;padding:.4rem .8rem;border-radius:8px;border:2px solid var(--info);background:#f0f7ff;font-size:.8rem;white-space:nowrap;flex-shrink:0">
-        <b>${p.hora}</b> <span class="badge badge-info" style="font-size:.65rem">PRUEBA</span>
-      </div>`;
+      personas = '<div style="color:var(--info);font-style:italic;font-size:.8rem">Clase de prueba</div>';
+    } else {
+      for (let i = 0; i < p.max_plazas; i++) {
+        const o = p.ocupantes[i];
+        personas += o
+          ? `<div style="font-size:.8rem;padding:.1rem 0">- ${o.nombre_completo}</div>`
+          : `<div style="font-size:.8rem;padding:.1rem 0;color:var(--text-light);font-style:italic">- vacío</div>`;
+      }
     }
-    const color = p.lleno ? 'var(--danger)' : p.ocupadas >= 3 ? 'var(--warning)' : 'var(--success)';
-    return `<div onclick="abrirModalPlaza(${p.id})" style="cursor:pointer;padding:.4rem .8rem;border-radius:8px;border:2px solid ${color};background:white;font-size:.8rem;white-space:nowrap;flex-shrink:0">
-      <b>${p.hora}</b> <span style="color:${color};font-weight:600">${p.ocupadas}/${p.max_plazas}</span>
-      ${p.lleno ? '<span class="badge badge-danger" style="font-size:.6rem;margin-left:.2rem">LLENO</span>' : ''}
+    const statusBadge = p.es_prueba ? '' : p.lleno
+      ? '<span class="badge badge-danger" style="font-size:.6rem">LLENO</span>'
+      : `<span class="badge badge-success" style="font-size:.6rem">${p.libres} libre${p.libres!==1?'s':''}</span>`;
+    return `<div onclick="abrirModalPlaza(${p.id})" style="cursor:pointer;min-width:160px;max-width:200px;flex-shrink:0;padding:.6rem;border-radius:10px;border:2px solid ${borderColor};background:${bg}">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.3rem">
+        <b style="font-size:.95rem">${p.hora}</b>
+        ${p.es_prueba ? '' : `<span style="font-size:.75rem;color:${borderColor};font-weight:600">${p.ocupadas}/${p.max_plazas}</span>`}
+      </div>
+      ${statusBadge}
+      <div style="margin-top:.3rem">${personas}</div>
     </div>`;
   }
 
-  let html = '<table style="width:100%;border-collapse:separate;border-spacing:0 .5rem">';
+  let html = '';
   ordenDias.forEach(dia => {
     const grupos = dias[dia];
     if (!grupos || !grupos.length) return;
-    html += `<tr>
-      <td style="background:var(--primary);color:white;font-weight:700;padding:.5rem 1rem;border-radius:8px 0 0 8px;white-space:nowrap;width:100px;vertical-align:top">${dia}</td>
-      <td style="background:var(--card);border:1px solid var(--border);border-left:none;border-radius:0 8px 8px 0;padding:.5rem">
-        <div style="display:flex;gap:.5rem;overflow-x:auto;padding-bottom:.25rem">
-          ${grupos.map(p => renderChip(p)).join('')}
-        </div>
-      </td>
-    </tr>`;
+    html += `<div style="display:flex;align-items:stretch;margin-bottom:.75rem">
+      <div style="background:var(--primary);color:white;font-weight:700;padding:.6rem .8rem;border-radius:8px 0 0 8px;writing-mode:horizontal-tb;display:flex;align-items:center;min-width:90px;justify-content:center;font-size:.95rem">${dia}</div>
+      <div style="flex:1;display:flex;gap:.6rem;overflow-x:auto;padding:.6rem;background:var(--card);border:1px solid var(--border);border-left:none;border-radius:0 8px 8px 0">
+        ${grupos.map(p => renderCard(p)).join('')}
+      </div>
+    </div>`;
   });
-  html += '</table>';
   $('plazas-grid').innerHTML = html;
 }
 
