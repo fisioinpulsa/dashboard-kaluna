@@ -188,16 +188,14 @@ async function cargarPlazas() {
 
   function renderChip(p) {
     if (p.es_prueba) {
-      return `<div onclick="togglePlazaDetalle(${p.id})" style="cursor:pointer;padding:.4rem .8rem;border-radius:8px;border:2px solid var(--info);background:#f0f7ff;font-size:.8rem;white-space:nowrap;flex-shrink:0">
+      return `<div onclick="abrirModalPlaza(${p.id})" style="cursor:pointer;padding:.4rem .8rem;border-radius:8px;border:2px solid var(--info);background:#f0f7ff;font-size:.8rem;white-space:nowrap;flex-shrink:0">
         <b>${p.hora}</b> <span class="badge badge-info" style="font-size:.65rem">PRUEBA</span>
-        <div id="plaza-detalle-${p.id}" style="display:none"></div>
       </div>`;
     }
     const color = p.lleno ? 'var(--danger)' : p.ocupadas >= 3 ? 'var(--warning)' : 'var(--success)';
-    return `<div onclick="togglePlazaDetalle(${p.id})" style="cursor:pointer;padding:.4rem .8rem;border-radius:8px;border:2px solid ${color};background:white;font-size:.8rem;white-space:nowrap;flex-shrink:0">
+    return `<div onclick="abrirModalPlaza(${p.id})" style="cursor:pointer;padding:.4rem .8rem;border-radius:8px;border:2px solid ${color};background:white;font-size:.8rem;white-space:nowrap;flex-shrink:0">
       <b>${p.hora}</b> <span style="color:${color};font-weight:600">${p.ocupadas}/${p.max_plazas}</span>
       ${p.lleno ? '<span class="badge badge-danger" style="font-size:.6rem;margin-left:.2rem">LLENO</span>' : ''}
-      <div id="plaza-detalle-${p.id}" style="display:none"></div>
     </div>`;
   }
 
@@ -218,62 +216,51 @@ async function cargarPlazas() {
   $('plazas-grid').innerHTML = html;
 }
 
-function togglePlazaDetalle(grupoId) {
-  const div = document.getElementById(`plaza-detalle-${grupoId}`);
-  if (!div) return;
-  if (div.style.display !== 'none') { div.style.display = 'none'; return; }
-  div.style.display = 'block';
-  renderPlazaDetalle(grupoId);
-}
-
-function renderPlazaDetalle(grupoId) {
+function abrirModalPlaza(grupoId) {
   const p = plazasData.find(x => x.id === grupoId);
   if (!p) return;
-  const div = document.getElementById(`plaza-detalle-${grupoId}`);
 
-  // Mostrar las max_plazas slots
   let slots = '';
   for (let i = 0; i < p.max_plazas; i++) {
     const ocupante = p.ocupantes[i];
     if (ocupante) {
-      slots += `<div style="display:flex;align-items:center;gap:.5rem;padding:.4rem 0;border-bottom:1px solid var(--border)">
-        <span style="width:20px;text-align:center;font-weight:700;color:var(--primary)">${i+1}</span>
-        <span style="flex:1;font-size:.85rem">${ocupante.nombre_completo}</span>
-        ${esAdmin() ? `<button class="btn btn-sm btn-danger" onclick="event.stopPropagation();quitarOcupante(${ocupante.id})" style="padding:.15rem .4rem;font-size:.7rem">X</button>` : ''}
+      slots += `<div style="display:flex;align-items:center;gap:.5rem;padding:.5rem 0;border-bottom:1px solid var(--border)">
+        <span style="width:24px;text-align:center;font-weight:700;color:var(--primary)">${i+1}</span>
+        <span style="flex:1">${ocupante.nombre_completo}</span>
+        ${esAdmin() ? `<button class="btn btn-sm btn-danger" onclick="quitarOcupanteModal(${ocupante.id},${grupoId})" style="padding:.15rem .4rem;font-size:.7rem">X</button>` : ''}
       </div>`;
     } else {
-      slots += `<div style="display:flex;align-items:center;gap:.5rem;padding:.4rem 0;border-bottom:1px solid var(--border)">
-        <span style="width:20px;text-align:center;font-weight:700;color:var(--text-light)">${i+1}</span>
-        <span style="flex:1;font-size:.85rem;color:var(--text-light);font-style:italic">VACÍO</span>
+      slots += `<div style="display:flex;align-items:center;gap:.5rem;padding:.5rem 0;border-bottom:1px solid var(--border)">
+        <span style="width:24px;text-align:center;font-weight:700;color:var(--text-light)">${i+1}</span>
+        <span style="flex:1;color:var(--text-light);font-style:italic">VACÍO</span>
       </div>`;
     }
   }
 
-  div.innerHTML = `<div onclick="event.stopPropagation()" style="margin-top:.75rem;padding-top:.75rem;border-top:2px solid var(--border)">
+  abrirModal(`<button class="modal-close" onclick="cerrarModal()">✕</button>
+    <h3>${p.dia} ${p.hora} ${p.es_prueba ? '(Clase de prueba)' : ''}</h3>
+    <div style="margin:.5rem 0;font-size:.9rem;color:var(--text-light)">${p.ocupadas}/${p.max_plazas} plazas ocupadas</div>
     ${slots}
-    <div style="margin-top:.5rem;display:flex;gap:.3rem">
-      <input id="nuevo-ocupante-${grupoId}" placeholder="Nombre..." style="flex:1;padding:.3rem .5rem;border:1px solid var(--border);border-radius:6px;font-size:.8rem">
-      <button class="btn btn-sm btn-primary" onclick="añadirOcupante(${grupoId})">Añadir</button>
-    </div>
-  </div>`;
+    <div style="margin-top:1rem;display:flex;gap:.5rem">
+      <input id="nuevo-ocupante-${grupoId}" placeholder="Añadir persona..." style="flex:1;padding:.5rem .8rem;border:2px solid var(--border);border-radius:8px;font-size:.9rem">
+      <button class="btn btn-primary" onclick="añadirOcupanteModal(${grupoId})">Añadir</button>
+    </div>`);
 }
 
-async function añadirOcupante(grupoId) {
+async function añadirOcupanteModal(grupoId) {
   const input = document.getElementById(`nuevo-ocupante-${grupoId}`);
   const nombre = input.value.trim();
   if (!nombre) return;
   await POST('/api/plazas/ocupante', { grupo_id: grupoId, nombre });
-  input.value = '';
   await cargarPlazas();
-  // Reabrir detalle
-  const div = document.getElementById(`plaza-detalle-${grupoId}`);
-  if (div) { div.style.display = 'block'; renderPlazaDetalle(grupoId); }
+  abrirModalPlaza(grupoId);
 }
 
-async function quitarOcupante(ocupanteId) {
+async function quitarOcupanteModal(ocupanteId, grupoId) {
   if (!confirm('¿Quitar esta persona del grupo?')) return;
   await DEL(`/api/plazas/ocupante/${ocupanteId}`);
-  cargarPlazas();
+  await cargarPlazas();
+  abrirModalPlaza(grupoId);
 }
 
 function abrirModalGrupo() {
