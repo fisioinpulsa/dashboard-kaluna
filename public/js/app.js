@@ -110,7 +110,7 @@ async function cargarClientes() {
       <td>${c.estado === 'activo' ? '<span class="badge badge-success">Activo</span>' : '<span class="badge badge-danger">Baja '+(c.mes_baja||'')+'</span>'}</td>
       <td style="max-width:200px;font-size:.8rem">${c.notas || ''}</td>
       <td style="white-space:nowrap">
-        ${esAdmin() ? `<button class="btn btn-sm btn-outline" onclick='editarCliente(${JSON.stringify(c).replace(/'/g,"&#39;")})'>Editar</button>` : ''}
+        <button class="btn btn-sm btn-outline" onclick='editarCliente(${JSON.stringify(c).replace(/'/g,"&#39;")})'>Editar</button>
         ${esAdmin() && c.estado === 'activo' ? `<button class="btn btn-sm btn-danger" onclick="darBaja(${c.id})">Baja</button>` : ''}
       </td>
     </tr>`;
@@ -718,7 +718,7 @@ async function cargarCambios() {
         <td>${fecha}</td>
         <td>${c.estado === 'gestionado' ? '<span class="badge badge-success">Gestionado</span>' : '<span class="badge badge-warning">Pendiente</span>'}</td>
         <td style="white-space:nowrap">
-          ${esAdmin() && c.estado === 'pendiente' ? `<button class="btn btn-sm btn-success" onclick="gestionarCambio(${c.id})">Gestionar</button>` : ''}
+          ${c.estado === 'pendiente' ? `<button class="btn btn-sm btn-success" onclick="gestionarCambio(${c.id})">Gestionar</button>` : ''}
           ${currentUser?.rol === 'admin' ? `<button class="btn btn-sm btn-danger" onclick="eliminarCambio(${c.id})">X</button>` : ''}
         </td>
       </tr>`;
