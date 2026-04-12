@@ -186,36 +186,35 @@ async function cargarPlazas() {
 
   const ordenDias = ['Lunes','Martes','Miércoles','Jueves','Viernes'];
 
-  function renderCard(p) {
+  function renderChip(p) {
     if (p.es_prueba) {
-      return `<div class="plaza-card" style="border-color:var(--info);background:#f0f7ff;cursor:pointer;min-width:200px" onclick="togglePlazaDetalle(${p.id})">
-        <h4>${p.hora}</h4>
-        <span class="badge badge-info">CLASE DE PRUEBA</span>
+      return `<div onclick="togglePlazaDetalle(${p.id})" style="cursor:pointer;padding:.4rem .8rem;border-radius:8px;border:2px solid var(--info);background:#f0f7ff;font-size:.8rem;white-space:nowrap;flex-shrink:0">
+        <b>${p.hora}</b> <span class="badge badge-info" style="font-size:.65rem">PRUEBA</span>
         <div id="plaza-detalle-${p.id}" style="display:none"></div>
       </div>`;
     }
-    const pct = (p.ocupadas / p.max_plazas) * 100;
-    const fillClass = pct >= 100 ? 'full' : pct >= 60 ? 'mid' : 'ok';
-    return `<div class="plaza-card ${p.lleno ? 'lleno' : 'libre'}" style="cursor:pointer;min-width:200px" onclick="togglePlazaDetalle(${p.id})">
-      <h4>${p.hora} <span class="plaza-count">${p.ocupadas}/${p.max_plazas}</span></h4>
-      <div class="plaza-bar"><div class="plaza-bar-fill ${fillClass}" style="width:${Math.min(pct,100)}%"></div></div>
-      ${p.lleno ? '<span class="badge badge-danger">LLENO</span>' : `<span class="badge badge-success">${p.libres} libre${p.libres!==1?'s':''}</span>`}
-      <div style="margin-top:.5rem">${p.ocupantes.map(o => `<div class="ocupante">- ${o.nombre_completo}</div>`).join('')}</div>
+    const color = p.lleno ? 'var(--danger)' : p.ocupadas >= 3 ? 'var(--warning)' : 'var(--success)';
+    return `<div onclick="togglePlazaDetalle(${p.id})" style="cursor:pointer;padding:.4rem .8rem;border-radius:8px;border:2px solid ${color};background:white;font-size:.8rem;white-space:nowrap;flex-shrink:0">
+      <b>${p.hora}</b> <span style="color:${color};font-weight:600">${p.ocupadas}/${p.max_plazas}</span>
+      ${p.lleno ? '<span class="badge badge-danger" style="font-size:.6rem;margin-left:.2rem">LLENO</span>' : ''}
       <div id="plaza-detalle-${p.id}" style="display:none"></div>
     </div>`;
   }
 
-  let html = '';
+  let html = '<table style="width:100%;border-collapse:separate;border-spacing:0 .5rem">';
   ordenDias.forEach(dia => {
     const grupos = dias[dia];
     if (!grupos || !grupos.length) return;
-    html += `<div style="margin-bottom:1.5rem">
-      <div style="background:var(--primary);color:white;font-weight:700;padding:.6rem 1rem;border-radius:10px 10px 0 0;font-size:1.1rem">${dia}</div>
-      <div style="display:flex;gap:.75rem;overflow-x:auto;padding:1rem;background:var(--card);border:2px solid var(--border);border-top:none;border-radius:0 0 10px 10px">
-        ${grupos.map(p => renderCard(p)).join('')}
-      </div>
-    </div>`;
+    html += `<tr>
+      <td style="background:var(--primary);color:white;font-weight:700;padding:.5rem 1rem;border-radius:8px 0 0 8px;white-space:nowrap;width:100px;vertical-align:top">${dia}</td>
+      <td style="background:var(--card);border:1px solid var(--border);border-left:none;border-radius:0 8px 8px 0;padding:.5rem">
+        <div style="display:flex;gap:.5rem;overflow-x:auto;padding-bottom:.25rem">
+          ${grupos.map(p => renderChip(p)).join('')}
+        </div>
+      </td>
+    </tr>`;
   });
+  html += '</table>';
   $('plazas-grid').innerHTML = html;
 }
 
