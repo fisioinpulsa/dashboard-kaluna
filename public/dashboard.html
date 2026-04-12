@@ -15,7 +15,7 @@
       <small>Centro de Pilates</small>
     </div>
     <nav class="sidebar-nav">
-      <button class="nav-item active" data-section="inicio"><span class="icon">📊</span><span>Inicio</span></button>
+      <button class="nav-item active admin-only" data-section="inicio"><span class="icon">📊</span><span>Inicio</span></button>
       <button class="nav-item" data-section="clientes"><span class="icon">👥</span><span>Clientes</span></button>
       <button class="nav-item" data-section="plazas"><span class="icon">🗓</span><span>Plazas</span></button>
       <button class="nav-item" data-section="ventas"><span class="icon">💰</span><span>Ventas</span></button>
@@ -53,7 +53,7 @@
         <h1>Clientes</h1>
         <div style="display:flex;gap:.5rem;align-items:center">
           <select id="filtro-clientes" class="btn btn-outline" style="padding:.45rem .8rem"><option value="activo">Activos</option><option value="baja">Bajas</option><option value="todos">Todos</option></select>
-          <button class="btn btn-primary" onclick="abrirModalCliente()">+ Nuevo cliente</button>
+          <button class="btn btn-primary admin-only" onclick="abrirModalCliente()">+ Nuevo cliente</button>
         </div>
       </div>
       <div class="panel"><div class="panel-body"><div class="table-wrapper" id="tabla-clientes"></div></div></div>

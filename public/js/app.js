@@ -1,5 +1,6 @@
 let currentUser = null;
 const $ = id => document.getElementById(id);
+const esAdmin = () => currentUser?.rol === 'admin';
 const API = path => fetch(path).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); });
 const POST = (path, body) => fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(r => r.json());
 const PUT = (path, body) => fetch(path, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(r => r.json());
@@ -10,12 +11,19 @@ async function init() {
   try {
     currentUser = await API('/api/auth/me');
     $('user-info').textContent = `${currentUser.nombre} (${currentUser.rol})`;
-    if (currentUser.rol !== 'admin') {
+    const esAdmin = currentUser.rol === 'admin';
+    if (!esAdmin) {
       document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+      // Trabajadoras: empiezan en Diario, no ven Inicio
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      $('sec-diario').classList.add('active');
+      document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+      document.querySelector('[data-section="diario"]').classList.add('active');
     }
     setupNav();
     $('fecha-hoy').textContent = new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-    cargarInicio();
+    if (esAdmin) cargarInicio();
+    else cargarDiario();
   } catch {
     window.location.href = '/';
   }
@@ -102,8 +110,8 @@ async function cargarClientes() {
       <td>${c.estado === 'activo' ? '<span class="badge badge-success">Activo</span>' : '<span class="badge badge-danger">Baja '+(c.mes_baja||'')+'</span>'}</td>
       <td style="max-width:200px;font-size:.8rem">${c.notas || ''}</td>
       <td style="white-space:nowrap">
-        <button class="btn btn-sm btn-outline" onclick='editarCliente(${JSON.stringify(c).replace(/'/g,"&#39;")})'>Editar</button>
-        ${c.estado === 'activo' ? `<button class="btn btn-sm btn-danger" onclick="darBaja(${c.id})">Baja</button>` : ''}
+        ${esAdmin() ? `<button class="btn btn-sm btn-outline" onclick='editarCliente(${JSON.stringify(c).replace(/'/g,"&#39;")})'>Editar</button>` : ''}
+        ${esAdmin() && c.estado === 'activo' ? `<button class="btn btn-sm btn-danger" onclick="darBaja(${c.id})">Baja</button>` : ''}
       </td>
     </tr>`;
   });
@@ -210,7 +218,7 @@ function renderPlazaDetalle(grupoId) {
       slots += `<div style="display:flex;align-items:center;gap:.5rem;padding:.4rem 0;border-bottom:1px solid var(--border)">
         <span style="width:20px;text-align:center;font-weight:700;color:var(--primary)">${i+1}</span>
         <span style="flex:1;font-size:.85rem">${ocupante.nombre_completo}</span>
-        <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();quitarOcupante(${ocupante.id})" style="padding:.15rem .4rem;font-size:.7rem">X</button>
+        ${esAdmin() ? `<button class="btn btn-sm btn-danger" onclick="event.stopPropagation();quitarOcupante(${ocupante.id})" style="padding:.15rem .4rem;font-size:.7rem">X</button>` : ''}
       </div>`;
     } else {
       slots += `<div style="display:flex;align-items:center;gap:.5rem;padding:.4rem 0;border-bottom:1px solid var(--border)">
@@ -324,7 +332,7 @@ async function cargarSoloVentas() {
           <td><span class="badge ${v.metodo_pago === 'Efectivo' ? 'badge-success' : 'badge-info'}">${v.metodo_pago || ''}</span></td>
           <td>${v.trabajadora_nombre || ''}</td>
           <td style="font-size:.8rem">${v.notas || ''}</td>
-          <td><button class="btn btn-sm btn-danger" onclick="eliminarVenta(${v.id})">X</button></td>
+          ${esAdmin() ? `<td><button class="btn btn-sm btn-danger" onclick="eliminarVenta(${v.id})">X</button></td>` : '<td></td>'}
         </tr>`; }).join('')}
       </tbody></table></div></div>
     </div>`;
@@ -515,7 +523,7 @@ function renderFichaLead(id) {
         </div>
         <div style="margin-top:.75rem;display:flex;gap:.5rem">
           <button class="btn btn-primary btn-sm" onclick="guardarFichaLead(${id})">Guardar cambios</button>
-          <button class="btn btn-danger btn-sm" onclick="eliminarLead(${id})">Eliminar</button>
+          ${esAdmin() ? `<button class="btn btn-danger btn-sm" onclick="eliminarLead(${id})">Eliminar</button>` : ''}
         </div>
       </div>
       <div>
@@ -710,7 +718,7 @@ async function cargarCambios() {
         <td>${fecha}</td>
         <td>${c.estado === 'gestionado' ? '<span class="badge badge-success">Gestionado</span>' : '<span class="badge badge-warning">Pendiente</span>'}</td>
         <td style="white-space:nowrap">
-          ${c.estado === 'pendiente' ? `<button class="btn btn-sm btn-success" onclick="gestionarCambio(${c.id})">Gestionar</button>` : ''}
+          ${esAdmin() && c.estado === 'pendiente' ? `<button class="btn btn-sm btn-success" onclick="gestionarCambio(${c.id})">Gestionar</button>` : ''}
           ${currentUser?.rol === 'admin' ? `<button class="btn btn-sm btn-danger" onclick="eliminarCambio(${c.id})">X</button>` : ''}
         </td>
       </tr>`;
@@ -769,7 +777,7 @@ async function cargarEspera() {
           <option value="contactado" ${e.estado==='contactado'?'selected':''}>Contactado</option>
           <option value="colocado" ${e.estado==='colocado'?'selected':''}>Colocado</option>
         </select>
-        <button class="btn btn-sm btn-danger" onclick="eliminarEspera(${e.id})">X</button>
+        ${esAdmin() ? `<button class="btn btn-sm btn-danger" onclick="eliminarEspera(${e.id})">X</button>` : ''}
       </td>
     </tr>`).join('')}
   </tbody></table>` : '<p style="color:var(--text-light)">Lista de espera vacía</p>';
@@ -879,7 +887,7 @@ function renderDiarioEntradas(entradas, containerId) {
     return `${header}<div class="aviso-card" style="border-left-color:var(--primary)">
       <div class="aviso-header">
         <div><span style="font-weight:700;color:var(--primary)">${e.autor || 'Sistema'}</span><span class="aviso-meta" style="margin-left:.5rem">${hora}</span></div>
-        <button class="btn btn-sm btn-danger" onclick="eliminarDiario(${e.id})">X</button>
+        ${esAdmin() || e.usuario_id === currentUser?.id ? `<button class="btn btn-sm btn-danger" onclick="eliminarDiario(${e.id})">X</button>` : ''}
       </div>
       <div class="aviso-desc">${e.contenido}</div>
     </div>`;
