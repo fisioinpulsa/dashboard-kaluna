@@ -177,24 +177,43 @@ async function cargarPlazas() {
     $('plazas-grid').innerHTML = '<p style="color:var(--text-light);padding:2rem">No hay grupos configurados.</p>';
     return;
   }
-  $('plazas-grid').innerHTML = plazasData.map(p => {
-    if (p.es_prueba) {
-      return `<div class="plaza-card" style="border-color:var(--info);background:#f0f7ff;cursor:pointer" onclick="togglePlazaDetalle(${p.id})">
-        <h4>${p.nombre}</h4>
-        <span class="badge badge-info">CLASE DE PRUEBA</span>
-        <div id="plaza-detalle-${p.id}" style="display:none"></div>
-      </div>`;
-    }
-    const pct = (p.ocupadas / p.max_plazas) * 100;
-    const fillClass = pct >= 100 ? 'full' : pct >= 60 ? 'mid' : 'ok';
-    return `<div class="plaza-card ${p.lleno ? 'lleno' : 'libre'}" style="cursor:pointer" onclick="togglePlazaDetalle(${p.id})">
-      <h4>${p.nombre} <span class="plaza-count">${p.ocupadas}/${p.max_plazas}</span></h4>
-      <div class="plaza-bar"><div class="plaza-bar-fill ${fillClass}" style="width:${Math.min(pct,100)}%"></div></div>
-      ${p.lleno ? '<span class="badge badge-danger">LLENO</span>' : `<span class="badge badge-success">${p.libres} libre${p.libres!==1?'s':''}</span>`}
-      <div style="margin-top:.5rem">${p.ocupantes.map(o => `<div class="ocupante">- ${o.nombre_completo}</div>`).join('')}</div>
-      <div id="plaza-detalle-${p.id}" style="display:none"></div>
-    </div>`;
-  }).join('');
+  // Agrupar por día
+  const dias = {};
+  plazasData.forEach(p => {
+    if (!dias[p.dia]) dias[p.dia] = [];
+    dias[p.dia].push(p);
+  });
+
+  const ordenDias = ['Lunes','Martes','Miércoles','Jueves','Viernes'];
+  let html = '';
+  ordenDias.forEach(dia => {
+    const grupos = dias[dia];
+    if (!grupos || !grupos.length) return;
+    html += `<div style="margin-bottom:1.5rem">
+      <h3 style="color:var(--primary-dark);border-bottom:3px solid var(--primary);padding-bottom:.5rem;margin-bottom:1rem;font-size:1.2rem">${dia}</h3>
+      <div class="plazas-grid">`;
+    grupos.forEach(p => {
+      if (p.es_prueba) {
+        html += `<div class="plaza-card" style="border-color:var(--info);background:#f0f7ff;cursor:pointer" onclick="togglePlazaDetalle(${p.id})">
+          <h4>${p.nombre}</h4>
+          <span class="badge badge-info">CLASE DE PRUEBA</span>
+          <div id="plaza-detalle-${p.id}" style="display:none"></div>
+        </div>`;
+      } else {
+        const pct = (p.ocupadas / p.max_plazas) * 100;
+        const fillClass = pct >= 100 ? 'full' : pct >= 60 ? 'mid' : 'ok';
+        html += `<div class="plaza-card ${p.lleno ? 'lleno' : 'libre'}" style="cursor:pointer" onclick="togglePlazaDetalle(${p.id})">
+          <h4>${p.nombre} <span class="plaza-count">${p.ocupadas}/${p.max_plazas}</span></h4>
+          <div class="plaza-bar"><div class="plaza-bar-fill ${fillClass}" style="width:${Math.min(pct,100)}%"></div></div>
+          ${p.lleno ? '<span class="badge badge-danger">LLENO</span>' : `<span class="badge badge-success">${p.libres} libre${p.libres!==1?'s':''}</span>`}
+          <div style="margin-top:.5rem">${p.ocupantes.map(o => `<div class="ocupante">- ${o.nombre_completo}</div>`).join('')}</div>
+          <div id="plaza-detalle-${p.id}" style="display:none"></div>
+        </div>`;
+      }
+    });
+    html += '</div></div>';
+  });
+  $('plazas-grid').innerHTML = html;
 }
 
 function togglePlazaDetalle(grupoId) {
