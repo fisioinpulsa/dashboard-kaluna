@@ -189,29 +189,18 @@ async function cargarPlazas() {
   const ordenDias = ['Lunes','Martes','Miércoles','Jueves','Viernes'];
 
   function renderCard(p) {
-    const borderColor = p.es_prueba ? 'var(--info)' : p.lleno ? 'var(--danger)' : 'var(--success)';
-    const bg = p.es_prueba ? '#f0f7ff' : 'white';
-    let personas = '';
     if (p.es_prueba) {
-      personas = '<div style="color:var(--info);font-style:italic;font-size:.8rem">Clase de prueba</div>';
-    } else {
-      for (let i = 0; i < p.max_plazas; i++) {
-        const o = p.ocupantes[i];
-        personas += o
-          ? `<div style="font-size:.8rem;padding:.1rem 0">- ${o.nombre_completo}</div>`
-          : `<div style="font-size:.8rem;padding:.1rem 0;color:var(--text-light);font-style:italic">- vacío</div>`;
-      }
+      return `<div onclick="abrirModalPlaza(${p.id})" style="cursor:pointer;flex-shrink:0;padding:.5rem .7rem;border-radius:8px;border:2px solid var(--info);background:#f0f7ff;text-align:center">
+        <div style="font-weight:700;font-size:.9rem">${p.hora}</div>
+        <div style="font-size:.65rem;color:var(--info);font-weight:600">PRUEBA</div>
+      </div>`;
     }
-    const statusBadge = p.es_prueba ? '' : p.lleno
-      ? '<span class="badge badge-danger" style="font-size:.6rem">LLENO</span>'
-      : `<span class="badge badge-success" style="font-size:.6rem">${p.libres} libre${p.libres!==1?'s':''}</span>`;
-    return `<div onclick="abrirModalPlaza(${p.id})" style="cursor:pointer;min-width:160px;max-width:200px;flex-shrink:0;padding:.6rem;border-radius:10px;border:2px solid ${borderColor};background:${bg}">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.3rem">
-        <b style="font-size:.95rem">${p.hora}</b>
-        ${p.es_prueba ? '' : `<span style="font-size:.75rem;color:${borderColor};font-weight:600">${p.ocupadas}/${p.max_plazas}</span>`}
-      </div>
-      ${statusBadge}
-      <div style="margin-top:.3rem">${personas}</div>
+    const color = p.lleno ? '#e74c3c' : p.ocupadas >= 3 ? '#ff9800' : '#4caf50';
+    const bg = p.lleno ? '#fff5f5' : 'white';
+    return `<div onclick="abrirModalPlaza(${p.id})" style="cursor:pointer;flex-shrink:0;padding:.5rem .7rem;border-radius:8px;border:2px solid ${color};background:${bg};text-align:center;min-width:70px">
+      <div style="font-weight:700;font-size:.9rem">${p.hora}</div>
+      <div style="font-size:.75rem;color:${color};font-weight:700">${p.ocupadas}/${p.max_plazas}</div>
+      ${p.lleno ? '<div style="font-size:.6rem;color:#e74c3c;font-weight:700">LLENO</div>' : `<div style="font-size:.6rem;color:${color}">${p.libres} libre${p.libres!==1?'s':''}</div>`}
     </div>`;
   }
 
@@ -219,9 +208,9 @@ async function cargarPlazas() {
   ordenDias.forEach(dia => {
     const grupos = dias[dia];
     if (!grupos || !grupos.length) return;
-    html += `<div style="display:flex;align-items:stretch;margin-bottom:.75rem">
-      <div style="background:var(--primary);color:white;font-weight:700;padding:.6rem .8rem;border-radius:8px 0 0 8px;writing-mode:horizontal-tb;display:flex;align-items:center;min-width:90px;justify-content:center;font-size:.95rem">${dia}</div>
-      <div style="flex:1;display:flex;gap:.6rem;overflow-x:auto;padding:.6rem;background:var(--card);border:1px solid var(--border);border-left:none;border-radius:0 8px 8px 0">
+    html += `<div style="display:flex;align-items:center;margin-bottom:.5rem">
+      <div style="background:var(--primary);color:white;font-weight:700;padding:.6rem;border-radius:8px 0 0 8px;min-width:85px;text-align:center;font-size:.85rem;align-self:stretch;display:flex;align-items:center;justify-content:center">${dia}</div>
+      <div style="flex:1;display:flex;gap:.4rem;overflow-x:auto;padding:.4rem .6rem;background:var(--card);border:1px solid var(--border);border-left:none;border-radius:0 8px 8px 0;align-items:center">
         ${grupos.map(p => renderCard(p)).join('')}
       </div>
     </div>`;
