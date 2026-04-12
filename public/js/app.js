@@ -651,17 +651,21 @@ function renderFichaLesion(id) {
         <textarea id="lesion-${id}-ejercicios" rows="8" style="width:100%;padding:.5rem;border:2px solid var(--border);border-radius:8px;font-size:.85rem;font-family:inherit;resize:vertical">${f.ejercicios_no_recomendados || ''}</textarea>
       </div>
       <div>
-        <h4 style="color:var(--primary);margin-bottom:.5rem">Notas Pilates (Alessandra)</h4>
-        <textarea id="lesion-${id}-pilates" rows="8" style="width:100%;padding:.5rem;border:2px solid var(--primary);border-radius:8px;font-size:.85rem;font-family:inherit;resize:vertical">${f.notas_pilates || ''}</textarea>
+        <h4 style="color:var(--primary);margin-bottom:.5rem">Notas Pilates</h4>
+        <div style="background:var(--bg);border-radius:8px;padding:.5rem;max-height:200px;overflow-y:auto;margin-bottom:.5rem;font-size:.82rem;white-space:pre-wrap">${f.notas_pilates || '<span style="color:var(--text-light)">Sin notas</span>'}</div>
+        <textarea id="lesion-${id}-nueva-pilates" rows="2" placeholder="Añadir nota de pilates..." style="width:100%;padding:.4rem;border:2px solid var(--primary);border-radius:8px;font-size:.85rem;font-family:inherit;resize:vertical"></textarea>
+        <button class="btn btn-sm btn-primary" style="margin-top:.3rem" onclick="añadirNotaLesion(${id},'pilates')">Añadir nota</button>
       </div>
       <div>
-        <h4 style="color:var(--info);margin-bottom:.5rem">Notas Fisio (Maria)</h4>
-        <textarea id="lesion-${id}-fisio" rows="8" style="width:100%;padding:.5rem;border:2px solid var(--info);border-radius:8px;font-size:.85rem;font-family:inherit;resize:vertical">${f.notas_fisio || ''}</textarea>
+        <h4 style="color:var(--info);margin-bottom:.5rem">Notas Fisio</h4>
+        <div style="background:var(--bg);border-radius:8px;padding:.5rem;max-height:200px;overflow-y:auto;margin-bottom:.5rem;font-size:.82rem;white-space:pre-wrap">${f.notas_fisio || '<span style="color:var(--text-light)">Sin notas</span>'}</div>
+        <textarea id="lesion-${id}-nueva-fisio" rows="2" placeholder="Añadir nota de fisio..." style="width:100%;padding:.4rem;border:2px solid var(--info);border-radius:8px;font-size:.85rem;font-family:inherit;resize:vertical"></textarea>
+        <button class="btn btn-sm" style="margin-top:.3rem;background:var(--info);color:white" onclick="añadirNotaLesion(${id},'fisio')">Añadir nota</button>
       </div>
     </div>
     <div style="margin-top:.75rem;display:flex;gap:.5rem">
-      <button class="btn btn-primary btn-sm" onclick="guardarFichaLesion(${id})">Guardar cambios</button>
-      ${currentUser?.rol === 'admin' ? `<button class="btn btn-danger btn-sm" onclick="eliminarLesion(${id})">Eliminar ficha</button>` : ''}
+      <button class="btn btn-primary btn-sm" onclick="guardarFichaLesion(${id})">Guardar ejercicios</button>
+      ${esAdmin() ? `<button class="btn btn-danger btn-sm" onclick="eliminarLesion(${id})">Eliminar ficha</button>` : ''}
     </div>`;
 }
 
@@ -671,11 +675,33 @@ async function guardarFichaLesion(id) {
     cliente_nombre: f.cliente_nombre,
     fecha: f.fecha,
     ejercicios_no_recomendados: document.getElementById(`lesion-${id}-ejercicios`).value,
-    notas_pilates: document.getElementById(`lesion-${id}-pilates`).value,
-    notas_fisio: document.getElementById(`lesion-${id}-fisio`).value
+    notas_pilates: f.notas_pilates,
+    notas_fisio: f.notas_fisio
   });
-  alert('Ficha guardada');
+  alert('Ejercicios guardados');
   cargarLesiones();
+}
+
+async function añadirNotaLesion(id, tipo) {
+  const textarea = document.getElementById(`lesion-${id}-nueva-${tipo}`);
+  const texto = textarea.value.trim();
+  if (!texto) return;
+  const f = lesionesData.find(x => x.id === id);
+  const fecha = new Date().toLocaleString('es-ES', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  const nuevaNota = `[${currentUser.nombre} - ${fecha}]\n${texto}`;
+  const campo = tipo === 'pilates' ? 'notas_pilates' : 'notas_fisio';
+  const notasActuales = f[campo] || '';
+  const notasNuevas = notasActuales ? notasActuales + '\n\n' + nuevaNota : nuevaNota;
+  await PUT(`/api/lesiones/${id}`, {
+    cliente_nombre: f.cliente_nombre,
+    fecha: f.fecha,
+    ejercicios_no_recomendados: f.ejercicios_no_recomendados,
+    notas_pilates: tipo === 'pilates' ? notasNuevas : f.notas_pilates,
+    notas_fisio: tipo === 'fisio' ? notasNuevas : f.notas_fisio
+  });
+  await cargarLesiones();
+  const fila = document.getElementById(`ficha-lesion-${id}`);
+  if (fila) { fila.style.display = 'table-row'; renderFichaLesion(id); }
 }
 
 function abrirModalLesion() {
