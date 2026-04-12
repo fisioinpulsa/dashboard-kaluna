@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kalüna - Fichaje</title>
+  <link rel="stylesheet" href="/css/app.css">
+  <style>
+    .fichaje-container { max-width: 500px; margin: 0 auto; padding: 2rem; }
+    .fichaje-header { text-align: center; margin-bottom: 2rem; }
+    .fichaje-header .login-logo { margin: 0 auto 1rem; }
+    .fichaje-clock { font-size: 3rem; font-weight: 700; color: var(--primary-dark); text-align: center; margin: 1.5rem 0; font-variant-numeric: tabular-nums; }
+    .fichaje-date { text-align: center; color: var(--text-light); margin-bottom: 1.5rem; text-transform: capitalize; }
+    .fichaje-status { text-align: center; padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem; font-weight: 600; font-size: 1.1rem; }
+    .fichaje-status.dentro { background: #e8f5e9; color: #2e7d32; }
+    .fichaje-status.fuera { background: #fff3e0; color: #e65100; }
+    .fichaje-btn { width: 100%; padding: 1.2rem; border: none; border-radius: 14px; font-size: 1.2rem; font-weight: 700; cursor: pointer; transition: all .2s; margin-bottom: 1rem; }
+    .fichaje-btn.entrada { background: #4caf50; color: white; }
+    .fichaje-btn.entrada:hover { background: #388e3c; }
+    .fichaje-btn.salida { background: #e74c3c; color: white; }
+    .fichaje-btn.salida:hover { background: #c0392b; }
+    .fichaje-historial { margin-top: 1.5rem; }
+    .fichaje-historial h3 { font-size: 1rem; color: var(--primary-dark); margin-bottom: .75rem; }
+    .fichaje-registro { display: flex; justify-content: space-between; padding: .5rem 0; border-bottom: 1px solid var(--border); font-size: .9rem; }
+    .fichaje-registro .tipo-entrada { color: #4caf50; font-weight: 600; }
+    .fichaje-registro .tipo-salida { color: #e74c3c; font-weight: 600; }
+    .firma-canvas { border: 2px solid var(--border); border-radius: 10px; background: white; touch-action: none; width: 100%; height: 120px; margin: .5rem 0; }
+  </style>
+</head>
+<body class="login-page">
+  <div class="fichaje-container">
+    <div class="fichaje-header">
+      <div class="login-logo">K</div>
+      <h1 style="font-size:1.6rem;color:var(--primary-dark)">Kalüna</h1>
+      <p class="login-subtitle">Fichaje de empleados</p>
+    </div>
+
+    <!-- LOGIN FICHAJE -->
+    <div id="fichaje-login">
+      <form id="form-fichaje-login" class="login-form">
+        <input type="text" id="fichaje-pin" placeholder="Introduce tu PIN" maxlength="6" required style="text-align:center;font-size:1.3rem;letter-spacing:.3rem">
+        <button type="submit">Fichar</button>
+      </form>
+      <div id="fichaje-login-error" class="error" style="display:none"></div>
+    </div>
+
+    <!-- PANEL FICHAJE -->
+    <div id="fichaje-panel" style="display:none">
+      <div style="text-align:right"><button onclick="cerrarFichaje()" style="background:none;border:none;color:var(--text-light);cursor:pointer;font-size:.85rem">Cerrar sesión</button></div>
+      <div id="fichaje-nombre" style="text-align:center;font-size:1.2rem;font-weight:700;color:var(--primary-dark)"></div>
+      <div class="fichaje-clock" id="fichaje-reloj"></div>
+      <div class="fichaje-date" id="fichaje-fecha"></div>
+      <div id="fichaje-estado" class="fichaje-status fuera">Cargando...</div>
+
+      <div id="fichaje-firma-container" style="display:none">
+        <p style="font-size:.85rem;color:var(--text-light);margin-bottom:.3rem">Firma para confirmar:</p>
+        <canvas id="firma-canvas" class="firma-canvas"></canvas>
+        <div style="display:flex;gap:.5rem">
+          <button onclick="limpiarFirma()" class="btn btn-outline" style="flex:1">Limpiar</button>
+          <button onclick="confirmarFichaje()" class="fichaje-btn entrada" id="btn-confirmar" style="flex:2">Confirmar entrada</button>
+        </div>
+      </div>
+
+      <div id="fichaje-botones">
+        <button onclick="iniciarFichaje('entrada')" class="fichaje-btn entrada" id="btn-entrada">Registrar ENTRADA</button>
+        <button onclick="iniciarFichaje('salida')" class="fichaje-btn salida" id="btn-salida">Registrar SALIDA</button>
+      </div>
+
+      <div class="fichaje-historial">
+        <h3>Fichajes de hoy</h3>
+        <div id="fichaje-hoy"></div>
+      </div>
+    </div>
+
+    <a href="/" style="display:block;text-align:center;margin-top:1.5rem;color:var(--text-light);font-size:.85rem">Volver al inicio</a>
+  </div>
+  <script src="/js/fichaje-app.js"></script>
+</body>
+</html>

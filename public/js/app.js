@@ -25,7 +25,7 @@ async function init() {
     if (esAdmin) cargarInicio();
     else cargarDiario();
   } catch {
-    window.location.href = '/';
+    window.location.href = '/login';
   }
 }
 
@@ -42,7 +42,7 @@ function setupNav() {
       if (loaders[sec]) loaders[sec]();
     });
   });
-  $('btn-logout').addEventListener('click', async () => { await POST('/api/auth/logout', {}); window.location.href = '/'; });
+  $('btn-logout').addEventListener('click', async () => { await POST('/api/auth/logout', {}); window.location.href = '/login'; });
   $('filtro-clientes').addEventListener('change', cargarClientes);
   $('form-password').addEventListener('submit', async e => {
     e.preventDefault();
