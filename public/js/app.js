@@ -5,6 +5,7 @@ const API = path => fetch(path).then(r => { if (!r.ok) throw new Error(r.status)
 const POST = (path, body) => fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(r => r.json());
 const PUT = (path, body) => fetch(path, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(r => r.json());
 const DEL = path => fetch(path, { method: 'DELETE' }).then(r => r.json());
+const LOG = (accion, seccion, detalle) => POST('/api/actividad', { accion, seccion, detalle }).catch(() => {});
 
 // INIT
 async function init() {
@@ -155,8 +156,8 @@ async function guardarCliente(e, id) {
   e.preventDefault();
   const fd = new FormData(e.target);
   const body = Object.fromEntries(fd);
-  if (id) await PUT(`/api/clientes/${id}`, body);
-  else await POST('/api/clientes', body);
+  if (id) { await PUT(`/api/clientes/${id}`, body); LOG('editar','clientes',`Editó "${body.nombre_completo}"`); }
+  else { await POST('/api/clientes', body); LOG('crear','clientes',`Nuevo cliente "${body.nombre_completo}"`); }
   cerrarModal();
   cargarClientes();
 }
@@ -165,6 +166,7 @@ async function darBaja(id) {
   const mes = prompt('Mes de baja (ej: Abril):');
   if (!mes) return;
   await PUT(`/api/clientes/${id}/baja`, { mes_baja: mes });
+  LOG('baja','clientes',`Baja en ${mes}`);
   cargarClientes();
 }
 
@@ -262,14 +264,19 @@ async function añadirOcupanteModal(grupoId) {
   const input = document.getElementById(`nuevo-ocupante-${grupoId}`);
   const nombre = input.value.trim();
   if (!nombre) return;
+  const p = plazasData.find(x => x.id === grupoId);
   await POST('/api/plazas/ocupante', { grupo_id: grupoId, nombre });
+  LOG('añadir', 'plazas', `Añadió a "${nombre}" en ${p?.dia} ${p?.hora}`);
   await cargarPlazas();
   abrirModalPlaza(grupoId);
 }
 
 async function quitarOcupanteModal(ocupanteId, grupoId) {
   if (!confirm('¿Quitar esta persona del grupo?')) return;
+  const p = plazasData.find(x => x.id === grupoId);
+  const ocupante = p?.ocupantes?.find(o => o.id === ocupanteId);
   await DEL(`/api/plazas/ocupante/${ocupanteId}`);
+  LOG('eliminar', 'plazas', `Quitó a "${ocupante?.nombre_completo || '?'}" de ${p?.dia} ${p?.hora}`);
   await cargarPlazas();
   abrirModalPlaza(grupoId);
 }
@@ -464,9 +471,9 @@ function calcularCaja() {
   document.getElementById('caja-input-billetes').value = desglose.join('+') || '0';
 }
 
-async function guardarVenta(e) { e.preventDefault(); await POST('/api/ventas', Object.fromEntries(new FormData(e.target))); cerrarModal(); cargarSoloVentas(); }
-async function guardarCaja(e) { e.preventDefault(); await POST('/api/caja', Object.fromEntries(new FormData(e.target))); cerrarModal(); cargarSoloCaja(); }
-async function eliminarVenta(id) { if (confirm('¿Eliminar venta?')) { await DEL(`/api/ventas/${id}`); cargarSoloVentas(); } }
+async function guardarVenta(e) { e.preventDefault(); const d=Object.fromEntries(new FormData(e.target)); await POST('/api/ventas',d); LOG('crear','ventas',`${d.cliente_nombre} - ${d.articulo} ${d.precio}€`); cerrarModal(); cargarSoloVentas(); }
+async function guardarCaja(e) { e.preventDefault(); const d=Object.fromEntries(new FormData(e.target)); await POST('/api/caja',d); LOG('crear','caja',`Arqueo: ${d.efectivo_total}€`); cerrarModal(); cargarSoloCaja(); }
+async function eliminarVenta(id) { if (confirm('¿Eliminar venta?')) { await DEL(`/api/ventas/${id}`); LOG('eliminar','ventas',`Venta #${id} eliminada`); cargarSoloVentas(); } }
 
 // ==================== LEADS ====================
 const LEAD_ESTADOS = [
@@ -597,7 +604,7 @@ function abrirModalLead() {
     </form>`);
 }
 
-async function guardarLeadNuevo(e) { e.preventDefault(); await POST('/api/leads', Object.fromEntries(new FormData(e.target))); cerrarModal(); cargarLeads(); }
+async function guardarLeadNuevo(e) { e.preventDefault(); const d=Object.fromEntries(new FormData(e.target)); await POST('/api/leads',d); LOG('crear','leads',`Nuevo lead "${d.nombre}"`); cerrarModal(); cargarLeads(); }
 
 async function añadirNotaLead(id) {
   const textarea = document.getElementById(`nueva-nota-${id}`);
@@ -793,7 +800,7 @@ function abrirModalCambio() {
     </form>`);
 }
 
-async function guardarCambio(e) { e.preventDefault(); await POST('/api/cambios', Object.fromEntries(new FormData(e.target))); cerrarModal(); cargarCambios(); }
+async function guardarCambio(e) { e.preventDefault(); const d=Object.fromEntries(new FormData(e.target)); await POST('/api/cambios',d); LOG('crear','cambios',`${d.tipo}: ${d.cliente_nombre} - ${d.descripcion}`); cerrarModal(); cargarCambios(); }
 
 async function gestionarCambio(id) {
   const notas = prompt('Nota de gestión (opcional):');
@@ -844,9 +851,9 @@ function abrirModalEspera() {
     </form>`);
 }
 
-async function guardarEspera(e) { e.preventDefault(); await POST('/api/espera', Object.fromEntries(new FormData(e.target))); cerrarModal(); cargarEspera(); }
-async function cambiarEstadoEspera(id, estado) { await PUT(`/api/espera/${id}/estado`, { estado }); }
-async function eliminarEspera(id) { if (confirm('¿Eliminar?')) { await DEL(`/api/espera/${id}`); cargarEspera(); } }
+async function guardarEspera(e) { e.preventDefault(); const d=Object.fromEntries(new FormData(e.target)); await POST('/api/espera',d); LOG('crear','espera',`"${d.nombre}" - ${d.horario_deseado||''}`); cerrarModal(); cargarEspera(); }
+async function cambiarEstadoEspera(id, estado) { await PUT(`/api/espera/${id}/estado`, { estado }); LOG('editar','espera',`Estado cambiado a "${estado}"`); }
+async function eliminarEspera(id) { if (confirm('¿Eliminar?')) { await DEL(`/api/espera/${id}`); LOG('eliminar','espera',`Entrada #${id} eliminada`); cargarEspera(); } }
 
 // ==================== CLASES DE PRUEBA ====================
 async function cargarPruebas() {
@@ -1016,6 +1023,24 @@ async function cargarConfig() {
       <td>${t.activo ? '<span class="badge badge-success">Activo</span>' : '<span class="badge badge-danger">Inactivo</span>'}</td>
     </tr>`).join('')}
   </tbody></table>`;
+
+  // Cargar registro de actividad
+  try {
+    const actividad = await API('/api/actividad');
+    const iconos = { crear: '🟢', editar: '🔵', eliminar: '🔴', baja: '📉', añadir: '➕' };
+    $('tabla-actividad').innerHTML = actividad.length ? `<table><thead><tr><th>Fecha</th><th>Quién</th><th>Acción</th><th>Sección</th><th>Detalle</th></tr></thead><tbody>
+      ${actividad.map(a => {
+        const f = new Date(a.created_at).toLocaleString('es-ES',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+        return `<tr>
+          <td style="white-space:nowrap;font-size:.8rem">${f}</td>
+          <td><b>${a.usuario_nombre||''}</b></td>
+          <td>${iconos[a.accion]||'📌'} ${a.accion}</td>
+          <td><span class="badge badge-gray">${a.seccion||''}</span></td>
+          <td style="font-size:.8rem;max-width:300px">${a.detalle||''}</td>
+        </tr>`;
+      }).join('')}
+    </tbody></table>` : '<p style="color:var(--text-light)">Sin actividad registrada</p>';
+  } catch {}
 }
 
 function abrirModalTrabajadora() {
