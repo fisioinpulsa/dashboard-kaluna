@@ -190,17 +190,18 @@ async function cargarPlazas() {
 
   function renderCard(p) {
     if (p.es_prueba) {
-      return `<div onclick="abrirModalPlaza(${p.id})" style="cursor:pointer;flex-shrink:0;padding:.5rem .7rem;border-radius:8px;border:2px solid var(--info);background:#f0f7ff;text-align:center">
-        <div style="font-weight:700;font-size:.9rem">${p.hora}</div>
-        <div style="font-size:.65rem;color:var(--info);font-weight:600">PRUEBA</div>
+      return `<div onclick="abrirModalPlaza(${p.id})" class="plaza-card" style="cursor:pointer;flex-shrink:0;min-width:180px;border-color:var(--info);background:#f0f7ff">
+        <h4>${p.hora}</h4>
+        <span class="badge badge-info">CLASE DE PRUEBA</span>
       </div>`;
     }
-    const color = p.lleno ? '#e74c3c' : p.ocupadas >= 3 ? '#ff9800' : '#4caf50';
-    const bg = p.lleno ? '#fff5f5' : 'white';
-    return `<div onclick="abrirModalPlaza(${p.id})" style="cursor:pointer;flex-shrink:0;padding:.5rem .7rem;border-radius:8px;border:2px solid ${color};background:${bg};text-align:center;min-width:70px">
-      <div style="font-weight:700;font-size:.9rem">${p.hora}</div>
-      <div style="font-size:.75rem;color:${color};font-weight:700">${p.ocupadas}/${p.max_plazas}</div>
-      ${p.lleno ? '<div style="font-size:.6rem;color:#e74c3c;font-weight:700">LLENO</div>' : `<div style="font-size:.6rem;color:${color}">${p.libres} libre${p.libres!==1?'s':''}</div>`}
+    const pct = (p.ocupadas / p.max_plazas) * 100;
+    const fillClass = pct >= 100 ? 'full' : pct >= 60 ? 'mid' : 'ok';
+    return `<div onclick="abrirModalPlaza(${p.id})" class="plaza-card ${p.lleno ? 'lleno' : 'libre'}" style="cursor:pointer;flex-shrink:0;min-width:180px">
+      <h4>${p.hora} <span class="plaza-count">${p.ocupadas}/${p.max_plazas}</span></h4>
+      <div class="plaza-bar"><div class="plaza-bar-fill ${fillClass}" style="width:${Math.min(pct,100)}%"></div></div>
+      ${p.lleno ? '<span class="badge badge-danger">LLENO</span>' : `<span class="badge badge-success">${p.libres} libre${p.libres!==1?'s':''}</span>`}
+      <div style="margin-top:.4rem">${p.ocupantes.map(o => `<div class="ocupante">- ${o.nombre_completo}</div>`).join('')}</div>
     </div>`;
   }
 
@@ -208,9 +209,9 @@ async function cargarPlazas() {
   ordenDias.forEach(dia => {
     const grupos = dias[dia];
     if (!grupos || !grupos.length) return;
-    html += `<div style="display:flex;align-items:center;margin-bottom:.5rem">
-      <div style="background:var(--primary);color:white;font-weight:700;padding:.6rem;border-radius:8px 0 0 8px;min-width:85px;text-align:center;font-size:.85rem;align-self:stretch;display:flex;align-items:center;justify-content:center">${dia}</div>
-      <div style="flex:1;display:flex;gap:.4rem;overflow-x:auto;padding:.4rem .6rem;background:var(--card);border:1px solid var(--border);border-left:none;border-radius:0 8px 8px 0;align-items:center">
+    html += `<div style="display:flex;align-items:stretch;margin-bottom:.75rem">
+      <div style="background:var(--primary);color:white;font-weight:700;padding:.6rem;border-radius:8px 0 0 8px;min-width:85px;text-align:center;font-size:.85rem;display:flex;align-items:center;justify-content:center">${dia}</div>
+      <div style="flex:1;display:flex;gap:.6rem;overflow-x:auto;padding:.6rem;background:var(--card);border:1px solid var(--border);border-left:none;border-radius:0 8px 8px 0;align-items:flex-start">
         ${grupos.map(p => renderCard(p)).join('')}
       </div>
     </div>`;
