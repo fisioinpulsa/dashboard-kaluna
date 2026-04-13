@@ -7,7 +7,7 @@ router.use(verificarToken);
 // Listar todas las fichas
 router.get('/', async (req, res) => {
   try {
-    const { rows } = await query("SELECT * FROM kaluna_lesiones ORDER BY cliente_nombre");
+    const { rows } = await query("SELECT * FROM kaluna_lesiones ORDER BY created_at DESC");
     res.json(rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
