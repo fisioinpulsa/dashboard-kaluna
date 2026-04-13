@@ -33,11 +33,11 @@ router.get('/', async (req, res) => {
 // Crear cliente
 router.post('/', async (req, res) => {
   try {
-    const { nombre_completo, telefono, dias, horario, horario2, dias_semana, notas, mes_inicio } = req.body;
+    const { nombre_completo, telefono, dias, horario, horario2, dias_semana, notas, mes_inicio, metodo_pago } = req.body;
     const { rows } = await query(
-      `INSERT INTO kaluna_clientes (nombre_completo, telefono, dias, horario, horario2, dias_semana, notas, mes_inicio)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
-      [nombre_completo, telefono, dias, horario, horario2, dias_semana || 2, notas, mes_inicio]
+      `INSERT INTO kaluna_clientes (nombre_completo, telefono, dias, horario, horario2, dias_semana, notas, mes_inicio, metodo_pago)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
+      [nombre_completo, telefono, dias, horario, horario2, dias_semana || 2, notas, mes_inicio, metodo_pago || '']
     );
     res.json(rows[0]);
   } catch (err) {
@@ -48,11 +48,16 @@ router.post('/', async (req, res) => {
 // Actualizar cliente
 router.put('/:id', async (req, res) => {
   try {
-    const { nombre_completo, telefono, dias, horario, horario2, dias_semana, notas, mes_inicio, mes_baja, estado } = req.body;
+    const { nombre_completo, telefono, dias, horario, horario2, dias_semana, notas, mes_inicio, mes_baja, estado, metodo_pago, fianza_pagada } = req.body;
+    // Si solo viene fianza_pagada, actualizar solo eso
+    if (fianza_pagada !== undefined && !nombre_completo) {
+      const { rows } = await query("UPDATE kaluna_clientes SET fianza_pagada = $1 WHERE id = $2 RETURNING *", [fianza_pagada, req.params.id]);
+      return res.json(rows[0]);
+    }
     const { rows } = await query(
       `UPDATE kaluna_clientes SET nombre_completo=$1, telefono=$2, dias=$3, horario=$4, horario2=$5,
-       dias_semana=$6, notas=$7, mes_inicio=$8, mes_baja=$9, estado=$10 WHERE id=$11 RETURNING *`,
-      [nombre_completo, telefono, dias, horario, horario2, dias_semana, notas, mes_inicio, mes_baja, estado, req.params.id]
+       dias_semana=$6, notas=$7, mes_inicio=$8, mes_baja=$9, estado=$10, metodo_pago=$11 WHERE id=$12 RETURNING *`,
+      [nombre_completo, telefono, dias, horario, horario2, dias_semana, notas, mes_inicio, mes_baja, estado, metodo_pago || '', req.params.id]
     );
     res.json(rows[0]);
   } catch (err) {

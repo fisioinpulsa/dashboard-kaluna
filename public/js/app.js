@@ -99,7 +99,7 @@ async function cargarClientes() {
   clientes.forEach(c => {
     if (c.dias !== lastDias) {
       lastDias = c.dias;
-      rows += `<tr><td colspan="9" style="background:var(--primary);color:white;font-weight:700;padding:.6rem 1rem;font-size:.9rem">${c.dias || 'Sin asignar'}</td></tr>`;
+      rows += `<tr><td colspan="11" style="background:var(--primary);color:white;font-weight:700;padding:.6rem 1rem;font-size:.9rem">${c.dias || 'Sin asignar'}</td></tr>`;
     }
     rows += `<tr>
       <td><b>${c.nombre_completo}</b></td>
@@ -109,6 +109,8 @@ async function cargarClientes() {
       <td>${c.dias_semana || ''}</td>
       <td>${c.mes_inicio || ''}</td>
       <td>${c.estado === 'activo' ? '<span class="badge badge-success">Activo</span>' : '<span class="badge badge-danger">Baja '+(c.mes_baja||'')+'</span>'}</td>
+      <td>${c.metodo_pago === 'domiciliacion' ? '<span class="badge badge-purple">Domiciliación</span>' : c.metodo_pago === 'efectivo_tarjeta' ? '<span class="badge badge-warning">Efectivo/Tarjeta</span>' : '<span class="badge badge-gray">-</span>'}</td>
+      <td>${c.metodo_pago === 'efectivo_tarjeta' ? (c.fianza_pagada ? '<span class="badge badge-success">Fianza OK</span>' : `<button class="btn btn-sm btn-warning" onclick="marcarFianza(${c.id})">Sin fianza</button>`) : ''}</td>
       <td style="max-width:200px;font-size:.8rem">${c.notas || ''}</td>
       <td style="white-space:nowrap">
         <button class="btn btn-sm btn-outline" onclick='editarCliente(${JSON.stringify(c).replace(/'/g,"&#39;")})'>Editar</button>
@@ -117,7 +119,7 @@ async function cargarClientes() {
     </tr>`;
   });
   $('tabla-clientes').innerHTML = `<table><thead><tr>
-    <th>Nombre</th><th>Teléfono</th><th>Días</th><th>Horario</th><th>Días/sem</th><th>Inicio</th><th>Estado</th><th>Notas</th><th></th>
+    <th>Nombre</th><th>Teléfono</th><th>Días</th><th>Horario</th><th>Días/sem</th><th>Inicio</th><th>Estado</th><th>Pago</th><th>Fianza</th><th>Notas</th><th></th>
   </tr></thead><tbody>${rows}</tbody></table>`;
 }
 
@@ -142,6 +144,12 @@ function abrirModalCliente(c) {
         <div class="form-group"><label>Horario 2 (opcional)</label><input name="horario2" value="${c?.horario2 || ''}" placeholder="10:00"></div>
         <div class="form-group"><label>Días/semana</label><input type="number" name="dias_semana" value="${c?.dias_semana || 2}" min="1" max="5"></div>
         <div class="form-group"><label>Mes inicio</label><input name="mes_inicio" value="${c?.mes_inicio || ''}" placeholder="Enero"></div>
+        <div class="form-group"><label>Método de pago</label>
+          <select name="metodo_pago"><option value="">Sin definir</option>
+            <option value="domiciliacion" ${c?.metodo_pago==='domiciliacion'?'selected':''}>Domiciliación</option>
+            <option value="efectivo_tarjeta" ${c?.metodo_pago==='efectivo_tarjeta'?'selected':''}>Efectivo/Tarjeta</option>
+          </select>
+        </div>
         ${c ? `<div class="form-group"><label>Mes baja</label><input name="mes_baja" value="${c?.mes_baja || ''}"></div>
         <div class="form-group"><label>Estado</label><select name="estado"><option value="activo" ${c.estado==='activo'?'selected':''}>Activo</option><option value="baja" ${c.estado==='baja'?'selected':''}>Baja</option></select></div>` : ''}
       </div>
@@ -159,6 +167,13 @@ async function guardarCliente(e, id) {
   if (id) { await PUT(`/api/clientes/${id}`, body); LOG('editar','clientes',`Editó "${body.nombre_completo}"`); }
   else { await POST('/api/clientes', body); LOG('crear','clientes',`Nuevo cliente "${body.nombre_completo}"`); }
   cerrarModal();
+  cargarClientes();
+}
+
+async function marcarFianza(id) {
+  if (!confirm('¿Marcar fianza como pagada?')) return;
+  await PUT(`/api/clientes/${id}`, { fianza_pagada: true });
+  LOG('editar','clientes',`Fianza marcada como pagada`);
   cargarClientes();
 }
 
