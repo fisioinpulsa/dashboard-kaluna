@@ -735,7 +735,15 @@ function abrirModalLesion() {
     </form>`);
 }
 
-async function crearLesion(e) { e.preventDefault(); await POST('/api/lesiones', Object.fromEntries(new FormData(e.target))); cerrarModal(); cargarLesiones(); }
+async function crearLesion(e) {
+  e.preventDefault();
+  const d = Object.fromEntries(new FormData(e.target));
+  const fecha = new Date().toLocaleString('es-ES', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  if (d.notas_pilates) d.notas_pilates = `[${currentUser.nombre} - ${fecha}]\n${d.notas_pilates}`;
+  if (d.notas_fisio) d.notas_fisio = `[${currentUser.nombre} - ${fecha}]\n${d.notas_fisio}`;
+  await POST('/api/lesiones', d);
+  cerrarModal(); cargarLesiones();
+}
 async function eliminarLesion(id) { if (confirm('¿Eliminar ficha?')) { await DEL(`/api/lesiones/${id}`); cargarLesiones(); } }
 
 // ==================== CAMBIOS / BAJAS ====================
