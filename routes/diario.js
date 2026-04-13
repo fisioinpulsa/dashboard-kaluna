@@ -42,8 +42,9 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const { contenido } = req.body;
-    // Siempre fecha de hoy - no se puede rellenar días atrasados
-    const hoy = new Date().toISOString().split('T')[0];
+    // Siempre fecha de hoy (hora España)
+    const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/Madrid' }));
+    const hoy = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
     const { rows } = await query(
       `INSERT INTO kaluna_diario (usuario_id, fecha, contenido)
        VALUES ($1, $2, $3) RETURNING *`,

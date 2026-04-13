@@ -43,10 +43,16 @@ function authFichaje(req, res, next) {
   } catch { res.status(401).json({ error: 'Sesión expirada' }); }
 }
 
+// Hora España
+function horaEspana() {
+  const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/Madrid' }));
+  return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+}
+
 // Estado actual
 router.get('/estado', authFichaje, async (req, res) => {
   try {
-    const hoy = new Date().toISOString().split('T')[0];
+    const hoy = horaEspana();
     const { rows } = await query(
       "SELECT * FROM fichajes WHERE usuario_id = $1 AND fecha = $2 ORDER BY hora DESC LIMIT 1",
       [req.user.id, hoy]
@@ -63,7 +69,7 @@ router.get('/estado', authFichaje, async (req, res) => {
 // Fichajes de hoy
 router.get('/hoy', authFichaje, async (req, res) => {
   try {
-    const hoy = new Date().toISOString().split('T')[0];
+    const hoy = horaEspana();
     const { rows } = await query(
       "SELECT tipo, hora, firma FROM fichajes WHERE usuario_id = $1 AND fecha = $2 ORDER BY hora ASC",
       [req.user.id, hoy]
@@ -76,9 +82,9 @@ router.get('/hoy', authFichaje, async (req, res) => {
 router.post('/registrar', authFichaje, async (req, res) => {
   try {
     const { tipo, firma } = req.body;
-    const now = new Date();
-    const fecha = now.toISOString().split('T')[0];
-    const hora = now.toTimeString().split(' ')[0];
+    const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/Madrid' }));
+    const fecha = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+    const hora = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
 
     // Generar hash de integridad
     const datos = { usuario_id: req.user.id, tipo, fecha, hora };
