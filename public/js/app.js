@@ -751,13 +751,13 @@ async function cargarCambios() {
     <th>Tipo</th><th>Cliente</th><th>Cambio</th><th>Trabajadora</th><th>Fecha</th><th>Estado</th><th></th>
   </tr></thead><tbody>
     ${filtrados.map(c => {
-      const fecha = new Date(c.created_at).toLocaleDateString('es-ES');
+      const fecha = new Date(c.created_at).toLocaleString('es-ES', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
       return `<tr>
         <td>${tipoIcon[c.tipo] || '📌'} <span class="badge badge-${c.tipo==='baja'?'danger':c.tipo==='alta'?'success':'info'}">${c.tipo}</span></td>
         <td><b>${c.cliente_nombre}</b></td>
         <td style="max-width:300px;font-size:.85rem;white-space:pre-wrap">${c.descripcion}</td>
-        <td>${c.trabajadora_nombre || ''}</td>
-        <td>${fecha}</td>
+        <td><b>${c.trabajadora_nombre || ''}</b></td>
+        <td style="font-size:.8rem">${fecha}</td>
         <td>${c.estado === 'gestionado' ? '<span class="badge badge-success">Gestionado</span>' : '<span class="badge badge-warning">Pendiente</span>'}</td>
         <td style="white-space:nowrap">
           ${c.estado === 'pendiente' ? `<button class="btn btn-sm btn-success" onclick="gestionarCambio(${c.id})">Gestionar</button>` : ''}
@@ -805,13 +805,14 @@ async function eliminarCambio(id) { if (confirm('¿Eliminar?')) { await DEL(`/ap
 async function cargarEspera() {
   const espera = await API('/api/espera');
   $('tabla-espera').innerHTML = espera.length ? `<table><thead><tr>
-    <th>Nombre</th><th>Teléfono</th><th>Fecha</th><th>Horario deseado</th><th>Días</th><th>Estado</th><th>Notas</th><th></th>
+    <th>Nombre</th><th>Teléfono</th><th>Fecha</th><th>Horario deseado</th><th>Estado</th><th>Registrado por</th><th>Notas</th><th></th>
   </tr></thead><tbody>
     ${espera.map(e => `<tr>
       <td><b>${e.nombre}</b></td><td>${e.telefono || ''}</td>
       <td>${e.fecha ? new Date(e.fecha).toLocaleDateString('es-ES') : ''}</td>
-      <td>${e.horario_deseado || ''}</td><td>${e.dias || ''}</td>
+      <td>${e.horario_deseado || ''}</td>
       <td><span class="badge badge-${e.estado==='esperando'?'warning':e.estado==='contactado'?'info':'success'}">${e.estado}</span></td>
+      <td style="font-size:.8rem">${e.trabajadora_nombre || ''} <span style="color:var(--text-light)">${e.created_at ? new Date(e.created_at).toLocaleDateString('es-ES') : ''}</span></td>
       <td style="font-size:.8rem">${e.notas || ''}</td>
       <td style="white-space:nowrap">
         <select onchange="cambiarEstadoEspera(${e.id}, this.value)" style="padding:.3rem;border-radius:6px;border:1px solid var(--border);font-size:.8rem">
