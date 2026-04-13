@@ -24,7 +24,7 @@
     .fichaje-registro { display: flex; justify-content: space-between; padding: .5rem 0; border-bottom: 1px solid var(--border); font-size: .9rem; }
     .fichaje-registro .tipo-entrada { color: #4caf50; font-weight: 600; }
     .fichaje-registro .tipo-salida { color: #e74c3c; font-weight: 600; }
-    .firma-canvas { border: 2px solid var(--border); border-radius: 10px; background: white; touch-action: none; width: 100%; height: 120px; margin: .5rem 0; }
+    .firma-canvas { border: 2px solid var(--primary); border-radius: 10px; background: #fafafa; touch-action: none; width: 100%; height: 150px; margin: .5rem 0; }
   </style>
 </head>
 <body class="login-page">
@@ -53,7 +53,7 @@
       <div id="fichaje-estado" class="fichaje-status fuera">Cargando...</div>
 
       <div id="fichaje-firma-container" style="display:none">
-        <p style="font-size:.85rem;color:var(--text-light);margin-bottom:.3rem">Firma para confirmar:</p>
+        <p style="font-size:.9rem;color:var(--primary-dark);margin-bottom:.5rem;font-weight:600">Firma aquí para confirmar:</p>
         <canvas id="firma-canvas" class="firma-canvas"></canvas>
         <div style="display:flex;gap:.5rem">
           <button onclick="limpiarFirma()" class="btn btn-outline" style="flex:1">Limpiar</button>

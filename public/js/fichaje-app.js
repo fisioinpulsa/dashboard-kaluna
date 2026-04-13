@@ -34,9 +34,6 @@ async function mostrarPanel() {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
   });
 
-  // Inicializar firma
-  initFirma();
-
   // Cargar estado y fichajes
   await cargarEstado();
   await cargarHoy();
@@ -86,7 +83,8 @@ function iniciarFichaje(tipo) {
   const btn = document.getElementById('btn-confirmar');
   btn.textContent = tipo === 'entrada' ? 'Confirmar ENTRADA' : 'Confirmar SALIDA';
   btn.className = `fichaje-btn ${tipo}`;
-  limpiarFirma();
+  // Inicializar canvas ahora que es visible
+  setTimeout(() => { initFirma(); limpiarFirma(); }, 50);
 }
 
 async function confirmarFichaje() {
@@ -116,29 +114,45 @@ function cerrarFichaje() {
 }
 
 // FIRMA
+let firmaIniciada = false;
+
 function initFirma() {
   const canvas = document.getElementById('firma-canvas');
-  canvas.width = canvas.offsetWidth;
-  canvas.height = 120;
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width - 4;
+  canvas.height = 150;
   firmaCtx = canvas.getContext('2d');
   firmaCtx.strokeStyle = '#333';
-  firmaCtx.lineWidth = 2;
+  firmaCtx.lineWidth = 2.5;
   firmaCtx.lineCap = 'round';
+  firmaCtx.lineJoin = 'round';
 
-  canvas.addEventListener('pointerdown', (e) => {
-    firmaDibujando = true;
-    firmaCtx.beginPath();
-    const rect = canvas.getBoundingClientRect();
-    firmaCtx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
-  });
-  canvas.addEventListener('pointermove', (e) => {
-    if (!firmaDibujando) return;
-    const rect = canvas.getBoundingClientRect();
-    firmaCtx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
-    firmaCtx.stroke();
-  });
-  canvas.addEventListener('pointerup', () => firmaDibujando = false);
-  canvas.addEventListener('pointerleave', () => firmaDibujando = false);
+  if (!firmaIniciada) {
+    firmaIniciada = true;
+
+    function getPos(e) {
+      const r = canvas.getBoundingClientRect();
+      const touch = e.touches ? e.touches[0] : e;
+      return { x: touch.clientX - r.left, y: touch.clientY - r.top };
+    }
+
+    canvas.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      firmaDibujando = true;
+      const pos = getPos(e);
+      firmaCtx.beginPath();
+      firmaCtx.moveTo(pos.x, pos.y);
+    });
+    canvas.addEventListener('pointermove', (e) => {
+      if (!firmaDibujando) return;
+      e.preventDefault();
+      const pos = getPos(e);
+      firmaCtx.lineTo(pos.x, pos.y);
+      firmaCtx.stroke();
+    });
+    canvas.addEventListener('pointerup', (e) => { e.preventDefault(); firmaDibujando = false; });
+    canvas.addEventListener('pointerleave', () => firmaDibujando = false);
+  }
 }
 
 function limpiarFirma() {
