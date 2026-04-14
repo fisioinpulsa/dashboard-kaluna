@@ -89,6 +89,14 @@ function iniciarFichaje(tipo) {
 
 async function confirmarFichaje() {
   const canvas = document.getElementById('firma-canvas');
+  // Comprobar si el canvas tiene algo dibujado
+  const ctx = canvas.getContext('2d');
+  const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+  let vacio = true;
+  for (let i = 3; i < pixels.length; i += 4) {
+    if (pixels[i] > 0) { vacio = false; break; }
+  }
+  if (vacio) { alert('Debes firmar antes de confirmar'); return; }
   const firma = canvas.toDataURL('image/png');
 
   try {
