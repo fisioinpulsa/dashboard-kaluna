@@ -715,24 +715,32 @@ async function guardarFichaLesion(id) {
 
 async function añadirNotaLesion(id, tipo) {
   const textarea = document.getElementById(`lesion-${id}-nueva-${tipo}`);
+  if (!textarea) { console.error('Textarea no encontrado'); return; }
   const texto = textarea.value.trim();
-  if (!texto) return;
+  if (!texto) { alert('Escribe algo antes de añadir'); return; }
   const f = lesionesData.find(x => x.id === id);
+  if (!f) return;
   const fecha = new Date().toLocaleString('es-ES', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
   const nuevaNota = `[${currentUser.nombre} - ${fecha}]\n${texto}`;
   const campo = tipo === 'pilates' ? 'notas_pilates' : 'notas_fisio';
   const notasActuales = f[campo] || '';
   const notasNuevas = notasActuales ? notasActuales + '\n\n' + nuevaNota : nuevaNota;
-  await PUT(`/api/lesiones/${id}`, {
+
+  // Actualizar en servidor
+  const result = await PUT(`/api/lesiones/${id}`, {
     cliente_nombre: f.cliente_nombre,
     fecha: f.fecha,
     ejercicios_no_recomendados: f.ejercicios_no_recomendados,
     notas_pilates: tipo === 'pilates' ? notasNuevas : f.notas_pilates,
     notas_fisio: tipo === 'fisio' ? notasNuevas : f.notas_fisio
   });
-  await cargarLesiones();
-  const fila = document.getElementById(`ficha-lesion-${id}`);
-  if (fila) { fila.style.display = 'table-row'; renderFichaLesion(id); }
+
+  // Actualizar datos locales sin recargar toda la lista
+  f.notas_pilates = tipo === 'pilates' ? notasNuevas : f.notas_pilates;
+  f.notas_fisio = tipo === 'fisio' ? notasNuevas : f.notas_fisio;
+
+  // Re-renderizar solo esta ficha
+  renderFichaLesion(id);
 }
 
 function abrirModalLesion() {
