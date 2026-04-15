@@ -132,14 +132,21 @@ function abrirModalCliente(c) {
         <div class="form-group"><label>Nombre completo</label><input name="nombre_completo" value="${c?.nombre_completo || ''}" required></div>
         <div class="form-group"><label>Teléfono</label><input name="telefono" value="${c?.telefono || ''}"></div>
         <div class="form-group"><label>Días</label>
-          <select name="dias"><option value="">Seleccionar</option>
-            <option ${c?.dias==='Lunes y Miercoles'?'selected':''}>Lunes y Miercoles</option>
-            <option ${c?.dias==='Martes y Jueves'?'selected':''}>Martes y Jueves</option>
-            <option ${c?.dias==='Lunes'?'selected':''}>Lunes</option><option ${c?.dias==='Martes'?'selected':''}>Martes</option>
-            <option ${c?.dias==='Miércoles'||c?.dias==='Miercoles'?'selected':''}>Miércoles</option><option ${c?.dias==='Jueves'?'selected':''}>Jueves</option>
-            <option ${c?.dias==='Sin fijo'?'selected':''}>Sin fijo</option>
-            <option ${c?.dias==='clase suelta'?'selected':''}>clase suelta</option>
-          </select>
+          <div style="display:flex;flex-wrap:wrap;gap:.4rem" id="dias-checkboxes">
+            ${['Lunes','Martes','Miércoles','Jueves','Viernes'].map(d => {
+              const diasStr = (c?.dias || '').toLowerCase();
+              const checked = diasStr.includes(d.toLowerCase()) || diasStr.includes(d.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase());
+              return `<label style="display:flex;align-items:center;gap:.2rem;font-size:.85rem;cursor:pointer;padding:.2rem .5rem;border:1px solid var(--border);border-radius:6px;${checked?'background:var(--primary);color:white':''}">
+                <input type="checkbox" value="${d}" ${checked?'checked':''} onchange="this.parentElement.style.background=this.checked?'var(--primary)':'';this.parentElement.style.color=this.checked?'white':''" style="display:none"> ${d}
+              </label>`;
+            }).join('')}
+            <label style="display:flex;align-items:center;gap:.2rem;font-size:.85rem;cursor:pointer;padding:.2rem .5rem;border:1px solid var(--border);border-radius:6px;${(c?.dias||'')==='Sin fijo'?'background:var(--primary);color:white':''}">
+              <input type="checkbox" value="Sin fijo" ${(c?.dias||'')==='Sin fijo'?'checked':''} onchange="this.parentElement.style.background=this.checked?'var(--primary)':'';this.parentElement.style.color=this.checked?'white':''" style="display:none"> Sin fijo
+            </label>
+            <label style="display:flex;align-items:center;gap:.2rem;font-size:.85rem;cursor:pointer;padding:.2rem .5rem;border:1px solid var(--border);border-radius:6px;${(c?.dias||'')==='clase suelta'?'background:var(--primary);color:white':''}">
+              <input type="checkbox" value="clase suelta" ${(c?.dias||'')==='clase suelta'?'checked':''} onchange="this.parentElement.style.background=this.checked?'var(--primary)':'';this.parentElement.style.color=this.checked?'white':''" style="display:none"> Clase suelta
+            </label>
+          </div>
         </div>
         <div class="form-group"><label>Horario</label><input name="horario" value="${c?.horario || ''}" placeholder="9:00"></div>
         <div class="form-group"><label>Horario 2 (opcional)</label><input name="horario2" value="${c?.horario2 || ''}" placeholder="10:00"></div>
@@ -165,6 +172,11 @@ async function guardarCliente(e, id) {
   e.preventDefault();
   const fd = new FormData(e.target);
   const body = Object.fromEntries(fd);
+  // Recoger días de los checkboxes
+  const diasChecked = Array.from(document.querySelectorAll('#dias-checkboxes input:checked')).map(cb => cb.value);
+  body.dias = diasChecked.length === 1 && (diasChecked[0] === 'Sin fijo' || diasChecked[0] === 'clase suelta')
+    ? diasChecked[0]
+    : diasChecked.filter(d => d !== 'Sin fijo' && d !== 'clase suelta').join(' y ');
   if (id) { await PUT(`/api/clientes/${id}`, body); LOG('editar','clientes',`Editó "${body.nombre_completo}"`); }
   else { await POST('/api/clientes', body); LOG('crear','clientes',`Nuevo cliente "${body.nombre_completo}"`); }
   cerrarModal();
