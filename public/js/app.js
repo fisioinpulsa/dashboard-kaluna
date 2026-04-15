@@ -69,7 +69,9 @@ async function cargarInicio() {
   const ventasNum = data.ventas_mes?.num || 0;
   $('stats-grid').innerHTML = `
     <div class="stat-card success"><div class="stat-icon">👥</div><div class="stat-value">${data.clientes_activos || 0}</div><div class="stat-label">Clientes activos</div></div>
-    <div class="stat-card danger"><div class="stat-icon">📉</div><div class="stat-value">${data.clientes_baja || 0}</div><div class="stat-label">Bajas totales${data.clientes_baja_mes ? ` <b>(${data.clientes_baja_mes} en ${data.mes_actual})</b>` : ''}</div></div>
+    <div class="stat-card danger"><div class="stat-icon">📉</div><div class="stat-value">${data.clientes_baja || 0}</div><div class="stat-label">Bajas totales</div></div>
+    <div class="stat-card success"><div class="stat-icon">📈</div><div class="stat-value">${data.clientes_alta_mes || 0}</div><div class="stat-label">Altas en ${data.mes_actual}</div></div>
+    <div class="stat-card danger"><div class="stat-icon">📉</div><div class="stat-value">${data.clientes_baja_mes || 0}</div><div class="stat-label">Bajas en ${data.mes_actual}</div></div>
     <div class="stat-card purple"><div class="stat-icon">💰</div><div class="stat-value">${parseFloat(ventasTotal).toFixed(0)}€</div><div class="stat-label">Ventas este mes (${ventasNum})</div></div>
     <div class="stat-card warning"><div class="stat-icon">⏳</div><div class="stat-value">${data.lista_espera || 0}</div><div class="stat-label">En lista de espera</div></div>
     <div class="stat-card info"><div class="stat-icon">🎯</div><div class="stat-value">${data.proximas_pruebas || 0}</div><div class="stat-label">Clases prueba pendientes</div></div>

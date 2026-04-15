@@ -9,10 +9,11 @@ router.get('/', async (req, res) => {
     const meses = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
     const mesActual = meses[new Date().getMonth() + 1].toLowerCase();
 
-    const [clientes, bajas, bajasMes, leads, ventas, espera, pruebas, plazas] = await Promise.all([
+    const [clientes, bajas, bajasMes, altasMes, leads, ventas, espera, pruebas, plazas] = await Promise.all([
       query("SELECT COUNT(*) as total FROM kaluna_clientes WHERE estado = 'activo'"),
       query("SELECT COUNT(*) as total FROM kaluna_clientes WHERE estado = 'baja'"),
-      query("SELECT COUNT(*) as total FROM kaluna_clientes WHERE estado = 'baja' AND LOWER(mes_baja) = $1", [mesActual]),
+      query("SELECT COUNT(*) as total FROM kaluna_clientes WHERE estado = 'baja' AND LOWER(TRIM(mes_baja)) = $1", [mesActual]),
+      query("SELECT COUNT(*) as total FROM kaluna_clientes WHERE estado = 'activo' AND LOWER(TRIM(mes_inicio)) = $1", [mesActual]),
       query(`SELECT estado, COUNT(*) as total FROM kaluna_leads GROUP BY estado`),
       query(`SELECT SUM(precio) as total, COUNT(*) as num
              FROM kaluna_ventas
@@ -42,6 +43,7 @@ router.get('/', async (req, res) => {
       clientes_activos: parseInt(clientes.rows[0].total),
       clientes_baja: parseInt(bajas.rows[0].total),
       clientes_baja_mes: parseInt(bajasMes.rows[0].total),
+      clientes_alta_mes: parseInt(altasMes.rows[0].total),
       mes_actual: meses[new Date().getMonth() + 1],
       leads_por_estado: leads.rows,
       ventas_mes: { total: parseFloat(ventas.rows[0].total || 0), num: parseInt(ventas.rows[0].num || 0) },
