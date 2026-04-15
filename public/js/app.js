@@ -69,7 +69,7 @@ async function cargarInicio() {
   const ventasNum = data.ventas_mes?.num || 0;
   $('stats-grid').innerHTML = `
     <div class="stat-card success"><div class="stat-icon">👥</div><div class="stat-value">${data.clientes_activos || 0}</div><div class="stat-label">Clientes activos</div></div>
-    <div class="stat-card danger"><div class="stat-icon">📉</div><div class="stat-value">${data.clientes_baja || 0}</div><div class="stat-label">Bajas totales</div></div>
+    <div class="stat-card danger"><div class="stat-icon">📉</div><div class="stat-value">${data.clientes_baja || 0}</div><div class="stat-label">Bajas totales${data.clientes_baja_mes ? ` <b>(${data.clientes_baja_mes} en ${data.mes_actual})</b>` : ''}</div></div>
     <div class="stat-card purple"><div class="stat-icon">💰</div><div class="stat-value">${parseFloat(ventasTotal).toFixed(0)}€</div><div class="stat-label">Ventas este mes (${ventasNum})</div></div>
     <div class="stat-card warning"><div class="stat-icon">⏳</div><div class="stat-value">${data.lista_espera || 0}</div><div class="stat-label">En lista de espera</div></div>
     <div class="stat-card info"><div class="stat-icon">🎯</div><div class="stat-value">${data.proximas_pruebas || 0}</div><div class="stat-label">Clases prueba pendientes</div></div>
@@ -111,7 +111,7 @@ async function cargarClientes() {
       <td>${c.mes_inicio || ''}</td>
       <td>${c.estado === 'activo' ? '<span class="badge badge-success">Activo</span>' : '<span class="badge badge-danger">Baja '+(c.mes_baja||'')+'</span>'}</td>
       <td>${c.metodo_pago === 'domiciliacion' ? '<span class="badge badge-purple">Domiciliación</span>' : c.metodo_pago === 'efectivo_tarjeta' ? '<span class="badge badge-warning">Efectivo/Tarjeta</span>' : '<span class="badge badge-gray">-</span>'}</td>
-      <td>${c.metodo_pago === 'efectivo_tarjeta' ? (c.fianza_pagada ? '<span class="badge badge-success">Fianza OK</span>' : `<button class="btn btn-sm btn-warning" onclick="marcarFianza(${c.id})">Sin fianza</button>`) : ''}</td>
+      <td>${c.metodo_pago === 'domiciliacion' ? (c.iban_entregado ? '<span class="badge badge-success">IBAN OK</span>' : `<button class="btn btn-sm btn-warning" onclick="marcarIban(${c.id})">Sin IBAN</button>`) : c.metodo_pago === 'efectivo_tarjeta' ? (c.fianza_pagada ? '<span class="badge badge-success">Fianza OK</span>' : `<button class="btn btn-sm btn-warning" onclick="marcarFianza(${c.id})">Sin fianza</button>`) : ''}</td>
       <td style="max-width:200px;font-size:.8rem">${c.notas || ''}</td>
       <td style="white-space:nowrap">
         <button class="btn btn-sm btn-outline" onclick='editarCliente(${JSON.stringify(c).replace(/'/g,"&#39;")})'>Editar</button>
@@ -120,7 +120,7 @@ async function cargarClientes() {
     </tr>`;
   });
   $('tabla-clientes').innerHTML = `<table><thead><tr>
-    <th>Nombre</th><th>Teléfono</th><th>Días</th><th>Horario</th><th>Días/sem</th><th>Inicio</th><th>Estado</th><th>Pago</th><th>Fianza</th><th>Notas</th><th></th>
+    <th>Nombre</th><th>Teléfono</th><th>Días</th><th>Horario</th><th>Días/sem</th><th>Inicio</th><th>Estado</th><th>Pago</th><th>IBAN/Fianza</th><th>Notas</th><th></th>
   </tr></thead><tbody>${rows}</tbody></table>`;
 }
 
@@ -175,6 +175,13 @@ async function marcarFianza(id) {
   if (!confirm('¿Marcar fianza como pagada?')) return;
   await PUT(`/api/clientes/${id}`, { fianza_pagada: true });
   LOG('editar','clientes',`Fianza marcada como pagada`);
+  cargarClientes();
+}
+
+async function marcarIban(id) {
+  if (!confirm('¿Marcar IBAN como entregado?')) return;
+  await PUT(`/api/clientes/${id}`, { iban_entregado: true });
+  LOG('editar','clientes',`IBAN marcado como entregado`);
   cargarClientes();
 }
 

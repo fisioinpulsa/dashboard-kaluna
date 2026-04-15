@@ -48,11 +48,17 @@ router.post('/', async (req, res) => {
 // Actualizar cliente
 router.put('/:id', async (req, res) => {
   try {
-    const { nombre_completo, telefono, dias, horario, horario2, dias_semana, notas, mes_inicio, mes_baja, estado, metodo_pago, fianza_pagada } = req.body;
-    // Si solo viene fianza_pagada, actualizar solo eso
-    if (fianza_pagada !== undefined && !nombre_completo) {
-      const { rows } = await query("UPDATE kaluna_clientes SET fianza_pagada = $1 WHERE id = $2 RETURNING *", [fianza_pagada, req.params.id]);
-      return res.json(rows[0]);
+    const { nombre_completo, telefono, dias, horario, horario2, dias_semana, notas, mes_inicio, mes_baja, estado, metodo_pago, fianza_pagada, iban_entregado } = req.body;
+    // Actualización parcial (solo un campo)
+    if (!nombre_completo) {
+      if (fianza_pagada !== undefined) {
+        const { rows } = await query("UPDATE kaluna_clientes SET fianza_pagada = $1 WHERE id = $2 RETURNING *", [fianza_pagada, req.params.id]);
+        return res.json(rows[0]);
+      }
+      if (iban_entregado !== undefined) {
+        const { rows } = await query("UPDATE kaluna_clientes SET iban_entregado = $1 WHERE id = $2 RETURNING *", [iban_entregado, req.params.id]);
+        return res.json(rows[0]);
+      }
     }
     const { rows } = await query(
       `UPDATE kaluna_clientes SET nombre_completo=$1, telefono=$2, dias=$3, horario=$4, horario2=$5,
