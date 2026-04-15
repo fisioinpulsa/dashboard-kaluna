@@ -498,16 +498,36 @@ const LEAD_ESTADOS = [
   { key: 'convertido', label: 'Convertido', color: 'success' }
 ];
 let leadsData = [];
+let filtroLeadsActual = 'pendientes';
+
+function filtrarLeads(filtro) {
+  filtroLeadsActual = filtro;
+  document.querySelectorAll('.filtro-leads').forEach(b => { b.classList.remove('btn-primary'); b.classList.add('btn-outline'); b.classList.remove('active'); });
+  document.querySelector(`.filtro-leads[data-filtro="${filtro}"]`).classList.add('btn-primary');
+  document.querySelector(`.filtro-leads[data-filtro="${filtro}"]`).classList.remove('btn-outline');
+  document.querySelector(`.filtro-leads[data-filtro="${filtro}"]`).classList.add('active');
+  renderLeads();
+}
 
 async function cargarLeads() {
   leadsData = await API('/api/leads');
+  renderLeads();
+}
+
+function renderLeads() {
   const estadoColor = e => { const m = LEAD_ESTADOS.find(x => x.key === e); return m ? m.color : 'gray'; };
   const estadoLabel = e => { const m = LEAD_ESTADOS.find(x => x.key === e); return m ? m.label : e; };
 
-  $('pipeline-leads').innerHTML = leadsData.length ? `<table><thead><tr>
+  const agendados = ['agendada', 'convertido'];
+  let filtrados;
+  if (filtroLeadsActual === 'agendados') filtrados = leadsData.filter(l => agendados.includes(l.estado));
+  else if (filtroLeadsActual === 'pendientes') filtrados = leadsData.filter(l => !agendados.includes(l.estado));
+  else filtrados = leadsData;
+
+  $('pipeline-leads').innerHTML = filtrados.length ? `<table><thead><tr>
     <th>Nombre</th><th>Teléfono</th><th>Estado</th><th>Trabajadora</th><th>Notas</th><th></th>
   </tr></thead><tbody>
-    ${leadsData.map(l => {
+    ${filtrados.map(l => {
       const numNotas = (() => { try { return JSON.parse(l.historial_notas || '[]').length; } catch { return 0; } })();
       return `<tr style="cursor:pointer" onclick="toggleFichaLead(${l.id})">
         <td><b>${l.nombre}</b></td>
