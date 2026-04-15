@@ -1,6 +1,7 @@
 let currentUser = null;
 const $ = id => document.getElementById(id);
 const esAdmin = () => currentUser?.rol === 'admin';
+const esSuperAdmin = () => currentUser?.rol === 'admin' && currentUser?.id === 1;
 const API = path => fetch(path).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); });
 const POST = (path, body) => fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(r => r.json());
 const PUT = (path, body) => fetch(path, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(r => r.json());
@@ -114,7 +115,7 @@ async function cargarClientes() {
       <td style="max-width:200px;font-size:.8rem">${c.notas || ''}</td>
       <td style="white-space:nowrap">
         <button class="btn btn-sm btn-outline" onclick='editarCliente(${JSON.stringify(c).replace(/'/g,"&#39;")})'>Editar</button>
-        ${esAdmin() && c.estado === 'activo' ? `<button class="btn btn-sm btn-danger" onclick="darBaja(${c.id})">Baja</button>` : ''}
+        ${esSuperAdmin() && c.estado === 'activo' ? `<button class="btn btn-sm btn-danger" onclick="darBaja(${c.id})">Baja</button>` : ''}
       </td>
     </tr>`;
   });
@@ -245,7 +246,7 @@ function abrirModalPlaza(grupoId) {
       slots += `<div style="display:flex;align-items:center;gap:.5rem;padding:.5rem 0;border-bottom:1px solid var(--border)">
         <span style="width:24px;text-align:center;font-weight:700;color:var(--primary)">${i+1}</span>
         <span style="flex:1">${ocupante.nombre_completo}</span>
-        ${esAdmin() ? `<button class="btn btn-sm btn-danger" onclick="quitarOcupanteModal(${ocupante.id},${grupoId})" style="padding:.15rem .4rem;font-size:.7rem">X</button>` : ''}
+        ${esSuperAdmin() ? `<button class="btn btn-sm btn-danger" onclick="quitarOcupanteModal(${ocupante.id},${grupoId})" style="padding:.15rem .4rem;font-size:.7rem">X</button>` : ''}
       </div>`;
     } else {
       slots += `<div style="display:flex;align-items:center;gap:.5rem;padding:.5rem 0;border-bottom:1px solid var(--border)">
@@ -363,7 +364,7 @@ async function cargarSoloVentas() {
           <td><span class="badge ${v.metodo_pago === 'Efectivo' ? 'badge-success' : 'badge-info'}">${v.metodo_pago || ''}</span></td>
           <td>${v.trabajadora_nombre || ''}</td>
           <td style="font-size:.8rem">${v.notas || ''}</td>
-          ${esAdmin() ? `<td><button class="btn btn-sm btn-danger" onclick="eliminarVenta(${v.id})">X</button></td>` : '<td></td>'}
+          ${esSuperAdmin() ? `<td><button class="btn btn-sm btn-danger" onclick="eliminarVenta(${v.id})">X</button></td>` : '<td></td>'}
         </tr>`; }).join('')}
       </tbody></table></div></div>
     </div>`;
@@ -554,7 +555,7 @@ function renderFichaLead(id) {
         </div>
         <div style="margin-top:.75rem;display:flex;gap:.5rem">
           <button class="btn btn-primary btn-sm" onclick="guardarFichaLead(${id})">Guardar cambios</button>
-          ${esAdmin() ? `<button class="btn btn-danger btn-sm" onclick="eliminarLead(${id})">Eliminar</button>` : ''}
+          ${esSuperAdmin() ? `<button class="btn btn-danger btn-sm" onclick="eliminarLead(${id})">Eliminar</button>` : ''}
         </div>
       </div>
       <div>
@@ -696,7 +697,7 @@ function renderFichaLesion(id) {
     </div>
     <div style="margin-top:.75rem;display:flex;gap:.5rem">
       <button class="btn btn-primary btn-sm" onclick="guardarFichaLesion(${id})">Guardar ejercicios</button>
-      ${esAdmin() ? `<button class="btn btn-danger btn-sm" onclick="eliminarLesion(${id})">Eliminar ficha</button>` : ''}
+      ${esSuperAdmin() ? `<button class="btn btn-danger btn-sm" onclick="eliminarLesion(${id})">Eliminar ficha</button>` : ''}
     </div>`;
 }
 
@@ -851,7 +852,7 @@ async function cargarEspera() {
           <option value="contactado" ${e.estado==='contactado'?'selected':''}>Contactado</option>
           <option value="colocado" ${e.estado==='colocado'?'selected':''}>Colocado</option>
         </select>
-        ${esAdmin() ? `<button class="btn btn-sm btn-danger" onclick="eliminarEspera(${e.id})">X</button>` : ''}
+        ${esSuperAdmin() ? `<button class="btn btn-sm btn-danger" onclick="eliminarEspera(${e.id})">X</button>` : ''}
       </td>
     </tr>`).join('')}
   </tbody></table>` : '<p style="color:var(--text-light)">Lista de espera vacía</p>';
@@ -961,7 +962,7 @@ function renderDiarioEntradas(entradas, containerId) {
     return `${header}<div class="aviso-card" style="border-left-color:var(--primary)">
       <div class="aviso-header">
         <div><span style="font-weight:700;color:var(--primary)">${e.autor || 'Sistema'}</span><span class="aviso-meta" style="margin-left:.5rem">${hora}</span></div>
-        ${esAdmin() || e.usuario_id === currentUser?.id ? `<button class="btn btn-sm btn-danger" onclick="eliminarDiario(${e.id})">X</button>` : ''}
+        ${esSuperAdmin() || e.usuario_id === currentUser?.id ? `<button class="btn btn-sm btn-danger" onclick="eliminarDiario(${e.id})">X</button>` : ''}
       </div>
       <div class="aviso-desc">${e.contenido}</div>
     </div>`;
@@ -1129,18 +1130,22 @@ async function cargarFichajes() {
 
   // Agrupar por día
   let lastFecha = null;
-  let html = '<table><thead><tr><th>Empleado</th><th>Tipo</th><th>Hora</th><th>Firma</th></tr></thead><tbody>';
+  let html = `<div style="margin-bottom:1rem"><button class="btn btn-primary" onclick="descargarPDFFichajes()">📄 Descargar PDF del mes</button></div>`;
+  html += '<table><thead><tr><th>Empleado</th><th>Tipo</th><th>Hora</th><th>Firma</th></tr></thead><tbody>';
   registros.forEach(f => {
     const fecha = new Date(f.fecha).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
     if (fecha !== lastFecha) {
       lastFecha = fecha;
       html += `<tr><td colspan="4" style="background:var(--primary);color:white;font-weight:700;padding:.5rem 1rem;text-transform:capitalize">${fecha}</td></tr>`;
     }
+    const firmaHtml = f.firma && f.firma.startsWith('data:image')
+      ? `<img src="${f.firma}" style="height:40px;border:1px solid var(--border);border-radius:4px;cursor:pointer" onclick="abrirModal('<img src=\\'${f.firma}\\' style=\\'max-width:100%;max-height:400px\\'><br><button class=\\'btn btn-outline\\' onclick=\\'cerrarModal()\\'>Cerrar</button>')">`
+      : (f.firma ? '<span style="color:var(--success);font-size:.8rem">✓ Firmado</span>' : '<span style="color:var(--text-light);font-size:.8rem">Sin firma</span>');
     html += `<tr>
       <td><b>${f.empleado_nombre || ''}</b></td>
       <td>${f.tipo === 'entrada' ? '<span class="badge badge-success">Entrada</span>' : '<span class="badge badge-danger">Salida</span>'}</td>
       <td>${f.hora ? f.hora.substring(0, 5) : ''}</td>
-      <td>${f.firma ? '<span style="color:var(--success);font-size:.8rem">✓ Firmado</span>' : ''}</td>
+      <td>${firmaHtml}</td>
     </tr>`;
   });
   html += '</tbody></table>';

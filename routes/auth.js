@@ -10,9 +10,9 @@ router.post('/login', async (req, res) => {
     const { email, password, pin } = req.body;
 
     if (pin) {
-      // Login trabajadora por PIN
+      // Login por PIN (trabajadoras y admins sin email)
       const { rows } = await query(
-        "SELECT * FROM kaluna_usuarios WHERE pin = $1 AND activo = true AND rol = 'trabajadora'",
+        "SELECT * FROM kaluna_usuarios WHERE pin = $1 AND activo = true",
         [pin]
       );
       if (rows.length === 0) return res.status(401).json({ error: 'PIN incorrecto' });
