@@ -7,13 +7,15 @@ router.use(verificarToken);
 router.get('/', async (req, res) => {
   try {
     const meses = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-    const mesActual = meses[new Date().getMonth() + 1].toLowerCase();
+    const mesIdx = new Date().getMonth() + 1;
+    const mesActual = meses[mesIdx].toLowerCase();
+    const mesSiguiente = meses[mesIdx < 12 ? mesIdx + 1 : 1].toLowerCase();
 
     const [clientes, bajas, bajasMes, altasMes, leads, ventas, espera, pruebas, plazas] = await Promise.all([
       query("SELECT COUNT(*) as total FROM kaluna_clientes WHERE estado = 'activo'"),
       query("SELECT COUNT(*) as total FROM kaluna_clientes WHERE estado = 'baja'"),
-      query("SELECT COUNT(*) as total FROM kaluna_clientes WHERE estado = 'baja' AND LOWER(TRIM(mes_baja)) = $1", [mesActual]),
-      query("SELECT COUNT(*) as total FROM kaluna_clientes WHERE estado = 'activo' AND LOWER(TRIM(mes_inicio)) = $1", [mesActual]),
+      query("SELECT COUNT(*) as total FROM kaluna_clientes WHERE estado = 'baja' AND LOWER(TRIM(mes_baja)) = $1", [mesSiguiente]),
+      query("SELECT COUNT(*) as total FROM kaluna_clientes WHERE LOWER(TRIM(mes_inicio)) = $1", [mesActual]),
       query(`SELECT estado, COUNT(*) as total FROM kaluna_leads GROUP BY estado`),
       query(`SELECT SUM(precio) as total, COUNT(*) as num
              FROM kaluna_ventas

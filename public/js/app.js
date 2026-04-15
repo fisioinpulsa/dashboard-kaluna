@@ -74,7 +74,6 @@ async function cargarInicio() {
     <div class="stat-card danger"><div class="stat-icon">📉</div><div class="stat-value">${data.clientes_baja_mes || 0}</div><div class="stat-label">Bajas en ${data.mes_actual}</div></div>
     <div class="stat-card purple"><div class="stat-icon">💰</div><div class="stat-value">${parseFloat(ventasTotal).toFixed(0)}€</div><div class="stat-label">Ventas este mes (${ventasNum})</div></div>
     <div class="stat-card warning"><div class="stat-icon">⏳</div><div class="stat-value">${data.lista_espera || 0}</div><div class="stat-label">En lista de espera</div></div>
-    <div class="stat-card info"><div class="stat-icon">🎯</div><div class="stat-value">${data.proximas_pruebas || 0}</div><div class="stat-label">Clases prueba pendientes</div></div>
     <div class="stat-card purple"><div class="stat-icon">🗓</div><div class="stat-value">${data.total_grupos || 0}</div><div class="stat-label">Grupos configurados</div></div>
   `;
   // Resumen ventas
