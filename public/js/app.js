@@ -548,9 +548,11 @@ function renderLeads() {
   const estadoLabel = e => { const m = LEAD_ESTADOS.find(x => x.key === e); return m ? m.label : e; };
 
   const agendados = ['agendada', 'convertido'];
+  const noAgenda = ['no_agenda'];
   let filtrados;
   if (filtroLeadsActual === 'agendados') filtrados = leadsData.filter(l => agendados.includes(l.estado));
-  else if (filtroLeadsActual === 'pendientes') filtrados = leadsData.filter(l => !agendados.includes(l.estado));
+  else if (filtroLeadsActual === 'no_agenda') filtrados = leadsData.filter(l => noAgenda.includes(l.estado));
+  else if (filtroLeadsActual === 'pendientes') filtrados = leadsData.filter(l => !agendados.includes(l.estado) && !noAgenda.includes(l.estado));
   else filtrados = leadsData;
 
   $('pipeline-leads').innerHTML = filtrados.length ? `<table><thead><tr>
