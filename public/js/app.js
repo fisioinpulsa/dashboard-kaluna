@@ -70,8 +70,8 @@ async function cargarInicio() {
   $('stats-grid').innerHTML = `
     <div class="stat-card success"><div class="stat-icon">👥</div><div class="stat-value">${data.clientes_activos || 0}</div><div class="stat-label">Clientes activos</div></div>
     <div class="stat-card danger"><div class="stat-icon">📉</div><div class="stat-value">${data.clientes_baja || 0}</div><div class="stat-label">Bajas totales</div></div>
-    <div class="stat-card success"><div class="stat-icon">📈</div><div class="stat-value">${data.clientes_alta_mes || 0}</div><div class="stat-label">Altas en ${data.mes_actual}</div></div>
-    <div class="stat-card danger"><div class="stat-icon">📉</div><div class="stat-value">${data.clientes_baja_mes || 0}</div><div class="stat-label">Bajas en ${data.mes_actual}</div></div>
+    <div class="stat-card success" style="cursor:pointer" onclick="verListaMes('altas')"><div class="stat-icon">📈</div><div class="stat-value">${data.clientes_alta_mes || 0}</div><div class="stat-label">Altas en ${data.mes_actual} <span style="font-size:.7rem">▶ ver</span></div></div>
+    <div class="stat-card danger" style="cursor:pointer" onclick="verListaMes('bajas')"><div class="stat-icon">📉</div><div class="stat-value">${data.clientes_baja_mes || 0}</div><div class="stat-label">Bajas en ${data.mes_actual} <span style="font-size:.7rem">▶ ver</span></div></div>
     <div class="stat-card purple"><div class="stat-icon">💰</div><div class="stat-value">${parseFloat(ventasTotal).toFixed(0)}€</div><div class="stat-label">Ventas este mes (${ventasNum})</div></div>
     <div class="stat-card warning"><div class="stat-icon">⏳</div><div class="stat-value">${data.lista_espera || 0}</div><div class="stat-label">En lista de espera</div></div>
     <div class="stat-card purple"><div class="stat-icon">🗓</div><div class="stat-value">${data.total_grupos || 0}</div><div class="stat-label">Grupos configurados</div></div>
@@ -85,6 +85,22 @@ async function cargarInicio() {
   } else {
     $('ventas-resumen-tabla').innerHTML = '<p style="color:var(--text-light)">Sin datos de ventas aún</p>';
   }
+
+  // Guardar listas para modal
+  window._altasMes = data.lista_altas_mes || [];
+  window._bajasMes = data.lista_bajas_mes || [];
+  window._mesActual = data.mes_actual;
+}
+
+function verListaMes(tipo) {
+  const lista = tipo === 'altas' ? window._altasMes : window._bajasMes;
+  const titulo = tipo === 'altas' ? `Altas en ${window._mesActual}` : `Bajas en ${window._mesActual}`;
+  const icon = tipo === 'altas' ? '📈' : '📉';
+  abrirModal(`<button class="modal-close" onclick="cerrarModal()">✕</button>
+    <h3>${icon} ${titulo}</h3>
+    ${lista.length ? `<table style="margin-top:1rem"><thead><tr><th>Nombre</th><th>Días</th><th>Horario</th></tr></thead><tbody>
+      ${lista.map(c => `<tr><td><b>${c.nombre_completo}</b></td><td>${c.dias || ''}</td><td>${c.horario || ''}</td></tr>`).join('')}
+    </tbody></table>` : '<p style="color:var(--text-light);margin-top:1rem">Ninguna</p>'}`);
 }
 
 // ==================== CLIENTES ====================

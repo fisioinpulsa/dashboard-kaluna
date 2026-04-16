@@ -31,6 +31,14 @@ router.get('/', async (req, res) => {
       SELECT dias, COUNT(*) as total FROM kaluna_clientes WHERE estado = 'activo' GROUP BY dias
     `);
 
+    // Nombres de altas y bajas del mes
+    const { rows: listaBajasMes } = await query(
+      "SELECT nombre_completo, dias, horario FROM kaluna_clientes WHERE estado = 'baja' AND LOWER(TRIM(mes_baja)) = $1", [mesSiguiente]
+    );
+    const { rows: listaAltasMes } = await query(
+      "SELECT nombre_completo, dias, horario FROM kaluna_clientes WHERE LOWER(TRIM(mes_inicio)) = $1", [mesActual]
+    );
+
     // Ventas últimos 6 meses
     const { rows: ventasMeses } = await query(`
       SELECT EXTRACT(MONTH FROM fecha) as mes, EXTRACT(YEAR FROM fecha) as año,
@@ -53,7 +61,9 @@ router.get('/', async (req, res) => {
       proximas_pruebas: parseInt(pruebas.rows[0].total),
       total_grupos: parseInt(plazas.rows[0].total || 0),
       clientes_por_dia: clientesPorDia,
-      ventas_meses: ventasMeses
+      ventas_meses: ventasMeses,
+      lista_bajas_mes: listaBajasMes,
+      lista_altas_mes: listaAltasMes
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
