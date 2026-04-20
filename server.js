@@ -27,6 +27,7 @@ app.use('/api/lesiones', require('./routes/lesiones'));
 app.use('/api/cambios', require('./routes/cambios'));
 app.use('/api/fichaje', require('./routes/fichaje'));
 app.use('/api/actividad', require('./routes/actividad'));
+app.use('/api/meta-webhook', require('./routes/meta-webhook'));
 
 // Pages
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
