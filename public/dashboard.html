@@ -91,7 +91,11 @@
     <div class="section" id="sec-leads">
       <div class="main-header">
         <h1>Leads / Contactos</h1>
-        <button class="btn btn-primary" onclick="abrirModalLead()">+ Nuevo lead</button>
+        <div style="display:flex;gap:.5rem">
+          <button class="btn btn-outline" onclick="document.getElementById('meta-csv-input').click()">📥 Importar CSV de Meta</button>
+          <input type="file" id="meta-csv-input" accept=".csv" style="display:none" onchange="importarCSVMeta(event)">
+          <button class="btn btn-primary" onclick="abrirModalLead()">+ Nuevo lead</button>
+        </div>
       </div>
       <div style="display:flex;gap:.5rem;margin-bottom:1rem">
         <button class="btn btn-primary btn-sm filtro-leads active" data-filtro="pendientes" onclick="filtrarLeads('pendientes')">Pendientes</button>

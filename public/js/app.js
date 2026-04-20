@@ -543,6 +543,29 @@ async function cargarLeads() {
   renderLeads();
 }
 
+async function importarCSVMeta(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    const csv = e.target.result;
+    try {
+      const res = await fetch('/api/import-csv/meta-leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ csv })
+      });
+      const data = await res.json();
+      if (data.error) { alert('Error: ' + data.error); return; }
+      LOG('crear','leads',`Importados ${data.nuevos} leads de Meta`);
+      alert(`✅ ${data.nuevos} leads nuevos importados\n⏭ ${data.duplicados} duplicados ignorados${data.nuevosNombres?.length ? '\n\nNuevos:\n- ' + data.nuevosNombres.slice(0,10).join('\n- ') + (data.nuevosNombres.length > 10 ? `\n...y ${data.nuevosNombres.length - 10} más` : '') : ''}`);
+      cargarLeads();
+    } catch (err) { alert('Error al importar: ' + err.message); }
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
 function renderLeads() {
   const estadoColor = e => { const m = LEAD_ESTADOS.find(x => x.key === e); return m ? m.color : 'gray'; };
   const estadoLabel = e => { const m = LEAD_ESTADOS.find(x => x.key === e); return m ? m.label : e; };
