@@ -68,7 +68,7 @@ async function cargarInicio() {
   const ventasTotal = data.ventas_mes?.total || 0;
   const ventasNum = data.ventas_mes?.num || 0;
   $('stats-grid').innerHTML = `
-    <div class="stat-card success"><div class="stat-icon">👥</div><div class="stat-value">${data.clientes_activos || 0}</div><div class="stat-label">Clientes activos</div></div>
+    <div class="stat-card success" style="cursor:pointer" onclick="verDesgloseActivos()"><div class="stat-icon">👥</div><div class="stat-value">${data.clientes_activos || 0}</div><div class="stat-label">Clientes activos <span style="font-size:.7rem">▶ ver</span></div></div>
     <div class="stat-card danger"><div class="stat-icon">📉</div><div class="stat-value">${data.clientes_baja || 0}</div><div class="stat-label">Bajas totales</div></div>
     <div class="stat-card success" style="cursor:pointer" onclick="verListaMes('altas')"><div class="stat-icon">📈</div><div class="stat-value">${data.clientes_alta_mes || 0}</div><div class="stat-label">Altas en ${data.mes_actual} <span style="font-size:.7rem">▶ ver</span></div></div>
     <div class="stat-card danger" style="cursor:pointer" onclick="verListaMes('bajas')"><div class="stat-icon">📉</div><div class="stat-value">${data.clientes_baja_mes || 0}</div><div class="stat-label">Bajas en ${data.mes_actual} <span style="font-size:.7rem">▶ ver</span></div></div>
@@ -90,6 +90,8 @@ async function cargarInicio() {
   window._altasMes = data.lista_altas_mes || [];
   window._bajasMes = data.lista_bajas_mes || [];
   window._mesActual = data.mes_actual;
+  window._activos = data.lista_activos || [];
+  window._frecuencia = data.clientes_por_frecuencia || [];
 }
 
 function verListaMes(tipo) {
@@ -101,6 +103,43 @@ function verListaMes(tipo) {
     ${lista.length ? `<table style="margin-top:1rem"><thead><tr><th>Nombre</th><th>Días</th><th>Horario</th></tr></thead><tbody>
       ${lista.map(c => `<tr><td><b>${c.nombre_completo}</b></td><td>${c.dias || ''}</td><td>${c.horario || ''}</td></tr>`).join('')}
     </tbody></table>` : '<p style="color:var(--text-light);margin-top:1rem">Ninguna</p>'}`);
+}
+
+function verDesgloseActivos() {
+  const frec = window._frecuencia || [];
+  const activos = window._activos || [];
+
+  // Resumen por frecuencia
+  let resumen = '<div style="display:flex;gap:.75rem;flex-wrap:wrap;margin:1rem 0">';
+  frec.forEach(f => {
+    const dias = parseInt(f.dias_semana) || 0;
+    const label = dias === 0 ? 'Sin definir' : dias === 1 ? '1 día/semana' : `${dias} días/semana`;
+    const color = dias === 1 ? 'var(--info)' : dias === 2 ? 'var(--success)' : dias >= 3 ? 'var(--primary)' : 'var(--text-light)';
+    resumen += `<div onclick="filtrarDesglose(${dias})" style="cursor:pointer;padding:.6rem 1rem;background:white;border:2px solid ${color};border-radius:10px;text-align:center;min-width:120px">
+      <div style="font-size:1.6rem;font-weight:700;color:${color}">${f.total}</div>
+      <div style="font-size:.8rem;color:var(--text-light)">${label}</div>
+    </div>`;
+  });
+  resumen += '</div>';
+
+  abrirModal(`<button class="modal-close" onclick="cerrarModal()">✕</button>
+    <h3>👥 Clientes activos (${activos.length})</h3>
+    ${resumen}
+    <div id="desglose-activos-lista">
+      <table><thead><tr><th>Nombre</th><th>Días/sem</th><th>Días</th><th>Horario</th></tr></thead><tbody>
+        ${activos.map(c => `<tr><td><b>${c.nombre_completo}</b></td><td><span class="badge badge-purple">${c.dias_semana || '-'}</span></td><td style="font-size:.85rem">${c.dias || ''}</td><td>${c.horario || ''}</td></tr>`).join('')}
+      </tbody></table>
+    </div>`);
+}
+
+function filtrarDesglose(dias) {
+  const activos = window._activos || [];
+  const filtrados = dias === 0 ? activos.filter(c => !c.dias_semana) : activos.filter(c => parseInt(c.dias_semana) === dias);
+  document.getElementById('desglose-activos-lista').innerHTML = `
+    <p style="margin-bottom:.5rem;color:var(--text-light)"><b>${filtrados.length}</b> clientes con ${dias === 0 ? 'sin frecuencia definida' : dias + (dias === 1 ? ' día' : ' días') + '/semana'} <button class="btn btn-sm btn-outline" onclick="verDesgloseActivos()">Ver todos</button></p>
+    <table><thead><tr><th>Nombre</th><th>Días/sem</th><th>Días</th><th>Horario</th></tr></thead><tbody>
+      ${filtrados.map(c => `<tr><td><b>${c.nombre_completo}</b></td><td><span class="badge badge-purple">${c.dias_semana || '-'}</span></td><td style="font-size:.85rem">${c.dias || ''}</td><td>${c.horario || ''}</td></tr>`).join('')}
+    </tbody></table>`;
 }
 
 // ==================== CLIENTES ====================
