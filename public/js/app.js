@@ -497,7 +497,7 @@ function abrirModalVenta() {
         <div class="form-group"><label>Cliente</label><input name="cliente_nombre" required></div>
         <div class="form-group"><label>Fecha</label><input type="date" name="fecha" value="${new Date().toISOString().split('T')[0]}"></div>
         <div class="form-group"><label>Artículo</label>
-          <select name="articulo"><option>Suscripción kaluna</option><option>Calcetines</option><option>Bebida</option><option>Clase suelta</option><option>Otro</option></select>
+          <select name="articulo"><option>Suscripción kaluna</option><option>Fianza</option><option>Calcetines</option><option>Bebida</option><option>Clase suelta</option><option>Otro</option></select>
         </div>
         <div class="form-group"><label>Precio (€)</label><input type="number" name="precio" step="0.01" required></div>
         <div class="form-group"><label>Método de pago</label><select name="metodo_pago"><option>Efectivo</option><option>Tarjeta</option></select></div>
