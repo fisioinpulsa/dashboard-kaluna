@@ -39,14 +39,27 @@ router.get('/', async (req, res) => {
       "SELECT nombre_completo, dias, horario FROM kaluna_clientes WHERE LOWER(TRIM(mes_inicio)) = $1", [mesActual]
     );
 
-    // Desglose de clientes activos por días/semana
+    // Desglose de clientes activos por días/semana (separando clase suelta)
     const { rows: clientesPorFrecuencia } = await query(`
-      SELECT COALESCE(dias_semana, 0) as dias_semana, COUNT(*) as total
+      SELECT
+        CASE
+          WHEN LOWER(TRIM(dias)) = 'clase suelta' THEN -1
+          WHEN LOWER(TRIM(dias)) = 'sin fijo' THEN -2
+          ELSE COALESCE(dias_semana, 0)
+        END as dias_semana,
+        COUNT(*) as total
       FROM kaluna_clientes WHERE estado = 'activo'
-      GROUP BY dias_semana ORDER BY dias_semana
+      GROUP BY 1 ORDER BY 1
     `);
     const { rows: listaActivos } = await query(
-      "SELECT nombre_completo, dias, horario, dias_semana FROM kaluna_clientes WHERE estado = 'activo' ORDER BY dias_semana DESC, nombre_completo"
+      `SELECT nombre_completo, dias, horario, dias_semana,
+        CASE
+          WHEN LOWER(TRIM(dias)) = 'clase suelta' THEN -1
+          WHEN LOWER(TRIM(dias)) = 'sin fijo' THEN -2
+          ELSE COALESCE(dias_semana, 0)
+        END as categoria
+      FROM kaluna_clientes WHERE estado = 'activo'
+      ORDER BY categoria DESC, nombre_completo`
     );
 
     // Ventas últimos 6 meses

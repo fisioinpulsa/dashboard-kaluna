@@ -112,9 +112,14 @@ function verDesgloseActivos() {
   // Resumen por frecuencia
   let resumen = '<div style="display:flex;gap:.75rem;flex-wrap:wrap;margin:1rem 0">';
   frec.forEach(f => {
-    const dias = parseInt(f.dias_semana) || 0;
-    const label = dias === 0 ? 'Sin definir' : dias === 1 ? '1 día/semana' : `${dias} días/semana`;
-    const color = dias === 1 ? 'var(--info)' : dias === 2 ? 'var(--success)' : dias >= 3 ? 'var(--primary)' : 'var(--text-light)';
+    const dias = parseInt(f.dias_semana);
+    let label, color;
+    if (dias === -1) { label = 'Clase suelta'; color = 'var(--warning)'; }
+    else if (dias === -2) { label = 'Sin fijo'; color = 'var(--text-light)'; }
+    else if (dias === 0) { label = 'Sin definir'; color = 'var(--text-light)'; }
+    else if (dias === 1) { label = '1 día/semana'; color = 'var(--info)'; }
+    else if (dias === 2) { label = '2 días/semana'; color = 'var(--success)'; }
+    else { label = `${dias} días/semana`; color = 'var(--primary)'; }
     resumen += `<div onclick="filtrarDesglose(${dias})" style="cursor:pointer;padding:.6rem 1rem;background:white;border:2px solid ${color};border-radius:10px;text-align:center;min-width:120px">
       <div style="font-size:1.6rem;font-weight:700;color:${color}">${f.total}</div>
       <div style="font-size:.8rem;color:var(--text-light)">${label}</div>
@@ -132,11 +137,16 @@ function verDesgloseActivos() {
     </div>`);
 }
 
-function filtrarDesglose(dias) {
+function filtrarDesglose(cat) {
   const activos = window._activos || [];
-  const filtrados = dias === 0 ? activos.filter(c => !c.dias_semana) : activos.filter(c => parseInt(c.dias_semana) === dias);
+  const filtrados = activos.filter(c => parseInt(c.categoria) === cat);
+  let titulo;
+  if (cat === -1) titulo = 'Clase suelta';
+  else if (cat === -2) titulo = 'Sin fijo';
+  else if (cat === 0) titulo = 'Sin frecuencia definida';
+  else titulo = cat + (cat === 1 ? ' día' : ' días') + '/semana';
   document.getElementById('desglose-activos-lista').innerHTML = `
-    <p style="margin-bottom:.5rem;color:var(--text-light)"><b>${filtrados.length}</b> clientes con ${dias === 0 ? 'sin frecuencia definida' : dias + (dias === 1 ? ' día' : ' días') + '/semana'} <button class="btn btn-sm btn-outline" onclick="verDesgloseActivos()">Ver todos</button></p>
+    <p style="margin-bottom:.5rem;color:var(--text-light)"><b>${filtrados.length}</b> clientes - ${titulo} <button class="btn btn-sm btn-outline" onclick="verDesgloseActivos()">Ver todos</button></p>
     <table><thead><tr><th>Nombre</th><th>Días/sem</th><th>Días</th><th>Horario</th></tr></thead><tbody>
       ${filtrados.map(c => `<tr><td><b>${c.nombre_completo}</b></td><td><span class="badge badge-purple">${c.dias_semana || '-'}</span></td><td style="font-size:.85rem">${c.dias || ''}</td><td>${c.horario || ''}</td></tr>`).join('')}
     </tbody></table>`;
