@@ -25,6 +25,7 @@
       <button class="nav-item" data-section="cambios"><span class="icon">🔄</span><span>Cambios/Bajas</span></button>
       <button class="nav-item" data-section="espera"><span class="icon">⏳</span><span>Lista espera</span></button>
       <button class="nav-item" data-section="diario"><span class="icon">📝</span><span>Diario</span></button>
+      <button class="nav-item" data-section="documentos"><span class="icon">📄</span><span>Documentos</span></button>
       <button class="nav-item" data-section="avisos"><span class="icon">📋</span><span>Avisos</span></button>
       <button class="nav-item admin-only" data-section="fichajes"><span class="icon">🕐</span><span>Fichajes</span></button>
       <button class="nav-item admin-only" data-section="config"><span class="icon">⚙</span><span>Configuración</span></button>
@@ -170,6 +171,15 @@
         <div class="panel-header"><h3>Mis entradas anteriores</h3></div>
         <div class="panel-body"><div id="lista-diario-propio"></div></div>
       </div>
+    </div>
+
+    <!-- DOCUMENTOS -->
+    <div class="section" id="sec-documentos">
+      <div class="main-header">
+        <h1>Documentos</h1>
+        <button class="btn btn-primary admin-only" onclick="abrirModalDocumento()">+ Nuevo documento</button>
+      </div>
+      <div class="panel"><div class="panel-body"><div id="lista-documentos"></div></div></div>
     </div>
 
     <!-- AVISOS / INCIDENCIAS -->

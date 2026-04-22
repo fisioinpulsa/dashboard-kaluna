@@ -40,7 +40,7 @@ function setupNav() {
       btn.classList.add('active');
       const sec = btn.dataset.section;
       $(`sec-${sec}`).classList.add('active');
-      const loaders = { inicio: cargarInicio, clientes: cargarClientes, plazas: cargarPlazas, ventas: cargarSoloVentas, caja: cargarSoloCaja, leads: cargarLeads, lesiones: cargarLesiones, cambios: cargarCambios, espera: cargarEspera, diario: cargarDiario, avisos: cargarAvisos, fichajes: cargarFichajesAdmin, config: cargarConfig };
+      const loaders = { inicio: cargarInicio, clientes: cargarClientes, plazas: cargarPlazas, ventas: cargarSoloVentas, caja: cargarSoloCaja, leads: cargarLeads, lesiones: cargarLesiones, cambios: cargarCambios, espera: cargarEspera, diario: cargarDiario, documentos: cargarDocumentos, avisos: cargarAvisos, fichajes: cargarFichajesAdmin, config: cargarConfig };
       if (loaders[sec]) loaders[sec]();
     });
   });
@@ -1286,6 +1286,178 @@ async function cargarFichajes() {
   });
   html += '</tbody></table>';
   $('tabla-fichajes').innerHTML = html;
+}
+
+// ==================== DOCUMENTOS ====================
+async function cargarDocumentos() {
+  const docs = await API('/api/documentos');
+  if (!docs.length) {
+    $('lista-documentos').innerHTML = '<p style="color:var(--text-light)">No hay documentos. ' + (esAdmin() ? 'Crea uno con "+ Nuevo documento".' : '') + '</p>';
+    return;
+  }
+  $('lista-documentos').innerHTML = docs.map(d => `
+    <div class="aviso-card" style="cursor:pointer" onclick="verDocumento(${d.id})">
+      <div class="aviso-header">
+        <div>
+          <span style="font-size:1.5rem;margin-right:.5rem">${d.archivo_tipo ? '📎' : '📄'}</span>
+          <span class="aviso-titulo">${d.titulo}</span>
+        </div>
+        <span class="aviso-meta">${new Date(d.fecha_creacion).toLocaleDateString('es-ES')}</span>
+      </div>
+      ${d.descripcion ? `<div class="aviso-meta">${d.descripcion}</div>` : ''}
+      <div style="margin-top:.5rem;display:flex;gap:.5rem;align-items:center">
+        <span class="badge badge-info">✍️ ${d.num_firmas} firma${d.num_firmas != 1 ? 's' : ''}</span>
+        <span style="font-size:.8rem;color:var(--text-light)">Por: ${d.creado_por_nombre || ''}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function verDocumento(id) {
+  const doc = await API(`/api/documentos/${id}`);
+  let firmaInfo = doc.firmas.find(f => f.usuario_kaluna_id === currentUser?.id);
+
+  let firmasHtml = '';
+  if (doc.firmas.length) {
+    firmasHtml = `<div style="margin-top:1rem;border-top:2px solid var(--border);padding-top:1rem">
+      <h4 style="margin-bottom:.5rem">Firmas (${doc.firmas.length})</h4>
+      ${doc.firmas.map(f => `<div style="display:flex;align-items:center;gap:1rem;padding:.5rem 0;border-bottom:1px solid var(--border)">
+        <div style="flex:1">
+          <b>${f.nombre_firmante}</b>
+          <div style="font-size:.75rem;color:var(--text-light)">${new Date(f.fecha_firma).toLocaleString('es-ES')}</div>
+        </div>
+        ${f.firma ? `<img src="${f.firma}" style="height:40px;border:1px solid var(--border);border-radius:4px;cursor:pointer" onclick="event.stopPropagation();window.open('about:blank').document.write('<img src=\\'${f.firma}\\' style=\\'max-width:100%\\'>')">`: ''}
+      </div>`).join('')}
+    </div>`;
+  }
+
+  let contenidoHtml = '';
+  if (doc.archivo_base64) {
+    if (doc.archivo_tipo?.includes('pdf')) {
+      contenidoHtml = `<embed src="${doc.archivo_base64}" type="application/pdf" style="width:100%;height:400px;border:1px solid var(--border);border-radius:8px;margin:.5rem 0">`;
+    } else if (doc.archivo_tipo?.includes('image')) {
+      contenidoHtml = `<img src="${doc.archivo_base64}" style="max-width:100%;border:1px solid var(--border);border-radius:8px;margin:.5rem 0">`;
+    } else {
+      contenidoHtml = `<a href="${doc.archivo_base64}" download="${doc.titulo}" class="btn btn-primary" style="margin:.5rem 0;display:inline-block">📥 Descargar archivo</a>`;
+    }
+  }
+  if (doc.contenido) {
+    contenidoHtml += `<div style="white-space:pre-wrap;background:var(--bg);padding:1rem;border-radius:8px;margin:.5rem 0;font-size:.9rem;line-height:1.5">${doc.contenido}</div>`;
+  }
+
+  const firmaSection = firmaInfo
+    ? `<div style="background:#e8f5e9;padding:1rem;border-radius:8px;margin-top:1rem;text-align:center">✅ Has firmado este documento el ${new Date(firmaInfo.fecha_firma).toLocaleString('es-ES')}<br><img src="${firmaInfo.firma}" style="max-height:80px;margin-top:.5rem"></div>`
+    : `<div style="margin-top:1rem;padding:1rem;background:var(--bg);border-radius:8px">
+        <h4 style="margin-bottom:.5rem">✍️ Firma para confirmar:</h4>
+        <canvas id="doc-firma-canvas" style="width:100%;height:150px;border:2px solid var(--primary);border-radius:8px;background:white;touch-action:none"></canvas>
+        <div style="display:flex;gap:.5rem;margin-top:.5rem">
+          <button class="btn btn-outline" onclick="limpiarDocFirma()">Limpiar</button>
+          <button class="btn btn-primary" onclick="firmarDocumento(${id})" style="flex:1">Firmar</button>
+        </div>
+      </div>`;
+
+  abrirModal(`<button class="modal-close" onclick="cerrarModal()">✕</button>
+    <h3>📄 ${doc.titulo}</h3>
+    ${doc.descripcion ? `<p style="color:var(--text-light);margin-bottom:.5rem">${doc.descripcion}</p>` : ''}
+    <div style="font-size:.8rem;color:var(--text-light)">Creado por ${doc.creado_por_nombre || ''} el ${new Date(doc.fecha_creacion).toLocaleDateString('es-ES')}</div>
+    ${contenidoHtml}
+    ${firmaSection}
+    ${firmasHtml}`);
+
+  if (!firmaInfo) setTimeout(() => initDocFirma(), 100);
+}
+
+let docFirmaCtx = null;
+let docFirmaDibujando = false;
+
+function initDocFirma() {
+  const canvas = document.getElementById('doc-firma-canvas');
+  if (!canvas) return;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width;
+  canvas.height = 150;
+  docFirmaCtx = canvas.getContext('2d');
+  docFirmaCtx.strokeStyle = '#333';
+  docFirmaCtx.lineWidth = 2.5;
+  docFirmaCtx.lineCap = 'round';
+
+  const getPos = (e) => {
+    const r = canvas.getBoundingClientRect();
+    return { x: e.clientX - r.left, y: e.clientY - r.top };
+  };
+
+  canvas.onpointerdown = (e) => { e.preventDefault(); docFirmaDibujando = true; const p = getPos(e); docFirmaCtx.beginPath(); docFirmaCtx.moveTo(p.x, p.y); };
+  canvas.onpointermove = (e) => { if (!docFirmaDibujando) return; e.preventDefault(); const p = getPos(e); docFirmaCtx.lineTo(p.x, p.y); docFirmaCtx.stroke(); };
+  canvas.onpointerup = () => docFirmaDibujando = false;
+  canvas.onpointerleave = () => docFirmaDibujando = false;
+}
+
+function limpiarDocFirma() {
+  const canvas = document.getElementById('doc-firma-canvas');
+  if (docFirmaCtx) docFirmaCtx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+async function firmarDocumento(id) {
+  const canvas = document.getElementById('doc-firma-canvas');
+  const ctx = canvas.getContext('2d');
+  const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+  let vacio = true;
+  for (let i = 3; i < pixels.length; i += 4) { if (pixels[i] > 0) { vacio = false; break; } }
+  if (vacio) { alert('Debes firmar antes de confirmar'); return; }
+  const firma = canvas.toDataURL('image/png');
+  const res = await fetch(`/api/documentos/${id}/firmar`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ firma })
+  });
+  const data = await res.json();
+  if (data.error) { alert('Error: ' + data.error); return; }
+  LOG('crear', 'documentos', `Firmó documento #${id}`);
+  alert('✅ Documento firmado correctamente');
+  cerrarModal();
+  cargarDocumentos();
+}
+
+function abrirModalDocumento() {
+  abrirModal(`<button class="modal-close" onclick="cerrarModal()">✕</button>
+    <h3>📄 Nuevo Documento</h3>
+    <form onsubmit="guardarDocumento(event)">
+      <div class="form-group"><label>Título</label><input name="titulo" required placeholder="Ej: Entrega de uniforme y llaves"></div>
+      <div class="form-group" style="margin-top:.5rem"><label>Descripción breve (opcional)</label><input name="descripcion" placeholder="Aparecerá en el listado"></div>
+      <div class="form-group" style="margin-top:.5rem"><label>Contenido del documento (texto)</label><textarea name="contenido" rows="8" placeholder="Escribe aquí el contenido completo del documento..."></textarea></div>
+      <div class="form-group" style="margin-top:.5rem"><label>O subir archivo (PDF/imagen)</label><input type="file" id="doc-archivo" accept=".pdf,image/*"></div>
+      <div class="form-actions">
+        <button class="btn btn-outline" type="button" onclick="cerrarModal()">Cancelar</button>
+        <button class="btn btn-primary" type="submit">Crear documento</button>
+      </div>
+    </form>`);
+}
+
+async function guardarDocumento(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const body = Object.fromEntries(fd);
+
+  const fileInput = document.getElementById('doc-archivo');
+  if (fileInput.files.length) {
+    const file = fileInput.files[0];
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      body.archivo_base64 = ev.target.result;
+      body.archivo_tipo = file.type;
+      await POST('/api/documentos', body);
+      LOG('crear', 'documentos', `Creó documento "${body.titulo}"`);
+      cerrarModal();
+      cargarDocumentos();
+    };
+    reader.readAsDataURL(file);
+  } else {
+    if (!body.contenido) { alert('Escribe contenido o sube un archivo'); return; }
+    await POST('/api/documentos', body);
+    LOG('crear', 'documentos', `Creó documento "${body.titulo}"`);
+    cerrarModal();
+    cargarDocumentos();
+  }
 }
 
 // INIT
