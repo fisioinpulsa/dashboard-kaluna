@@ -56,8 +56,10 @@ router.post('/', verificarToken, async (req, res) => {
 // Firmar documento (cualquier usuario logueado)
 router.post('/:id/firmar', verificarToken, async (req, res) => {
   try {
-    const { firma } = req.body;
+    const { firma, nombre_completo, dni } = req.body;
     if (!firma) return res.status(400).json({ error: 'Firma requerida' });
+    if (!nombre_completo) return res.status(400).json({ error: 'Nombre completo requerido' });
+    if (!dni) return res.status(400).json({ error: 'DNI requerido' });
 
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
 
@@ -69,9 +71,9 @@ router.post('/:id/firmar', verificarToken, async (req, res) => {
     if (existe.length) return res.status(400).json({ error: 'Ya has firmado este documento' });
 
     await query(
-      `INSERT INTO kaluna_documento_firmas (documento_id, usuario_kaluna_id, nombre_firmante, firma, ip_address)
-       VALUES ($1, $2, $3, $4, $5)`,
-      [req.params.id, req.user.id, req.user.nombre, firma, ip]
+      `INSERT INTO kaluna_documento_firmas (documento_id, usuario_kaluna_id, nombre_firmante, dni, firma, ip_address)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [req.params.id, req.user.id, nombre_completo, dni, firma, ip]
     );
     res.json({ ok: true });
   } catch (err) { res.status(500).json({ error: err.message }); }

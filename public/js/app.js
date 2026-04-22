@@ -1323,7 +1323,7 @@ async function verDocumento(id) {
       <h4 style="margin-bottom:.5rem">Firmas (${doc.firmas.length})</h4>
       ${doc.firmas.map(f => `<div style="display:flex;align-items:center;gap:1rem;padding:.5rem 0;border-bottom:1px solid var(--border)">
         <div style="flex:1">
-          <b>${f.nombre_firmante}</b>
+          <b>${f.nombre_firmante}</b>${f.dni ? ` · <span style="font-family:monospace;font-size:.85rem">${f.dni}</span>` : ''}
           <div style="font-size:.75rem;color:var(--text-light)">${new Date(f.fecha_firma).toLocaleString('es-ES')}</div>
         </div>
         ${f.firma ? `<img src="${f.firma}" style="height:40px;border:1px solid var(--border);border-radius:4px;cursor:pointer" onclick="event.stopPropagation();window.open('about:blank').document.write('<img src=\\'${f.firma}\\' style=\\'max-width:100%\\'>')">`: ''}
@@ -1346,13 +1346,20 @@ async function verDocumento(id) {
   }
 
   const firmaSection = firmaInfo
-    ? `<div style="background:#e8f5e9;padding:1rem;border-radius:8px;margin-top:1rem;text-align:center">✅ Has firmado este documento el ${new Date(firmaInfo.fecha_firma).toLocaleString('es-ES')}<br><img src="${firmaInfo.firma}" style="max-height:80px;margin-top:.5rem"></div>`
+    ? `<div style="background:#e8f5e9;padding:1rem;border-radius:8px;margin-top:1rem;text-align:center">
+        ✅ Firmado el ${new Date(firmaInfo.fecha_firma).toLocaleString('es-ES')}
+        <div style="margin-top:.5rem;font-size:.9rem"><b>${firmaInfo.nombre_firmante}</b>${firmaInfo.dni ? ` · DNI: ${firmaInfo.dni}` : ''}</div>
+        <img src="${firmaInfo.firma}" style="max-height:80px;margin-top:.5rem">
+      </div>`
     : `<div style="margin-top:1rem;padding:1rem;background:var(--bg);border-radius:8px">
-        <h4 style="margin-bottom:.5rem">✍️ Firma para confirmar:</h4>
-        <canvas id="doc-firma-canvas" style="width:100%;height:150px;border:2px solid var(--primary);border-radius:8px;background:white;touch-action:none"></canvas>
+        <h4 style="margin-bottom:.75rem">✍️ Firmar documento</h4>
+        <div class="form-group" style="margin-bottom:.5rem"><label>Nombre completo</label><input id="doc-firma-nombre" placeholder="Ej: María García López" required></div>
+        <div class="form-group" style="margin-bottom:.5rem"><label>DNI</label><input id="doc-firma-dni" placeholder="Ej: 12345678X" required></div>
+        <label style="font-size:.8rem;font-weight:600;color:var(--text-light);text-transform:uppercase">Firma</label>
+        <canvas id="doc-firma-canvas" style="width:100%;height:150px;border:2px solid var(--primary);border-radius:8px;background:white;touch-action:none;display:block;margin-top:.3rem"></canvas>
         <div style="display:flex;gap:.5rem;margin-top:.5rem">
-          <button class="btn btn-outline" onclick="limpiarDocFirma()">Limpiar</button>
-          <button class="btn btn-primary" onclick="firmarDocumento(${id})" style="flex:1">Firmar</button>
+          <button class="btn btn-outline" onclick="limpiarDocFirma()">Limpiar firma</button>
+          <button class="btn btn-primary" onclick="firmarDocumento(${id})" style="flex:1">Firmar y guardar</button>
         </div>
       </div>`;
 
@@ -1398,6 +1405,11 @@ function limpiarDocFirma() {
 }
 
 async function firmarDocumento(id) {
+  const nombre = document.getElementById('doc-firma-nombre').value.trim();
+  const dni = document.getElementById('doc-firma-dni').value.trim();
+  if (!nombre) { alert('Escribe tu nombre completo'); return; }
+  if (!dni) { alert('Escribe tu DNI'); return; }
+
   const canvas = document.getElementById('doc-firma-canvas');
   const ctx = canvas.getContext('2d');
   const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
@@ -1408,11 +1420,11 @@ async function firmarDocumento(id) {
   const res = await fetch(`/api/documentos/${id}/firmar`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ firma })
+    body: JSON.stringify({ firma, nombre_completo: nombre, dni })
   });
   const data = await res.json();
   if (data.error) { alert('Error: ' + data.error); return; }
-  LOG('crear', 'documentos', `Firmó documento #${id}`);
+  LOG('crear', 'documentos', `Firmó documento #${id} - ${nombre} (${dni})`);
   alert('✅ Documento firmado correctamente');
   cerrarModal();
   cargarDocumentos();
