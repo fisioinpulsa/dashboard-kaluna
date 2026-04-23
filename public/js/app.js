@@ -243,8 +243,16 @@ async function guardarCliente(e, id) {
   body.dias = diasChecked.length === 1 && (diasChecked[0] === 'Sin fijo' || diasChecked[0] === 'clase suelta')
     ? diasChecked[0]
     : diasChecked.filter(d => d !== 'Sin fijo' && d !== 'clase suelta').join(' y ');
-  if (id) { await PUT(`/api/clientes/${id}`, body); LOG('editar','clientes',`Editó "${body.nombre_completo}"`); }
-  else { await POST('/api/clientes', body); LOG('crear','clientes',`Nuevo cliente "${body.nombre_completo}"`); }
+  let result;
+  if (id) {
+    result = await PUT(`/api/clientes/${id}`, body);
+    if (result?.error) { alert('⚠️ ' + result.error); return; }
+    LOG('editar','clientes',`Editó "${body.nombre_completo}"`);
+  } else {
+    result = await POST('/api/clientes', body);
+    if (result?.error) { alert('⚠️ ' + result.error); return; }
+    LOG('crear','clientes',`Nuevo cliente "${body.nombre_completo}"`);
+  }
   cerrarModal();
   cargarClientes();
 }

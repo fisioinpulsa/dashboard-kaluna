@@ -34,6 +34,25 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const { nombre_completo, telefono, dias, horario, horario2, dias_semana, notas, mes_inicio, metodo_pago } = req.body;
+    if (!nombre_completo || !nombre_completo.trim()) {
+      return res.status(400).json({ error: 'Nombre requerido' });
+    }
+
+    // Comprobar duplicados (por nombre o por teléfono)
+    const dup = await query(
+      `SELECT id, nombre_completo, estado FROM kaluna_clientes
+       WHERE LOWER(TRIM(nombre_completo)) = LOWER(TRIM($1))
+       OR (telefono IS NOT NULL AND telefono != '' AND telefono = $2)
+       LIMIT 1`,
+      [nombre_completo, telefono || '']
+    );
+    if (dup.rows.length) {
+      const existente = dup.rows[0];
+      return res.status(400).json({
+        error: `Ya existe un cliente con ese nombre o teléfono: "${existente.nombre_completo}" (${existente.estado}). No se puede duplicar.`
+      });
+    }
+
     const { rows } = await query(
       `INSERT INTO kaluna_clientes (nombre_completo, telefono, dias, horario, horario2, dias_semana, notas, mes_inicio, metodo_pago)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
