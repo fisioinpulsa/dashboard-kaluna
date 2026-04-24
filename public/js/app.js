@@ -22,6 +22,10 @@ async function init() {
       document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
       document.querySelector('[data-section="diario"]').classList.add('active');
     }
+    // Solo Lydia (id=1) ve secciones superadmin como IBAN
+    if (currentUser.id !== 1) {
+      document.querySelectorAll('.superadmin-only').forEach(el => el.style.display = 'none');
+    }
     setupNav();
     $('fecha-hoy').textContent = new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
     if (esAdmin) cargarInicio();
@@ -40,7 +44,7 @@ function setupNav() {
       btn.classList.add('active');
       const sec = btn.dataset.section;
       $(`sec-${sec}`).classList.add('active');
-      const loaders = { inicio: cargarInicio, clientes: cargarClientes, plazas: cargarPlazas, ventas: cargarSoloVentas, caja: cargarSoloCaja, leads: cargarLeads, lesiones: cargarLesiones, cambios: cargarCambios, espera: cargarEspera, diario: cargarDiario, documentos: cargarDocumentos, avisos: cargarAvisos, fichajes: cargarFichajesAdmin, config: cargarConfig };
+      const loaders = { inicio: cargarInicio, clientes: cargarClientes, plazas: cargarPlazas, ventas: cargarSoloVentas, caja: cargarSoloCaja, leads: cargarLeads, lesiones: cargarLesiones, cambios: cargarCambios, espera: cargarEspera, diario: cargarDiario, documentos: cargarDocumentos, avisos: cargarAvisos, fichajes: cargarFichajesAdmin, iban: cargarIban, config: cargarConfig };
       if (loaders[sec]) loaders[sec]();
     });
   });
@@ -1478,6 +1482,74 @@ async function guardarDocumento(e) {
     cerrarModal();
     cargarDocumentos();
   }
+}
+
+// ==================== IBAN / REMESAS ====================
+async function cargarIban() {
+  const grupos = await API('/api/iban');
+  const orden = ['3', '2', '1', 'clase_suelta', 'sin_fijo', '0'];
+
+  // Calcular totales
+  let totalRemesa = 0, conIban = 0, sinIban = 0;
+  Object.values(grupos).forEach(g => g.clientes.forEach(c => {
+    if (c.iban) { conIban++; totalRemesa += parseFloat(c.importe_mensual || 0); }
+    else sinIban++;
+  }));
+
+  let html = `<div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:1rem">
+    <div style="padding:.6rem 1rem;background:white;border:2px solid var(--success);border-radius:10px">
+      <div style="font-size:1.4rem;font-weight:700;color:var(--success)">${conIban}</div>
+      <div style="font-size:.8rem;color:var(--text-light)">Con IBAN</div>
+    </div>
+    <div style="padding:.6rem 1rem;background:white;border:2px solid var(--danger);border-radius:10px">
+      <div style="font-size:1.4rem;font-weight:700;color:var(--danger)">${sinIban}</div>
+      <div style="font-size:.8rem;color:var(--text-light)">Sin IBAN</div>
+    </div>
+    <div style="padding:.6rem 1rem;background:white;border:2px solid var(--primary);border-radius:10px">
+      <div style="font-size:1.4rem;font-weight:700;color:var(--primary)">${totalRemesa.toFixed(2)}€</div>
+      <div style="font-size:.8rem;color:var(--text-light)">Total remesa mensual</div>
+    </div>
+  </div>`;
+
+  orden.forEach(key => {
+    const g = grupos[key];
+    if (!g || !g.clientes.length) return;
+    let totalGrupo = 0;
+    g.clientes.forEach(c => totalGrupo += parseFloat(c.importe_mensual || 0));
+    html += `<div class="panel" style="margin-bottom:1rem">
+      <div class="panel-header">
+        <h3>${g.titulo} (${g.clientes.length})</h3>
+        <span style="font-weight:700;color:var(--primary)">${totalGrupo.toFixed(2)}€/mes</span>
+      </div>
+      <div class="panel-body"><div class="table-wrapper"><table>
+        <thead><tr><th>Nombre</th><th>DNI</th><th>IBAN</th><th>Dirección</th><th>Email</th><th>Importe</th><th></th></tr></thead>
+        <tbody>${g.clientes.map(c => `<tr ${!c.iban ? 'style="background:#fff5f5"' : ''}>
+          <td><b>${c.nombre_completo}</b></td>
+          <td><input value="${c.dni || ''}" id="iban-${c.id}-dni" placeholder="DNI" style="padding:.3rem;border:1px solid var(--border);border-radius:6px;font-size:.85rem;width:110px"></td>
+          <td><input value="${c.iban || ''}" id="iban-${c.id}-iban" placeholder="ES00 0000 0000 0000 0000 0000" style="padding:.3rem;border:1px solid var(--border);border-radius:6px;font-size:.8rem;font-family:monospace;width:230px"></td>
+          <td><input value="${c.direccion || ''}" id="iban-${c.id}-direccion" placeholder="Dirección" style="padding:.3rem;border:1px solid var(--border);border-radius:6px;font-size:.85rem;width:200px"></td>
+          <td><input value="${c.email || ''}" id="iban-${c.id}-email" placeholder="Email" style="padding:.3rem;border:1px solid var(--border);border-radius:6px;font-size:.85rem;width:160px"></td>
+          <td><input type="number" step="0.01" value="${c.importe_mensual || ''}" id="iban-${c.id}-importe" placeholder="0" style="padding:.3rem;border:1px solid var(--border);border-radius:6px;font-size:.85rem;width:70px;text-align:right"> €</td>
+          <td><button class="btn btn-sm btn-primary" onclick="guardarIban(${c.id})">💾</button></td>
+        </tr>`).join('')}</tbody>
+      </table></div></div>
+    </div>`;
+  });
+
+  $('lista-iban').innerHTML = html;
+}
+
+async function guardarIban(id) {
+  const body = {
+    dni: document.getElementById(`iban-${id}-dni`).value.trim(),
+    iban: document.getElementById(`iban-${id}-iban`).value.trim().replace(/\s/g, '').toUpperCase(),
+    direccion: document.getElementById(`iban-${id}-direccion`).value.trim(),
+    email: document.getElementById(`iban-${id}-email`).value.trim(),
+    importe_mensual: parseFloat(document.getElementById(`iban-${id}-importe`).value) || null
+  };
+  await PUT(`/api/iban/${id}`, body);
+  LOG('editar', 'iban', `Datos bancarios actualizados cliente #${id}`);
+  cargarIban();
 }
 
 // INIT

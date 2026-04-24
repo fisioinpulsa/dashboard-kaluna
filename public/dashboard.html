@@ -28,6 +28,7 @@
       <button class="nav-item" data-section="documentos"><span class="icon">📄</span><span>Documentos</span></button>
       <button class="nav-item" data-section="avisos"><span class="icon">📋</span><span>Avisos</span></button>
       <button class="nav-item admin-only" data-section="fichajes"><span class="icon">🕐</span><span>Fichajes</span></button>
+      <button class="nav-item superadmin-only" data-section="iban"><span class="icon">🏦</span><span>IBAN/Remesas</span></button>
       <button class="nav-item admin-only" data-section="config"><span class="icon">⚙</span><span>Configuración</span></button>
     </nav>
     <div class="sidebar-footer">
@@ -194,6 +195,15 @@
         <button class="btn btn-outline btn-sm filtro-avisos" data-filtro="todos" onclick="filtrarAvisos('todos')">Todos</button>
       </div>
       <div id="lista-avisos"></div>
+    </div>
+
+    <!-- IBAN/REMESAS (solo superadmin) -->
+    <div class="section superadmin-only" id="sec-iban">
+      <div class="main-header">
+        <h1>🏦 IBAN y Remesas</h1>
+        <a href="/api/iban/remesa" class="btn btn-primary" download>📥 Descargar CSV remesa</a>
+      </div>
+      <div id="lista-iban"></div>
     </div>
 
     <!-- FICHAJES (admin) -->
