@@ -467,7 +467,10 @@ async function cargarSoloVentas() {
           <td><span class="badge ${v.metodo_pago === 'Efectivo' ? 'badge-success' : 'badge-info'}">${v.metodo_pago || ''}</span></td>
           <td>${v.trabajadora_nombre || ''}</td>
           <td style="font-size:.8rem">${v.notas || ''}</td>
-          ${esSuperAdmin() ? `<td><button class="btn btn-sm btn-danger" onclick="eliminarVenta(${v.id})">X</button></td>` : '<td></td>'}
+          <td style="white-space:nowrap">
+            <button class="btn btn-sm btn-outline" onclick='editarVenta(${JSON.stringify(v).replace(/'/g,"&#39;")})'>✏️</button>
+            ${esSuperAdmin() ? `<button class="btn btn-sm btn-danger" onclick="eliminarVenta(${v.id})">X</button>` : ''}
+          </td>
         </tr>`; }).join('')}
       </tbody></table></div></div>
     </div>`;
@@ -488,7 +491,7 @@ function mostrarMesVentas(key) {
 async function cargarSoloCaja() {
   const cajas = await API('/api/caja');
   $('tabla-caja').innerHTML = cajas.length ? `<table><thead><tr>
-    <th>Fecha</th><th>Trabajadora</th><th>Efectivo total</th><th>Monedas</th><th>Billetes</th><th>Notas</th>
+    <th>Fecha</th><th>Trabajadora</th><th>Efectivo total</th><th>Monedas</th><th>Billetes</th><th>Notas</th><th></th>
   </tr></thead><tbody>
     ${cajas.map(c => `<tr>
       <td>${c.fecha ? new Date(c.fecha).toLocaleDateString('es-ES') : ''}</td>
@@ -497,27 +500,62 @@ async function cargarSoloCaja() {
       <td>${parseFloat(c.monedas || 0).toFixed(2)}€</td>
       <td>${c.billetes || ''}</td>
       <td style="font-size:.8rem">${c.notas || ''}</td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-sm btn-outline" onclick='editarCaja(${JSON.stringify(c).replace(/'/g,"&#39;")})'>✏️</button>
+        ${esSuperAdmin() ? `<button class="btn btn-sm btn-danger" onclick="eliminarCaja(${c.id})">X</button>` : ''}
+      </td>
     </tr>`).join('')}
   </tbody></table>` : '<p style="color:var(--text-light)">Sin arqueos</p>';
 }
 
-function abrirModalVenta() {
+function editarCaja(c) {
+  const fechaVal = c?.fecha ? new Date(c.fecha).toISOString().split('T')[0] : '';
   abrirModal(`<button class="modal-close" onclick="cerrarModal()">✕</button>
-    <h3>Nueva Venta</h3>
-    <form onsubmit="guardarVenta(event)">
+    <h3>Editar Arqueo de Caja</h3>
+    <form onsubmit="actualizarCaja(event, ${c.id})">
       <div class="form-grid">
-        <div class="form-group"><label>Cliente</label><input name="cliente_nombre" required></div>
-        <div class="form-group"><label>Fecha</label><input type="date" name="fecha" value="${new Date().toISOString().split('T')[0]}"></div>
-        <div class="form-group"><label>Artículo</label>
-          <select name="articulo"><option>Suscripción kaluna</option><option>Fianza</option><option>Calcetines</option><option>Bebida</option><option>Clase suelta</option><option>Otro</option></select>
-        </div>
-        <div class="form-group"><label>Precio (€)</label><input type="number" name="precio" step="0.01" required></div>
-        <div class="form-group"><label>Método de pago</label><select name="metodo_pago"><option>Efectivo</option><option>Tarjeta</option></select></div>
+        <div class="form-group"><label>Fecha</label><input type="date" name="fecha" value="${fechaVal}"></div>
+        <div class="form-group"><label>Efectivo total (€)</label><input type="number" name="efectivo_total" step="0.01" value="${c.efectivo_total || ''}" required></div>
+        <div class="form-group"><label>Monedas (€)</label><input type="number" name="monedas" step="0.01" value="${c.monedas || ''}"></div>
+        <div class="form-group"><label>Billetes (desglose)</label><input name="billetes" value="${c.billetes || ''}"></div>
       </div>
-      <div class="form-group" style="margin-top:1rem"><label>Notas</label><textarea name="notas" rows="2"></textarea></div>
+      <div class="form-group" style="margin-top:1rem"><label>Notas</label><textarea name="notas" rows="2">${c.notas || ''}</textarea></div>
       <div class="form-actions"><button class="btn btn-outline" type="button" onclick="cerrarModal()">Cancelar</button><button class="btn btn-primary" type="submit">Guardar</button></div>
     </form>`);
 }
+
+async function actualizarCaja(e, id) {
+  e.preventDefault();
+  const d = Object.fromEntries(new FormData(e.target));
+  await PUT(`/api/caja/${id}`, d);
+  LOG('editar','caja',`Editó arqueo #${id}: ${d.efectivo_total}€`);
+  cerrarModal();
+  cargarSoloCaja();
+}
+
+async function eliminarCaja(id) { if (confirm('¿Eliminar arqueo?')) { await DEL(`/api/caja/${id}`); LOG('eliminar','caja',`Arqueo #${id} eliminado`); cargarSoloCaja(); } }
+
+function abrirModalVenta(v) {
+  const articulos = ['Suscripción kaluna','Fianza','Calcetines','Bebida','Clase suelta','Otro'];
+  const fechaVal = v?.fecha ? new Date(v.fecha).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+  abrirModal(`<button class="modal-close" onclick="cerrarModal()">✕</button>
+    <h3>${v ? 'Editar' : 'Nueva'} Venta</h3>
+    <form onsubmit="guardarVenta(event, ${v?.id || 'null'})">
+      <div class="form-grid">
+        <div class="form-group"><label>Cliente</label><input name="cliente_nombre" value="${v?.cliente_nombre || ''}" required></div>
+        <div class="form-group"><label>Fecha</label><input type="date" name="fecha" value="${fechaVal}"></div>
+        <div class="form-group"><label>Artículo</label>
+          <select name="articulo">${articulos.map(a => `<option ${v?.articulo === a ? 'selected' : ''}>${a}</option>`).join('')}</select>
+        </div>
+        <div class="form-group"><label>Precio (€)</label><input type="number" name="precio" step="0.01" value="${v?.precio || ''}" required></div>
+        <div class="form-group"><label>Método de pago</label><select name="metodo_pago"><option ${v?.metodo_pago === 'Efectivo' ? 'selected' : ''}>Efectivo</option><option ${v?.metodo_pago === 'Tarjeta' ? 'selected' : ''}>Tarjeta</option></select></div>
+      </div>
+      <div class="form-group" style="margin-top:1rem"><label>Notas</label><textarea name="notas" rows="2">${v?.notas || ''}</textarea></div>
+      <div class="form-actions"><button class="btn btn-outline" type="button" onclick="cerrarModal()">Cancelar</button><button class="btn btn-primary" type="submit">Guardar</button></div>
+    </form>`);
+}
+
+function editarVenta(v) { abrirModalVenta(v); }
 
 function abrirModalCaja() {
   abrirModal(`<button class="modal-close" onclick="cerrarModal()">✕</button>
@@ -580,7 +618,14 @@ function calcularCaja() {
   document.getElementById('caja-input-billetes').value = desglose.join('+') || '0';
 }
 
-async function guardarVenta(e) { e.preventDefault(); const d=Object.fromEntries(new FormData(e.target)); await POST('/api/ventas',d); LOG('crear','ventas',`${d.cliente_nombre} - ${d.articulo} ${d.precio}€`); cerrarModal(); cargarSoloVentas(); }
+async function guardarVenta(e, id) {
+  e.preventDefault();
+  const d = Object.fromEntries(new FormData(e.target));
+  if (id) { await PUT(`/api/ventas/${id}`, d); LOG('editar','ventas',`Editó venta #${id}: ${d.cliente_nombre} - ${d.articulo} ${d.precio}€`); }
+  else { await POST('/api/ventas', d); LOG('crear','ventas',`${d.cliente_nombre} - ${d.articulo} ${d.precio}€`); }
+  cerrarModal();
+  cargarSoloVentas();
+}
 async function guardarCaja(e) { e.preventDefault(); const d=Object.fromEntries(new FormData(e.target)); await POST('/api/caja',d); LOG('crear','caja',`Arqueo: ${d.efectivo_total}€`); cerrarModal(); cargarSoloCaja(); }
 async function eliminarVenta(id) { if (confirm('¿Eliminar venta?')) { await DEL(`/api/ventas/${id}`); LOG('eliminar','ventas',`Venta #${id} eliminada`); cargarSoloVentas(); } }
 
@@ -941,7 +986,8 @@ async function cargarCambios() {
         <td>${c.estado === 'gestionado' ? '<span class="badge badge-success">Gestionado</span>' : '<span class="badge badge-warning">Pendiente</span>'}</td>
         <td style="white-space:nowrap">
           ${c.estado === 'pendiente' ? `<button class="btn btn-sm btn-success" onclick="gestionarCambio(${c.id})">Gestionar</button>` : ''}
-          ${currentUser?.rol === 'admin' ? `<button class="btn btn-sm btn-danger" onclick="eliminarCambio(${c.id})">X</button>` : ''}
+          <button class="btn btn-sm btn-outline" onclick='editarCambio(${JSON.stringify(c).replace(/'/g,"&#39;")})'>✏️</button>
+          ${esSuperAdmin() ? `<button class="btn btn-sm btn-danger" onclick="eliminarCambio(${c.id})">X</button>` : ''}
         </td>
       </tr>`;
     }).join('')}
@@ -955,22 +1001,32 @@ function filtrarCambios(filtro) {
   cargarCambios();
 }
 
-function abrirModalCambio() {
+function abrirModalCambio(c) {
+  const tipos = ['cambio','baja','alta','otro'];
+  const labels = { cambio:'Cambio de plaza', baja:'Baja', alta:'Alta', otro:'Otro' };
   abrirModal(`<button class="modal-close" onclick="cerrarModal()">✕</button>
-    <h3>Nuevo Cambio / Baja</h3>
-    <form onsubmit="guardarCambio(event)">
+    <h3>${c ? 'Editar' : 'Nuevo'} Cambio / Baja</h3>
+    <form onsubmit="guardarCambio(event, ${c?.id || 'null'})">
       <div class="form-grid">
         <div class="form-group"><label>Tipo</label>
-          <select name="tipo"><option value="cambio">Cambio de plaza</option><option value="baja">Baja</option><option value="alta">Alta</option><option value="otro">Otro</option></select>
+          <select name="tipo">${tipos.map(t => `<option value="${t}" ${c?.tipo === t ? 'selected' : ''}>${labels[t]}</option>`).join('')}</select>
         </div>
-        <div class="form-group"><label>Cliente</label><input name="cliente_nombre" required></div>
+        <div class="form-group"><label>Cliente</label><input name="cliente_nombre" value="${c?.cliente_nombre || ''}" required></div>
       </div>
-      <div class="form-group" style="margin-top:.75rem"><label>Descripción del cambio</label><textarea name="descripcion" rows="3" required placeholder="Ej: cambia a martes y jueves a las 21, baja en mayo, etc."></textarea></div>
-      <div class="form-actions"><button class="btn btn-outline" type="button" onclick="cerrarModal()">Cancelar</button><button class="btn btn-primary" type="submit">Crear</button></div>
+      <div class="form-group" style="margin-top:.75rem"><label>Descripción</label><textarea name="descripcion" rows="3" required>${c?.descripcion || ''}</textarea></div>
+      <div class="form-actions"><button class="btn btn-outline" type="button" onclick="cerrarModal()">Cancelar</button><button class="btn btn-primary" type="submit">${c ? 'Guardar' : 'Crear'}</button></div>
     </form>`);
 }
 
-async function guardarCambio(e) { e.preventDefault(); const d=Object.fromEntries(new FormData(e.target)); await POST('/api/cambios',d); LOG('crear','cambios',`${d.tipo}: ${d.cliente_nombre} - ${d.descripcion}`); cerrarModal(); cargarCambios(); }
+function editarCambio(c) { abrirModalCambio(c); }
+
+async function guardarCambio(e, id) {
+  e.preventDefault();
+  const d = Object.fromEntries(new FormData(e.target));
+  if (id) { await PUT(`/api/cambios/${id}`, d); LOG('editar','cambios',`Editó cambio "${d.cliente_nombre}"`); }
+  else { await POST('/api/cambios', d); LOG('crear','cambios',`${d.tipo}: ${d.cliente_nombre} - ${d.descripcion}`); }
+  cerrarModal(); cargarCambios();
+}
 
 async function gestionarCambio(id) {
   const notas = prompt('Nota de gestión (opcional):');
@@ -1000,29 +1056,39 @@ async function cargarEspera() {
           <option value="contactado" ${e.estado==='contactado'?'selected':''}>Contactado</option>
           <option value="colocado" ${e.estado==='colocado'?'selected':''}>Colocado</option>
         </select>
+        <button class="btn btn-sm btn-outline" onclick='editarEspera(${JSON.stringify(e).replace(/'/g,"&#39;")})'>✏️</button>
         ${esSuperAdmin() ? `<button class="btn btn-sm btn-danger" onclick="eliminarEspera(${e.id})">X</button>` : ''}
       </td>
     </tr>`).join('')}
   </tbody></table>` : '<p style="color:var(--text-light)">Lista de espera vacía</p>';
 }
 
-function abrirModalEspera() {
+function abrirModalEspera(e) {
+  const fechaVal = e?.fecha ? new Date(e.fecha).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
   abrirModal(`<button class="modal-close" onclick="cerrarModal()">✕</button>
-    <h3>Añadir a lista de espera</h3>
-    <form onsubmit="guardarEspera(event)">
+    <h3>${e ? 'Editar' : 'Añadir a'} lista de espera</h3>
+    <form onsubmit="guardarEspera(event, ${e?.id || 'null'})">
       <div class="form-grid">
-        <div class="form-group"><label>Nombre</label><input name="nombre" required></div>
-        <div class="form-group"><label>Teléfono</label><input name="telefono"></div>
-        <div class="form-group"><label>Fecha</label><input type="date" name="fecha" value="${new Date().toISOString().split('T')[0]}"></div>
-        <div class="form-group"><label>Horario deseado</label><input name="horario_deseado" placeholder="miércoles 18 a las 19h"></div>
-        <div class="form-group"><label>Días</label><input name="dias"></div>
+        <div class="form-group"><label>Nombre</label><input name="nombre" value="${e?.nombre || ''}" required></div>
+        <div class="form-group"><label>Teléfono</label><input name="telefono" value="${e?.telefono || ''}"></div>
+        <div class="form-group"><label>Fecha</label><input type="date" name="fecha" value="${fechaVal}"></div>
+        <div class="form-group"><label>Horario deseado</label><input name="horario_deseado" value="${e?.horario_deseado || ''}" placeholder="miércoles 18 a las 19h"></div>
+        <div class="form-group"><label>Días</label><input name="dias" value="${e?.dias || ''}"></div>
       </div>
-      <div class="form-group" style="margin-top:1rem"><label>Notas</label><textarea name="notas" rows="2"></textarea></div>
+      <div class="form-group" style="margin-top:1rem"><label>Notas</label><textarea name="notas" rows="2">${e?.notas || ''}</textarea></div>
       <div class="form-actions"><button class="btn btn-outline" type="button" onclick="cerrarModal()">Cancelar</button><button class="btn btn-primary" type="submit">Guardar</button></div>
     </form>`);
 }
 
-async function guardarEspera(e) { e.preventDefault(); const d=Object.fromEntries(new FormData(e.target)); await POST('/api/espera',d); LOG('crear','espera',`"${d.nombre}" - ${d.horario_deseado||''}`); cerrarModal(); cargarEspera(); }
+function editarEspera(e) { abrirModalEspera(e); }
+
+async function guardarEspera(e, id) {
+  e.preventDefault();
+  const d = Object.fromEntries(new FormData(e.target));
+  if (id) { await PUT(`/api/espera/${id}`, d); LOG('editar','espera',`Editó "${d.nombre}"`); }
+  else { await POST('/api/espera', d); LOG('crear','espera',`"${d.nombre}" - ${d.horario_deseado||''}`); }
+  cerrarModal(); cargarEspera();
+}
 async function cambiarEstadoEspera(id, estado) { await PUT(`/api/espera/${id}/estado`, { estado }); LOG('editar','espera',`Estado cambiado a "${estado}"`); }
 async function eliminarEspera(id) { if (confirm('¿Eliminar?')) { await DEL(`/api/espera/${id}`); LOG('eliminar','espera',`Entrada #${id} eliminada`); cargarEspera(); } }
 
@@ -1152,7 +1218,8 @@ async function cargarAvisos() {
       ${a.resuelto ? `<div class="aviso-resuelto-info">Resuelto por ${a.resuelto_por_nombre || '?'} el ${new Date(a.resuelto_fecha).toLocaleString('es-ES', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div>` : ''}
       <div class="aviso-actions">
         ${!a.resuelto ? `<button class="btn btn-sm btn-success" onclick="resolverAviso(${a.id})">Marcar resuelto</button>` : ''}
-        ${currentUser?.rol === 'admin' ? `<button class="btn btn-sm btn-danger" onclick="eliminarAviso(${a.id})">Eliminar</button>` : ''}
+        <button class="btn btn-sm btn-outline" onclick='editarAviso(${JSON.stringify(a).replace(/'/g,"&#39;")})'>✏️ Editar</button>
+        ${esSuperAdmin() ? `<button class="btn btn-sm btn-danger" onclick="eliminarAviso(${a.id})">Eliminar</button>` : ''}
       </div>
     </div>`;
   }).join('') : '<p style="color:var(--text-light);padding:1rem">No hay avisos</p>';
@@ -1165,22 +1232,31 @@ function filtrarAvisos(filtro) {
   cargarAvisos();
 }
 
-function abrirModalAviso() {
+function abrirModalAviso(a) {
+  const tipos = ['error','aviso','mejora','urgente'];
   abrirModal(`<button class="modal-close" onclick="cerrarModal()">✕</button>
-    <h3>Nuevo Aviso / Incidencia</h3>
-    <form onsubmit="guardarAviso(event)">
+    <h3>${a ? 'Editar' : 'Nuevo'} Aviso / Incidencia</h3>
+    <form onsubmit="guardarAviso(event, ${a?.id || 'null'})">
       <div class="form-grid">
         <div class="form-group"><label>Tipo</label>
-          <select name="tipo"><option value="error">Error</option><option value="aviso">Aviso</option><option value="mejora">Mejora</option><option value="urgente">Urgente</option></select>
+          <select name="tipo">${tipos.map(t => `<option value="${t}" ${a?.tipo === t ? 'selected' : ''}>${t.charAt(0).toUpperCase()+t.slice(1)}</option>`).join('')}</select>
         </div>
-        <div class="form-group"><label>Título</label><input name="titulo" required placeholder="Resumen breve del aviso"></div>
+        <div class="form-group"><label>Título</label><input name="titulo" value="${a?.titulo || ''}" required placeholder="Resumen breve del aviso"></div>
       </div>
-      <div class="form-group" style="margin-top:1rem"><label>Descripción detallada</label><textarea name="descripcion" rows="4" placeholder="Describe qué ha pasado, quién estaba, qué se ha hecho..."></textarea></div>
-      <div class="form-actions"><button class="btn btn-outline" type="button" onclick="cerrarModal()">Cancelar</button><button class="btn btn-primary" type="submit">Crear aviso</button></div>
+      <div class="form-group" style="margin-top:1rem"><label>Descripción detallada</label><textarea name="descripcion" rows="4" placeholder="Describe qué ha pasado...">${a?.descripcion || ''}</textarea></div>
+      <div class="form-actions"><button class="btn btn-outline" type="button" onclick="cerrarModal()">Cancelar</button><button class="btn btn-primary" type="submit">${a ? 'Guardar' : 'Crear aviso'}</button></div>
     </form>`);
 }
 
-async function guardarAviso(e) { e.preventDefault(); await POST('/api/avisos', Object.fromEntries(new FormData(e.target))); cerrarModal(); cargarAvisos(); }
+function editarAviso(a) { abrirModalAviso(a); }
+
+async function guardarAviso(e, id) {
+  e.preventDefault();
+  const d = Object.fromEntries(new FormData(e.target));
+  if (id) { await PUT(`/api/avisos/${id}`, d); LOG('editar','avisos',`Editó aviso "${d.titulo}"`); }
+  else { await POST('/api/avisos', d); LOG('crear','avisos',`Nuevo aviso "${d.titulo}"`); }
+  cerrarModal(); cargarAvisos();
+}
 async function resolverAviso(id) { await PUT(`/api/avisos/${id}/resolver`, {}); cargarAvisos(); }
 async function eliminarAviso(id) { if (confirm('¿Eliminar aviso?')) { await DEL(`/api/avisos/${id}`); cargarAvisos(); } }
 

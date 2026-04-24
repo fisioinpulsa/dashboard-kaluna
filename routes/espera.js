@@ -31,6 +31,20 @@ router.post('/', async (req, res) => {
   }
 });
 
+router.put('/:id', async (req, res) => {
+  try {
+    const { nombre, telefono, fecha, horario_deseado, dias, notas } = req.body;
+    const { rows } = await query(
+      `UPDATE kaluna_lista_espera SET nombre=$1, telefono=$2, fecha=$3, horario_deseado=$4, dias=$5, notas=$6
+       WHERE id=$7 RETURNING *`,
+      [nombre, telefono, fecha || null, horario_deseado, dias, notas, req.params.id]
+    );
+    res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.put('/:id/estado', async (req, res) => {
   try {
     const { rows } = await query(

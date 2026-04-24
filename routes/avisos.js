@@ -33,6 +33,19 @@ router.post('/', async (req, res) => {
   }
 });
 
+router.put('/:id', async (req, res) => {
+  try {
+    const { tipo, titulo, descripcion } = req.body;
+    const { rows } = await query(
+      "UPDATE kaluna_avisos SET tipo=$1, titulo=$2, descripcion=$3 WHERE id=$4 RETURNING *",
+      [tipo, titulo, descripcion, req.params.id]
+    );
+    res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.put('/:id/resolver', async (req, res) => {
   try {
     const { rows } = await query(

@@ -58,6 +58,20 @@ router.post('/', async (req, res) => {
   }
 });
 
+router.put('/:id', async (req, res) => {
+  try {
+    const { cliente_nombre, fecha, articulo, precio, metodo_pago, notas } = req.body;
+    const { rows } = await query(
+      `UPDATE kaluna_ventas SET cliente_nombre=$1, fecha=$2, articulo=$3, precio=$4, metodo_pago=$5, notas=$6
+       WHERE id=$7 RETURNING *`,
+      [cliente_nombre, fecha || null, articulo, precio, metodo_pago, notas, req.params.id]
+    );
+    res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.delete('/:id', async (req, res) => {
   try {
     await query("DELETE FROM kaluna_ventas WHERE id = $1", [req.params.id]);

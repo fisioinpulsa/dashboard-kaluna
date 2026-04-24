@@ -31,6 +31,19 @@ router.post('/', async (req, res) => {
   }
 });
 
+router.put('/:id', async (req, res) => {
+  try {
+    const { tipo, cliente_nombre, descripcion } = req.body;
+    const { rows } = await query(
+      "UPDATE kaluna_cambios SET tipo=$1, cliente_nombre=$2, descripcion=$3 WHERE id=$4 RETURNING *",
+      [tipo, cliente_nombre, descripcion, req.params.id]
+    );
+    res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.put('/:id/gestionar', async (req, res) => {
   try {
     const { notas } = req.body;
