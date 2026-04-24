@@ -29,6 +29,7 @@
       <button class="nav-item" data-section="avisos"><span class="icon">📋</span><span>Avisos</span></button>
       <button class="nav-item admin-only" data-section="fichajes"><span class="icon">🕐</span><span>Fichajes</span></button>
       <button class="nav-item superadmin-only" data-section="iban"><span class="icon">🏦</span><span>IBAN/Remesas</span></button>
+      <button class="nav-item superadmin-only" data-section="gastos"><span class="icon">💰</span><span>Gastos</span></button>
       <button class="nav-item admin-only" data-section="config"><span class="icon">⚙</span><span>Configuración</span></button>
     </nav>
     <div class="sidebar-footer">
@@ -204,6 +205,21 @@
         <a href="/api/iban/remesa" class="btn btn-primary" download>📥 Descargar CSV remesa</a>
       </div>
       <div id="lista-iban"></div>
+    </div>
+
+    <!-- GASTOS (solo superadmin) -->
+    <div class="section superadmin-only" id="sec-gastos">
+      <div class="main-header">
+        <h1>💰 Control de Gastos</h1>
+        <div style="display:flex;gap:.5rem;align-items:center">
+          <select id="gastos-mes" style="padding:.5rem;border:2px solid var(--border);border-radius:8px"></select>
+          <select id="gastos-año" style="padding:.5rem;border:2px solid var(--border);border-radius:8px"></select>
+          <button class="btn btn-outline" onclick="copiarMesAnterior()">📋 Copiar mes anterior</button>
+          <button class="btn btn-primary" onclick="abrirModalGasto()">+ Nuevo gasto</button>
+        </div>
+      </div>
+      <div id="gastos-resumen" style="margin-bottom:1rem"></div>
+      <div id="gastos-tabla"></div>
     </div>
 
     <!-- FICHAJES (admin) -->

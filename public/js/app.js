@@ -44,7 +44,7 @@ function setupNav() {
       btn.classList.add('active');
       const sec = btn.dataset.section;
       $(`sec-${sec}`).classList.add('active');
-      const loaders = { inicio: cargarInicio, clientes: cargarClientes, plazas: cargarPlazas, ventas: cargarSoloVentas, caja: cargarSoloCaja, leads: cargarLeads, lesiones: cargarLesiones, cambios: cargarCambios, espera: cargarEspera, diario: cargarDiario, documentos: cargarDocumentos, avisos: cargarAvisos, fichajes: cargarFichajesAdmin, iban: cargarIban, config: cargarConfig };
+      const loaders = { inicio: cargarInicio, clientes: cargarClientes, plazas: cargarPlazas, ventas: cargarSoloVentas, caja: cargarSoloCaja, leads: cargarLeads, lesiones: cargarLesiones, cambios: cargarCambios, espera: cargarEspera, diario: cargarDiario, documentos: cargarDocumentos, avisos: cargarAvisos, fichajes: cargarFichajesAdmin, iban: cargarIban, gastos: cargarGastos, config: cargarConfig };
       if (loaders[sec]) loaders[sec]();
     });
   });
@@ -1598,10 +1598,9 @@ async function cargarIban() {
         <span style="font-weight:700;color:var(--primary)">${totalGrupo.toFixed(2)}€/mes</span>
       </div>
       <div class="panel-body"><div class="table-wrapper"><table>
-        <thead><tr><th>Nombre</th><th>DNI</th><th>IBAN</th><th>Dirección</th><th>Email</th><th>Importe</th><th></th></tr></thead>
+        <thead><tr><th>Nombre</th><th>IBAN</th><th>Dirección</th><th>Email</th><th>Importe</th><th></th></tr></thead>
         <tbody>${g.clientes.map(c => `<tr ${!c.iban ? 'style="background:#fff5f5"' : ''}>
           <td><b>${c.nombre_completo}</b></td>
-          <td><input value="${c.dni || ''}" id="iban-${c.id}-dni" placeholder="DNI" style="padding:.3rem;border:1px solid var(--border);border-radius:6px;font-size:.85rem;width:110px"></td>
           <td><input value="${c.iban || ''}" id="iban-${c.id}-iban" placeholder="ES00 0000 0000 0000 0000 0000" style="padding:.3rem;border:1px solid var(--border);border-radius:6px;font-size:.8rem;font-family:monospace;width:230px"></td>
           <td><input value="${c.direccion || ''}" id="iban-${c.id}-direccion" placeholder="Dirección" style="padding:.3rem;border:1px solid var(--border);border-radius:6px;font-size:.85rem;width:200px"></td>
           <td><input value="${c.email || ''}" id="iban-${c.id}-email" placeholder="Email" style="padding:.3rem;border:1px solid var(--border);border-radius:6px;font-size:.85rem;width:160px"></td>
@@ -1617,7 +1616,6 @@ async function cargarIban() {
 
 async function guardarIban(id) {
   const body = {
-    dni: document.getElementById(`iban-${id}-dni`).value.trim(),
     iban: document.getElementById(`iban-${id}-iban`).value.trim().replace(/\s/g, '').toUpperCase(),
     direccion: document.getElementById(`iban-${id}-direccion`).value.trim(),
     email: document.getElementById(`iban-${id}-email`).value.trim(),
@@ -1626,6 +1624,172 @@ async function guardarIban(id) {
   await PUT(`/api/iban/${id}`, body);
   LOG('editar', 'iban', `Datos bancarios actualizados cliente #${id}`);
   cargarIban();
+}
+
+// ==================== GASTOS ====================
+const MESES_GASTOS = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const CATEGORIAS_GASTOS = ['Local','Préstamos','Material','Impuestos','Sueldos','Otros'];
+let gastosIniciados = false;
+
+async function cargarGastos() {
+  if (!gastosIniciados) {
+    const selectMes = $('gastos-mes');
+    const selectAño = $('gastos-año');
+    const ahora = new Date();
+    for (let i = 1; i <= 12; i++) {
+      const opt = document.createElement('option');
+      opt.value = i; opt.textContent = MESES_GASTOS[i];
+      if (i === ahora.getMonth() + 1) opt.selected = true;
+      selectMes.appendChild(opt);
+    }
+    for (let y = ahora.getFullYear() - 1; y <= ahora.getFullYear() + 1; y++) {
+      const opt = document.createElement('option');
+      opt.value = y; opt.textContent = y;
+      if (y === ahora.getFullYear()) opt.selected = true;
+      selectAño.appendChild(opt);
+    }
+    selectMes.onchange = cargarGastos;
+    selectAño.onchange = cargarGastos;
+    gastosIniciados = true;
+  }
+
+  const mes = $('gastos-mes').value;
+  const año = $('gastos-año').value;
+  const gastos = await API(`/api/gastos?mes=${mes}&año=${año}`);
+
+  // Totales
+  let totalEst = 0, totalReal = 0, totalAho = 0;
+  gastos.forEach(g => {
+    totalEst += parseFloat(g.estimacion || 0);
+    totalReal += parseFloat(g.realidad || 0);
+    totalAho += parseFloat(g.ahorro || 0);
+  });
+
+  $('gastos-resumen').innerHTML = `<div style="display:flex;gap:.75rem;flex-wrap:wrap">
+    <div style="padding:.6rem 1rem;background:white;border:2px solid var(--info);border-radius:10px;min-width:150px">
+      <div style="font-size:1.5rem;font-weight:700;color:var(--info)">${totalEst.toFixed(2)}€</div>
+      <div style="font-size:.8rem;color:var(--text-light)">Estimación</div>
+    </div>
+    <div style="padding:.6rem 1rem;background:white;border:2px solid var(--danger);border-radius:10px;min-width:150px">
+      <div style="font-size:1.5rem;font-weight:700;color:var(--danger)">${totalReal.toFixed(2)}€</div>
+      <div style="font-size:.8rem;color:var(--text-light)">Realidad</div>
+    </div>
+    <div style="padding:.6rem 1rem;background:white;border:2px solid var(--success);border-radius:10px;min-width:150px">
+      <div style="font-size:1.5rem;font-weight:700;color:var(--success)">${totalAho.toFixed(2)}€</div>
+      <div style="font-size:.8rem;color:var(--text-light)">Ahorro</div>
+    </div>
+    <div style="padding:.6rem 1rem;background:white;border:2px solid var(--primary);border-radius:10px;min-width:150px">
+      <div style="font-size:1.5rem;font-weight:700;color:${totalEst - totalReal >= 0 ? 'var(--success)' : 'var(--danger)'}">${(totalEst - totalReal).toFixed(2)}€</div>
+      <div style="font-size:.8rem;color:var(--text-light)">Diferencia vs estimación</div>
+    </div>
+  </div>`;
+
+  // Agrupar por categoría
+  const grupos = {};
+  gastos.forEach(g => {
+    if (!grupos[g.categoria]) grupos[g.categoria] = [];
+    grupos[g.categoria].push(g);
+  });
+
+  if (!gastos.length) {
+    $('gastos-tabla').innerHTML = '<p style="color:var(--text-light);padding:1rem">Sin gastos este mes. Usa "Copiar mes anterior" o "+ Nuevo gasto"</p>';
+    return;
+  }
+
+  let html = '';
+  CATEGORIAS_GASTOS.forEach(cat => {
+    const items = grupos[cat];
+    if (!items || !items.length) return;
+    let subTotalEst = 0, subTotalReal = 0;
+    items.forEach(g => { subTotalEst += parseFloat(g.estimacion||0); subTotalReal += parseFloat(g.realidad||0); });
+    html += `<div class="panel" style="margin-bottom:1rem">
+      <div class="panel-header"><h3>${cat}</h3>
+        <div style="display:flex;gap:1rem;font-size:.85rem">
+          <span>Est: <b>${subTotalEst.toFixed(2)}€</b></span>
+          <span>Real: <b style="color:var(--danger)">${subTotalReal.toFixed(2)}€</b></span>
+        </div>
+      </div>
+      <div class="panel-body"><div class="table-wrapper"><table>
+        <thead><tr><th>Concepto</th><th>Estimación</th><th>Semana</th><th>Realidad</th><th>Ahorro</th><th>Notas</th><th></th></tr></thead>
+        <tbody>${items.map(g => `<tr>
+          <td><b>${g.concepto}</b></td>
+          <td><input type="number" step="0.01" value="${g.estimacion || ''}" id="g-${g.id}-est" style="width:90px;padding:.3rem;border:1px solid var(--border);border-radius:6px;text-align:right">€</td>
+          <td><input type="number" value="${g.semana || ''}" id="g-${g.id}-sem" style="width:50px;padding:.3rem;border:1px solid var(--border);border-radius:6px;text-align:center"></td>
+          <td><input type="number" step="0.01" value="${g.realidad || ''}" id="g-${g.id}-real" style="width:90px;padding:.3rem;border:1px solid var(--border);border-radius:6px;text-align:right">€</td>
+          <td><input type="number" step="0.01" value="${g.ahorro || ''}" id="g-${g.id}-aho" style="width:80px;padding:.3rem;border:1px solid var(--border);border-radius:6px;text-align:right">€</td>
+          <td><input value="${g.notas || ''}" id="g-${g.id}-notas" style="padding:.3rem;border:1px solid var(--border);border-radius:6px;width:140px;font-size:.8rem"></td>
+          <td style="white-space:nowrap">
+            <button class="btn btn-sm btn-primary" onclick="guardarGasto(${g.id}, '${g.concepto.replace(/'/g,"\\'")}', '${cat}')">💾</button>
+            <button class="btn btn-sm btn-danger" onclick="eliminarGasto(${g.id})">X</button>
+          </td>
+        </tr>`).join('')}</tbody>
+      </table></div></div>
+    </div>`;
+  });
+  $('gastos-tabla').innerHTML = html;
+}
+
+async function guardarGasto(id, concepto, categoria) {
+  const body = {
+    categoria, concepto,
+    estimacion: parseFloat(document.getElementById(`g-${id}-est`).value) || 0,
+    semana: parseInt(document.getElementById(`g-${id}-sem`).value) || null,
+    realidad: parseFloat(document.getElementById(`g-${id}-real`).value) || 0,
+    ahorro: parseFloat(document.getElementById(`g-${id}-aho`).value) || 0,
+    notas: document.getElementById(`g-${id}-notas`).value
+  };
+  await PUT(`/api/gastos/${id}`, body);
+  LOG('editar','gastos',`Gasto "${concepto}": real ${body.realidad}€`);
+  cargarGastos();
+}
+
+async function eliminarGasto(id) {
+  if (!confirm('¿Eliminar este gasto?')) return;
+  await DEL(`/api/gastos/${id}`);
+  LOG('eliminar','gastos',`Gasto #${id} eliminado`);
+  cargarGastos();
+}
+
+function abrirModalGasto() {
+  const mes = $('gastos-mes').value;
+  const año = $('gastos-año').value;
+  abrirModal(`<button class="modal-close" onclick="cerrarModal()">✕</button>
+    <h3>Nuevo Gasto - ${MESES_GASTOS[mes]} ${año}</h3>
+    <form onsubmit="guardarGastoNuevo(event, ${mes}, ${año})">
+      <div class="form-grid">
+        <div class="form-group"><label>Categoría</label>
+          <select name="categoria" required>${CATEGORIAS_GASTOS.map(c => `<option>${c}</option>`).join('')}</select>
+        </div>
+        <div class="form-group"><label>Concepto</label><input name="concepto" required placeholder="Ej: Alquiler"></div>
+        <div class="form-group"><label>Estimación (€)</label><input type="number" step="0.01" name="estimacion" placeholder="0"></div>
+        <div class="form-group"><label>Semana</label><input type="number" name="semana" placeholder="1-4"></div>
+        <div class="form-group"><label>Realidad (€)</label><input type="number" step="0.01" name="realidad" placeholder="0"></div>
+        <div class="form-group"><label>Ahorro (€)</label><input type="number" step="0.01" name="ahorro" placeholder="0"></div>
+      </div>
+      <div class="form-group" style="margin-top:.5rem"><label>Notas</label><input name="notas"></div>
+      <div class="form-actions"><button class="btn btn-outline" type="button" onclick="cerrarModal()">Cancelar</button><button class="btn btn-primary" type="submit">Añadir</button></div>
+    </form>`);
+}
+
+async function guardarGastoNuevo(e, mes, año) {
+  e.preventDefault();
+  const d = Object.fromEntries(new FormData(e.target));
+  d.mes = mes; d.año = año;
+  await POST('/api/gastos', d);
+  LOG('crear','gastos',`${d.categoria}: ${d.concepto}`);
+  cerrarModal();
+  cargarGastos();
+}
+
+async function copiarMesAnterior() {
+  const mes = parseInt($('gastos-mes').value);
+  const año = parseInt($('gastos-año').value);
+  const prevMes = mes === 1 ? 12 : mes - 1;
+  const prevAño = mes === 1 ? año - 1 : año;
+  if (!confirm(`¿Copiar estructura de ${MESES_GASTOS[prevMes]} ${prevAño} a ${MESES_GASTOS[mes]} ${año}?`)) return;
+  const r = await POST('/api/gastos/copiar', { origen_mes: prevMes, origen_año: prevAño, destino_mes: mes, destino_año: año });
+  alert(`${r.copiados} gastos copiados`);
+  cargarGastos();
 }
 
 // INIT

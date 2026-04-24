@@ -31,6 +31,7 @@ app.use('/api/meta-webhook', require('./routes/meta-webhook'));
 app.use('/api/import-csv', require('./routes/import-csv'));
 app.use('/api/documentos', require('./routes/documentos'));
 app.use('/api/iban', require('./routes/iban'));
+app.use('/api/gastos', require('./routes/gastos'));
 
 // Pages
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
