@@ -11,17 +11,72 @@ function soloSuperAdmin(req, res, next) {
 
 router.use(verificarToken, soloSuperAdmin);
 
-// Listar gastos de un mes/año
+// Listar gastos de un mes/año (auto-crea desde plantilla si está vacío)
 router.get('/', async (req, res) => {
   try {
     const { mes, año } = req.query;
     const m = mes || (new Date().getMonth() + 1);
     const y = año || new Date().getFullYear();
-    const { rows } = await query(
+    let { rows } = await query(
       "SELECT * FROM kaluna_gastos WHERE mes = $1 AND año = $2 ORDER BY orden, categoria, id",
       [m, y]
     );
+
+    // Si está vacío, crear desde plantilla
+    if (!rows.length) {
+      const { rows: plantilla } = await query(
+        "SELECT categoria, concepto, estimacion, orden FROM kaluna_gastos_plantilla WHERE activo = true ORDER BY orden"
+      );
+      for (const p of plantilla) {
+        await query(
+          "INSERT INTO kaluna_gastos (mes, año, categoria, concepto, estimacion, orden) VALUES ($1,$2,$3,$4,$5,$6)",
+          [m, y, p.categoria, p.concepto, p.estimacion, p.orden]
+        );
+      }
+      const result = await query(
+        "SELECT * FROM kaluna_gastos WHERE mes = $1 AND año = $2 ORDER BY orden, categoria, id",
+        [m, y]
+      );
+      rows = result.rows;
+    }
     res.json(rows);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Plantilla (para editar los gastos fijos recurrentes)
+router.get('/plantilla', async (req, res) => {
+  try {
+    const { rows } = await query("SELECT * FROM kaluna_gastos_plantilla ORDER BY orden");
+    res.json(rows);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+router.post('/plantilla', async (req, res) => {
+  try {
+    const { categoria, concepto, estimacion, orden } = req.body;
+    const { rows } = await query(
+      "INSERT INTO kaluna_gastos_plantilla (categoria, concepto, estimacion, orden) VALUES ($1,$2,$3,$4) RETURNING *",
+      [categoria, concepto, estimacion || 0, orden || 0]
+    );
+    res.json(rows[0]);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+router.put('/plantilla/:id', async (req, res) => {
+  try {
+    const { categoria, concepto, estimacion, activo } = req.body;
+    const { rows } = await query(
+      "UPDATE kaluna_gastos_plantilla SET categoria=$1, concepto=$2, estimacion=$3, activo=$4 WHERE id=$5 RETURNING *",
+      [categoria, concepto, estimacion || 0, activo !== false, req.params.id]
+    );
+    res.json(rows[0]);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+router.delete('/plantilla/:id', async (req, res) => {
+  try {
+    await query("DELETE FROM kaluna_gastos_plantilla WHERE id = $1", [req.params.id]);
+    res.json({ ok: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 

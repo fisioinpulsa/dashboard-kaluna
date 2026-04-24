@@ -1692,11 +1692,15 @@ async function cargarGastos() {
   });
 
   if (!gastos.length) {
-    $('gastos-tabla').innerHTML = '<p style="color:var(--text-light);padding:1rem">Sin gastos este mes. Usa "Copiar mes anterior" o "+ Nuevo gasto"</p>';
+    $('gastos-tabla').innerHTML = '<p style="color:var(--text-light);padding:1rem">Sin gastos este mes.</p>';
     return;
   }
 
-  let html = '';
+  let html = `<div style="background:#e3f2fd;color:#1565c0;padding:.6rem 1rem;border-radius:8px;margin-bottom:1rem;font-size:.85rem;display:flex;justify-content:space-between;align-items:center">
+    <span>💡 <b>Solo rellena el importe real</b> - Los conceptos están cargados, se guarda al salir del campo</span>
+    <button class="btn btn-sm btn-outline" onclick="abrirModalPlantilla()" style="background:white">⚙️ Editar gastos fijos</button>
+  </div>`;
+
   CATEGORIAS_GASTOS.forEach(cat => {
     const items = grupos[cat];
     if (!items || !items.length) return;
@@ -1705,37 +1709,55 @@ async function cargarGastos() {
     html += `<div class="panel" style="margin-bottom:1rem">
       <div class="panel-header"><h3>${cat}</h3>
         <div style="display:flex;gap:1rem;font-size:.85rem">
-          <span>Est: <b>${subTotalEst.toFixed(2)}€</b></span>
-          <span>Real: <b style="color:var(--danger)">${subTotalReal.toFixed(2)}€</b></span>
+          <span>Estimado: <b>${subTotalEst.toFixed(2)}€</b></span>
+          <span>Pagado: <b style="color:${subTotalReal>0?'var(--danger)':'var(--text-light)'}">${subTotalReal.toFixed(2)}€</b></span>
         </div>
       </div>
-      <div class="panel-body"><div class="table-wrapper"><table>
-        <thead><tr><th>Concepto</th><th>Estimación</th><th>Semana</th><th>Realidad</th><th>Ahorro</th><th>Notas</th><th></th></tr></thead>
-        <tbody>${items.map(g => `<tr>
-          <td><b>${g.concepto}</b></td>
-          <td><input type="number" step="0.01" value="${g.estimacion || ''}" id="g-${g.id}-est" style="width:90px;padding:.3rem;border:1px solid var(--border);border-radius:6px;text-align:right">€</td>
-          <td><input type="number" value="${g.semana || ''}" id="g-${g.id}-sem" style="width:50px;padding:.3rem;border:1px solid var(--border);border-radius:6px;text-align:center"></td>
-          <td><input type="number" step="0.01" value="${g.realidad || ''}" id="g-${g.id}-real" style="width:90px;padding:.3rem;border:1px solid var(--border);border-radius:6px;text-align:right">€</td>
-          <td><input type="number" step="0.01" value="${g.ahorro || ''}" id="g-${g.id}-aho" style="width:80px;padding:.3rem;border:1px solid var(--border);border-radius:6px;text-align:right">€</td>
-          <td><input value="${g.notas || ''}" id="g-${g.id}-notas" style="padding:.3rem;border:1px solid var(--border);border-radius:6px;width:140px;font-size:.8rem"></td>
-          <td style="white-space:nowrap">
-            <button class="btn btn-sm btn-primary" onclick="guardarGasto(${g.id}, '${g.concepto.replace(/'/g,"\\'")}', '${cat}')">💾</button>
-            <button class="btn btn-sm btn-danger" onclick="eliminarGasto(${g.id})">X</button>
-          </td>
-        </tr>`).join('')}</tbody>
-      </table></div></div>
+      <div class="panel-body">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:.75rem">
+          ${items.map(g => {
+            const pagado = parseFloat(g.realidad || 0) > 0;
+            return `<div style="padding:.75rem;border:2px solid ${pagado ? 'var(--success)' : 'var(--border)'};border-radius:10px;background:${pagado ? '#f0fff4' : 'white'}">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem">
+                <b style="font-size:.95rem">${g.concepto}</b>
+                ${pagado ? '<span style="color:var(--success);font-size:.75rem;font-weight:700">✓ Pagado</span>' : '<span style="color:var(--text-light);font-size:.7rem">Pendiente</span>'}
+              </div>
+              <div style="font-size:.75rem;color:var(--text-light);margin-bottom:.4rem">Estimado: ${parseFloat(g.estimacion||0).toFixed(2)}€</div>
+              <div style="display:flex;align-items:center;gap:.3rem">
+                <input type="number" step="0.01" value="${g.realidad || ''}" id="g-${g.id}-real" placeholder="0.00" onchange="guardarRealidad(${g.id}, ${JSON.stringify(g.concepto).replace(/"/g,"&quot;")}, ${JSON.stringify(cat).replace(/"/g,"&quot;")}, ${parseFloat(g.estimacion||0)})" style="flex:1;padding:.5rem;border:2px solid var(--primary);border-radius:8px;font-size:1rem;font-weight:600;text-align:right">
+                <span style="font-size:1.1rem;font-weight:700">€</span>
+              </div>
+              <div style="margin-top:.4rem;display:flex;gap:.3rem">
+                <input value="${g.notas || ''}" id="g-${g.id}-notas" placeholder="Notas..." onchange="guardarRealidad(${g.id}, ${JSON.stringify(g.concepto).replace(/"/g,"&quot;")}, ${JSON.stringify(cat).replace(/"/g,"&quot;")}, ${parseFloat(g.estimacion||0)})" style="flex:1;padding:.3rem .5rem;border:1px solid var(--border);border-radius:6px;font-size:.75rem">
+                <button class="btn btn-sm btn-danger" onclick="eliminarGasto(${g.id})" style="padding:.2rem .5rem;font-size:.7rem">X</button>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
     </div>`;
   });
   $('gastos-tabla').innerHTML = html;
 }
 
+async function guardarRealidad(id, concepto, categoria, estimacion) {
+  const realidad = parseFloat(document.getElementById(`g-${id}-real`).value) || 0;
+  const notas = document.getElementById(`g-${id}-notas`).value;
+  const ahorro = estimacion > 0 && estimacion > realidad && realidad > 0 ? (estimacion - realidad) : 0;
+  await PUT(`/api/gastos/${id}`, {
+    categoria, concepto, estimacion, realidad, ahorro, notas
+  });
+  LOG('editar','gastos',`${concepto}: ${realidad}€`);
+  cargarGastos();
+}
+
 async function guardarGasto(id, concepto, categoria) {
   const body = {
     categoria, concepto,
-    estimacion: parseFloat(document.getElementById(`g-${id}-est`).value) || 0,
-    semana: parseInt(document.getElementById(`g-${id}-sem`).value) || null,
+    estimacion: parseFloat(document.getElementById(`g-${id}-est`)?.value) || 0,
+    semana: parseInt(document.getElementById(`g-${id}-sem`)?.value) || null,
     realidad: parseFloat(document.getElementById(`g-${id}-real`).value) || 0,
-    ahorro: parseFloat(document.getElementById(`g-${id}-aho`).value) || 0,
+    ahorro: parseFloat(document.getElementById(`g-${id}-aho`)?.value) || 0,
     notas: document.getElementById(`g-${id}-notas`).value
   };
   await PUT(`/api/gastos/${id}`, body);
@@ -1790,6 +1812,69 @@ async function copiarMesAnterior() {
   const r = await POST('/api/gastos/copiar', { origen_mes: prevMes, origen_año: prevAño, destino_mes: mes, destino_año: año });
   alert(`${r.copiados} gastos copiados`);
   cargarGastos();
+}
+
+async function abrirModalPlantilla() {
+  const plantilla = await API('/api/gastos/plantilla');
+  abrirModal(`<button class="modal-close" onclick="cerrarModal()">✕</button>
+    <h3>⚙️ Gastos fijos (plantilla mensual)</h3>
+    <p style="font-size:.85rem;color:var(--text-light);margin-bottom:1rem">Edita los gastos que aparecen cada mes automáticamente. Puedes añadir, modificar o eliminar.</p>
+    <div style="max-height:400px;overflow-y:auto">
+      <table style="width:100%;font-size:.85rem">
+        <thead><tr><th>Categoría</th><th>Concepto</th><th>Estimación</th><th></th></tr></thead>
+        <tbody id="plantilla-tbody">
+          ${plantilla.map(p => `<tr>
+            <td><select id="pl-${p.id}-cat" style="padding:.3rem;border:1px solid var(--border);border-radius:6px;font-size:.8rem">
+              ${CATEGORIAS_GASTOS.map(c => `<option ${p.categoria === c ? 'selected' : ''}>${c}</option>`).join('')}
+            </select></td>
+            <td><input value="${p.concepto}" id="pl-${p.id}-conc" style="padding:.3rem;border:1px solid var(--border);border-radius:6px;width:150px;font-size:.8rem"></td>
+            <td><input type="number" step="0.01" value="${p.estimacion}" id="pl-${p.id}-est" style="padding:.3rem;border:1px solid var(--border);border-radius:6px;width:80px;text-align:right;font-size:.8rem">€</td>
+            <td style="white-space:nowrap">
+              <button class="btn btn-sm btn-primary" onclick="guardarPlantilla(${p.id})">💾</button>
+              <button class="btn btn-sm btn-danger" onclick="eliminarPlantilla(${p.id})">X</button>
+            </td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+    <div style="margin-top:1rem;padding-top:1rem;border-top:2px solid var(--border)">
+      <h4 style="margin-bottom:.5rem">➕ Añadir nuevo gasto fijo</h4>
+      <form onsubmit="crearPlantilla(event)">
+        <div style="display:flex;gap:.4rem">
+          <select name="categoria" required style="padding:.4rem;border:2px solid var(--border);border-radius:6px">${CATEGORIAS_GASTOS.map(c => `<option>${c}</option>`).join('')}</select>
+          <input name="concepto" placeholder="Concepto" required style="flex:1;padding:.4rem;border:2px solid var(--border);border-radius:6px">
+          <input name="estimacion" type="number" step="0.01" placeholder="Estimación €" style="width:120px;padding:.4rem;border:2px solid var(--border);border-radius:6px">
+          <button class="btn btn-primary" type="submit">Añadir</button>
+        </div>
+      </form>
+    </div>`);
+}
+
+async function guardarPlantilla(id) {
+  const body = {
+    categoria: document.getElementById(`pl-${id}-cat`).value,
+    concepto: document.getElementById(`pl-${id}-conc`).value,
+    estimacion: parseFloat(document.getElementById(`pl-${id}-est`).value) || 0,
+    activo: true
+  };
+  await PUT(`/api/gastos/plantilla/${id}`, body);
+  LOG('editar','gastos',`Plantilla: ${body.concepto}`);
+  abrirModalPlantilla();
+}
+
+async function crearPlantilla(e) {
+  e.preventDefault();
+  const d = Object.fromEntries(new FormData(e.target));
+  await POST('/api/gastos/plantilla', d);
+  LOG('crear','gastos',`Plantilla nueva: ${d.concepto}`);
+  abrirModalPlantilla();
+}
+
+async function eliminarPlantilla(id) {
+  if (!confirm('¿Eliminar de la plantilla? No afecta a los meses ya creados.')) return;
+  await DEL(`/api/gastos/plantilla/${id}`);
+  LOG('eliminar','gastos',`Plantilla #${id}`);
+  abrirModalPlantilla();
 }
 
 // INIT
