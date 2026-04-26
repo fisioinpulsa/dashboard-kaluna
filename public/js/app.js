@@ -189,8 +189,14 @@ function renderClientes() {
     if (!grupos.has(key)) grupos.set(key, { label, items: [] });
     grupos.get(key).items.push(c);
   });
+  // Reordenar: "clase suelta" al final
+  const entradas = Array.from(grupos.entries()).sort((a, b) => {
+    const aSuelta = a[0].includes('suelta') ? 1 : 0;
+    const bSuelta = b[0].includes('suelta') ? 1 : 0;
+    return aSuelta - bSuelta;
+  });
   let rows = '';
-  grupos.forEach(({ label, items }) => {
+  entradas.forEach(([, { label, items }]) => {
     rows += `<tr><td colspan="11" style="background:var(--primary);color:white;font-weight:700;padding:.6rem 1rem;font-size:.9rem">${label}</td></tr>`;
     items.forEach(c => {
       rows += `<tr>
