@@ -157,22 +157,43 @@ function filtrarDesglose(cat) {
 }
 
 // ==================== CLIENTES ====================
+let _clientesCache = [];
+function _normalizar(str) {
+  return (str || '').toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+}
 async function cargarClientes() {
   const estado = $('filtro-clientes').value;
-  const clientes = await API(`/api/clientes?estado=${estado}`);
+  _clientesCache = await API(`/api/clientes?estado=${estado}`);
+  renderClientes();
+  const inputBuscar = $('buscar-cliente');
+  if (inputBuscar && !inputBuscar._listenerAdded) {
+    inputBuscar.addEventListener('input', renderClientes);
+    inputBuscar._listenerAdded = true;
+  }
+}
+function renderClientes() {
+  const inputBuscar = $('buscar-cliente');
+  const filtro = inputBuscar ? _normalizar(inputBuscar.value) : '';
+  const clientes = filtro
+    ? _clientesCache.filter(c => _normalizar(c.nombre_completo).includes(filtro))
+    : _clientesCache;
   if (!clientes.length) {
     $('tabla-clientes').innerHTML = '<p style="color:var(--text-light)">No hay clientes</p>';
     return;
   }
-  // Agrupar por días
-  let lastDias = null;
-  let rows = '';
+  // Agrupar por días (clave normalizada para unir "Lunes y Miércoles" / "Lunes y Miercoles")
+  const grupos = new Map();
   clientes.forEach(c => {
-    if (c.dias !== lastDias) {
-      lastDias = c.dias;
-      rows += `<tr><td colspan="11" style="background:var(--primary);color:white;font-weight:700;padding:.6rem 1rem;font-size:.9rem">${c.dias || 'Sin asignar'}</td></tr>`;
-    }
-    rows += `<tr>
+    const label = c.dias || 'Sin asignar';
+    const key = _normalizar(label);
+    if (!grupos.has(key)) grupos.set(key, { label, items: [] });
+    grupos.get(key).items.push(c);
+  });
+  let rows = '';
+  grupos.forEach(({ label, items }) => {
+    rows += `<tr><td colspan="11" style="background:var(--primary);color:white;font-weight:700;padding:.6rem 1rem;font-size:.9rem">${label}</td></tr>`;
+    items.forEach(c => {
+      rows += `<tr>
       <td><b>${c.nombre_completo}</b></td>
       <td>${c.telefono || ''}</td>
       <td><span class="badge badge-purple">${c.dias || ''}</span></td>
@@ -188,6 +209,7 @@ async function cargarClientes() {
         ${esSuperAdmin() && c.estado === 'activo' ? `<button class="btn btn-sm btn-danger" onclick="darBaja(${c.id})">Baja</button>` : ''}
       </td>
     </tr>`;
+    });
   });
   $('tabla-clientes').innerHTML = `<table><thead><tr>
     <th>Nombre</th><th>Teléfono</th><th>Días</th><th>Horario</th><th>Días/sem</th><th>Inicio</th><th>Estado</th><th>Pago</th><th>IBAN/Fianza</th><th>Notas</th><th></th>
