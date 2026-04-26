@@ -266,6 +266,13 @@ function abrirModalCliente(c) {
 
 function editarCliente(c) { abrirModalCliente(c); }
 
+// Recarga la sección de clientes que esté activa (Clientes o Pagos en centro)
+function refrescarClientes() {
+  const activa = document.querySelector('.section.active');
+  if (activa?.id === 'sec-pagos-centro') return cargarPagosCentro();
+  return cargarClientes();
+}
+
 async function guardarCliente(e, id) {
   e.preventDefault();
   const fd = new FormData(e.target);
@@ -286,21 +293,21 @@ async function guardarCliente(e, id) {
     LOG('crear','clientes',`Nuevo cliente "${body.nombre_completo}"`);
   }
   cerrarModal();
-  cargarClientes();
+  refrescarClientes();
 }
 
 async function marcarFianza(id) {
   if (!confirm('¿Marcar fianza como pagada?')) return;
   await PUT(`/api/clientes/${id}`, { fianza_pagada: true });
   LOG('editar','clientes',`Fianza marcada como pagada`);
-  cargarClientes();
+  refrescarClientes();
 }
 
 async function marcarIban(id) {
   if (!confirm('¿Marcar IBAN como entregado?')) return;
   await PUT(`/api/clientes/${id}`, { iban_entregado: true });
   LOG('editar','clientes',`IBAN marcado como entregado`);
-  cargarClientes();
+  refrescarClientes();
 }
 
 async function darBaja(id) {
@@ -308,7 +315,7 @@ async function darBaja(id) {
   if (!mes) return;
   await PUT(`/api/clientes/${id}/baja`, { mes_baja: mes });
   LOG('baja','clientes',`Baja en ${mes}`);
-  cargarClientes();
+  refrescarClientes();
 }
 
 // ==================== PLAZAS ====================
@@ -1595,6 +1602,8 @@ let _pagosCentroCache = [];
 
 function _importeMensual(c) {
   if (c.importe_mensual && parseFloat(c.importe_mensual) > 0) return parseFloat(c.importe_mensual);
+  // Clase suelta = 15€ por clase
+  if ((c.dias || '').toLowerCase().includes('suelta')) return 15;
   const n = parseInt(c.dias_semana) || 0;
   if (n === 1) return 50;
   if (n === 2) return 90;
@@ -1666,16 +1675,24 @@ function renderPagosCentro() {
     return;
   }
 
-  // Agrupar por días/sem (3, 2, 1, otros)
+  // Agrupar: días/sem o clase suelta
   const grupos = new Map();
   lista.forEach(c => {
-    const n = parseInt(c.dias_semana) || 0;
-    const key = n > 0 ? `${n} día${n > 1 ? 's' : ''}/semana` : 'Sin asignar';
+    let key;
+    if ((c.dias || '').toLowerCase().includes('suelta')) {
+      key = 'Clase suelta';
+    } else {
+      const n = parseInt(c.dias_semana) || 0;
+      key = n > 0 ? `${n} día${n > 1 ? 's' : ''}/semana` : 'Sin asignar';
+    }
     if (!grupos.has(key)) grupos.set(key, []);
     grupos.get(key).push(c);
   });
-  // Orden: 3 días, 2 días, 1 día, Sin asignar
+  // Orden: 3, 2, 1, Sin asignar, Clase suelta (al final)
   const orden = Array.from(grupos.entries()).sort((a, b) => {
+    const aSuelta = a[0] === 'Clase suelta' ? 1 : 0;
+    const bSuelta = b[0] === 'Clase suelta' ? 1 : 0;
+    if (aSuelta !== bSuelta) return aSuelta - bSuelta;
     const na = parseInt(a[0]) || 0, nb = parseInt(b[0]) || 0;
     return nb - na;
   });
@@ -1694,11 +1711,14 @@ function renderPagosCentro() {
         <td>${c.telefono || ''}</td>
         <td><span class="badge badge-purple">${c.dias || ''}</span></td>
         <td>${c.horario || ''}${c.horario2 ? ' / '+c.horario2 : ''}</td>
-        <td style="font-weight:700;color:var(--primary)">${_importeMensual(c).toFixed(2)}€</td>
-        <td>${c.fianza_pagada ? '<span class="badge badge-success">OK</span>' : '<span class="badge badge-danger">Pendiente</span>'}</td>
-        <td style="max-width:200px;font-size:.8rem">${c.notas || ''}</td>
+        <td style="white-space:nowrap"><input type="number" step="0.01" value="${_importeMensual(c).toFixed(2)}" id="pc-importe-${c.id}" style="width:70px;padding:.3rem;border:1px solid var(--border);border-radius:6px;text-align:right;font-weight:700;color:var(--primary)"> €
+          <button class="btn btn-sm btn-outline" onclick="guardarImportePC(${c.id})" title="Guardar importe">💾</button></td>
+        <td>${c.fianza_pagada ? '<span class="badge badge-success">OK</span>' : `<button class="btn btn-sm btn-warning" onclick="marcarFianza(${c.id})">Pendiente</button>`}</td>
+        <td style="max-width:160px;font-size:.8rem">${c.notas || ''}</td>
         <td style="white-space:nowrap">
-          ${wa ? `<a href="${wa}" target="_blank" class="btn btn-sm btn-success">📱 WhatsApp</a>` : ''}
+          ${wa ? `<a href="${wa}" target="_blank" class="btn btn-sm btn-success">📱</a>` : ''}
+          <button class="btn btn-sm btn-outline" onclick='editarCliente(${JSON.stringify(c).replace(/'/g,"&#39;")})'>✏️</button>
+          ${esSuperAdmin() ? `<button class="btn btn-sm btn-danger" onclick="darBaja(${c.id})">Baja</button>` : ''}
         </td>
       </tr>`;
     });
@@ -1706,6 +1726,15 @@ function renderPagosCentro() {
   $('pagos-centro-tabla').innerHTML = `<table><thead><tr>
     <th>Nombre</th><th>Teléfono</th><th>Días</th><th>Horario</th><th>Importe</th><th>Fianza</th><th>Notas</th><th></th>
   </tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+async function guardarImportePC(id) {
+  const input = document.getElementById(`pc-importe-${id}`);
+  const importe = parseFloat(input.value);
+  if (isNaN(importe) || importe < 0) { alert('Importe inválido'); return; }
+  await PUT(`/api/clientes/${id}`, { importe_mensual: importe });
+  LOG('editar', 'clientes', `Importe mensual cliente #${id} = ${importe}€`);
+  cargarPagosCentro();
 }
 
 // ==================== IBAN / REMESAS ====================
