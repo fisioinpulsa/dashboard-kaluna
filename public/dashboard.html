@@ -27,6 +27,7 @@
       <button class="nav-item" data-section="diario"><span class="icon">📝</span><span>Diario</span></button>
       <button class="nav-item" data-section="documentos"><span class="icon">📄</span><span>Documentos</span></button>
       <button class="nav-item" data-section="avisos"><span class="icon">📋</span><span>Avisos</span></button>
+      <button class="nav-item" data-section="pagos-centro"><span class="icon">💵</span><span>Pagos en centro</span></button>
       <button class="nav-item admin-only" data-section="fichajes"><span class="icon">🕐</span><span>Fichajes</span></button>
       <button class="nav-item superadmin-only" data-section="iban"><span class="icon">🏦</span><span>IBAN/Remesas</span></button>
       <button class="nav-item superadmin-only" data-section="gastos"><span class="icon">💰</span><span>Gastos</span></button>
@@ -197,6 +198,20 @@
         <button class="btn btn-outline btn-sm filtro-avisos" data-filtro="todos" onclick="filtrarAvisos('todos')">Todos</button>
       </div>
       <div id="lista-avisos"></div>
+    </div>
+
+    <!-- PAGOS EN CENTRO -->
+    <div class="section" id="sec-pagos-centro">
+      <div class="main-header">
+        <h1>💵 Pagos en centro</h1>
+        <div style="display:flex;gap:.5rem;align-items:center">
+          <select id="pagos-centro-mes" style="padding:.5rem;border:2px solid var(--border);border-radius:8px"></select>
+          <select id="pagos-centro-año" style="padding:.5rem;border:2px solid var(--border);border-radius:8px"></select>
+          <input type="text" id="buscar-pagos-centro" class="btn btn-outline" placeholder="Buscar por nombre..." style="padding:.45rem .8rem">
+        </div>
+      </div>
+      <div id="pagos-centro-resumen" style="margin-bottom:1rem"></div>
+      <div id="pagos-centro-tabla"></div>
     </div>
 
     <!-- IBAN/REMESAS (solo superadmin) -->

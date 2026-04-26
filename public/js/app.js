@@ -44,7 +44,7 @@ function setupNav() {
       btn.classList.add('active');
       const sec = btn.dataset.section;
       $(`sec-${sec}`).classList.add('active');
-      const loaders = { inicio: cargarInicio, clientes: cargarClientes, plazas: cargarPlazas, ventas: cargarSoloVentas, caja: cargarSoloCaja, leads: cargarLeads, lesiones: cargarLesiones, cambios: cargarCambios, espera: cargarEspera, diario: cargarDiario, documentos: cargarDocumentos, avisos: cargarAvisos, fichajes: cargarFichajesAdmin, iban: cargarIban, gastos: cargarGastos, config: cargarConfig };
+      const loaders = { inicio: cargarInicio, clientes: cargarClientes, plazas: cargarPlazas, ventas: cargarSoloVentas, caja: cargarSoloCaja, leads: cargarLeads, lesiones: cargarLesiones, cambios: cargarCambios, espera: cargarEspera, diario: cargarDiario, documentos: cargarDocumentos, avisos: cargarAvisos, 'pagos-centro': cargarPagosCentro, fichajes: cargarFichajesAdmin, iban: cargarIban, gastos: cargarGastos, config: cargarConfig };
       if (loaders[sec]) loaders[sec]();
     });
   });
@@ -1586,6 +1586,126 @@ async function guardarDocumento(e) {
     cerrarModal();
     cargarDocumentos();
   }
+}
+
+// ==================== PAGOS EN CENTRO ====================
+const MESES_PC = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+let _pagosCentroIniciados = false;
+let _pagosCentroCache = [];
+
+function _importeMensual(c) {
+  if (c.importe_mensual && parseFloat(c.importe_mensual) > 0) return parseFloat(c.importe_mensual);
+  const n = parseInt(c.dias_semana) || 0;
+  if (n === 1) return 50;
+  if (n === 2) return 90;
+  if (n === 3) return 120;
+  return 0;
+}
+
+async function cargarPagosCentro() {
+  if (!_pagosCentroIniciados) {
+    const selectMes = $('pagos-centro-mes');
+    const selectAño = $('pagos-centro-año');
+    const ahora = new Date();
+    for (let i = 1; i <= 12; i++) {
+      const opt = document.createElement('option');
+      opt.value = i; opt.textContent = MESES_PC[i];
+      if (i === ahora.getMonth() + 1) opt.selected = true;
+      selectMes.appendChild(opt);
+    }
+    for (let y = ahora.getFullYear() - 1; y <= ahora.getFullYear() + 1; y++) {
+      const opt = document.createElement('option');
+      opt.value = y; opt.textContent = y;
+      if (y === ahora.getFullYear()) opt.selected = true;
+      selectAño.appendChild(opt);
+    }
+    selectMes.onchange = renderPagosCentro;
+    selectAño.onchange = renderPagosCentro;
+    const inputBuscar = $('buscar-pagos-centro');
+    inputBuscar.addEventListener('input', renderPagosCentro);
+    _pagosCentroIniciados = true;
+  }
+  const todos = await API('/api/clientes?estado=activo');
+  _pagosCentroCache = todos.filter(c => c.metodo_pago === 'efectivo_tarjeta');
+  renderPagosCentro();
+}
+
+function renderPagosCentro() {
+  const filtro = _normalizar($('buscar-pagos-centro').value || '');
+  const lista = filtro
+    ? _pagosCentroCache.filter(c => _normalizar(c.nombre_completo).includes(filtro))
+    : _pagosCentroCache;
+  const mes = parseInt($('pagos-centro-mes').value);
+  const año = parseInt($('pagos-centro-año').value);
+
+  // Resumen
+  let totalCobrar = 0, sinFianza = 0;
+  lista.forEach(c => {
+    totalCobrar += _importeMensual(c);
+    if (!c.fianza_pagada) sinFianza++;
+  });
+
+  const resumen = `<div style="display:flex;gap:.75rem;flex-wrap:wrap">
+    <div style="padding:.6rem 1rem;background:white;border:2px solid var(--primary);border-radius:10px">
+      <div style="font-size:1.4rem;font-weight:700;color:var(--primary)">${lista.length}</div>
+      <div style="font-size:.8rem;color:var(--text-light)">Clientes ${MESES_PC[mes]} ${año}</div>
+    </div>
+    <div style="padding:.6rem 1rem;background:white;border:2px solid var(--success);border-radius:10px">
+      <div style="font-size:1.4rem;font-weight:700;color:var(--success)">${totalCobrar.toFixed(2)}€</div>
+      <div style="font-size:.8rem;color:var(--text-light)">Total a cobrar</div>
+    </div>
+    <div style="padding:.6rem 1rem;background:white;border:2px solid var(--warning);border-radius:10px">
+      <div style="font-size:1.4rem;font-weight:700;color:var(--warning)">${sinFianza}</div>
+      <div style="font-size:.8rem;color:var(--text-light)">Sin fianza</div>
+    </div>
+  </div>`;
+  $('pagos-centro-resumen').innerHTML = resumen;
+
+  if (!lista.length) {
+    $('pagos-centro-tabla').innerHTML = '<p style="color:var(--text-light)">No hay clientes que paguen en efectivo o tarjeta.</p>';
+    return;
+  }
+
+  // Agrupar por días/sem (3, 2, 1, otros)
+  const grupos = new Map();
+  lista.forEach(c => {
+    const n = parseInt(c.dias_semana) || 0;
+    const key = n > 0 ? `${n} día${n > 1 ? 's' : ''}/semana` : 'Sin asignar';
+    if (!grupos.has(key)) grupos.set(key, []);
+    grupos.get(key).push(c);
+  });
+  // Orden: 3 días, 2 días, 1 día, Sin asignar
+  const orden = Array.from(grupos.entries()).sort((a, b) => {
+    const na = parseInt(a[0]) || 0, nb = parseInt(b[0]) || 0;
+    return nb - na;
+  });
+
+  let rows = '';
+  orden.forEach(([titulo, items]) => {
+    let totalGrupo = 0;
+    items.forEach(c => totalGrupo += _importeMensual(c));
+    rows += `<tr><td colspan="8" style="background:var(--primary);color:white;font-weight:700;padding:.6rem 1rem;font-size:.9rem">${titulo} (${items.length}) — ${totalGrupo.toFixed(2)}€</td></tr>`;
+    items.forEach(c => {
+      const tel = (c.telefono || '').replace(/\s/g, '');
+      const msg = encodeURIComponent(`Hola ${c.nombre_completo.split(' ')[0]}, te recuerdo que tienes pendiente el pago de la mensualidad de ${MESES_PC[mes]} en Kalüna. Importe: ${_importeMensual(c).toFixed(2)}€. ¡Gracias!`);
+      const wa = tel ? `https://wa.me/${tel.startsWith('+') ? tel.slice(1) : '34'+tel}?text=${msg}` : '';
+      rows += `<tr>
+        <td><b>${c.nombre_completo}</b></td>
+        <td>${c.telefono || ''}</td>
+        <td><span class="badge badge-purple">${c.dias || ''}</span></td>
+        <td>${c.horario || ''}${c.horario2 ? ' / '+c.horario2 : ''}</td>
+        <td style="font-weight:700;color:var(--primary)">${_importeMensual(c).toFixed(2)}€</td>
+        <td>${c.fianza_pagada ? '<span class="badge badge-success">OK</span>' : '<span class="badge badge-danger">Pendiente</span>'}</td>
+        <td style="max-width:200px;font-size:.8rem">${c.notas || ''}</td>
+        <td style="white-space:nowrap">
+          ${wa ? `<a href="${wa}" target="_blank" class="btn btn-sm btn-success">📱 WhatsApp</a>` : ''}
+        </td>
+      </tr>`;
+    });
+  });
+  $('pagos-centro-tabla').innerHTML = `<table><thead><tr>
+    <th>Nombre</th><th>Teléfono</th><th>Días</th><th>Horario</th><th>Importe</th><th>Fianza</th><th>Notas</th><th></th>
+  </tr></thead><tbody>${rows}</tbody></table>`;
 }
 
 // ==================== IBAN / REMESAS ====================
