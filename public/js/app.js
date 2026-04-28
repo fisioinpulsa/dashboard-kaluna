@@ -1599,6 +1599,7 @@ async function guardarDocumento(e) {
 const MESES_PC = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 let _pagosCentroIniciados = false;
 let _pagosCentroCache = [];
+let _pagosMarcados = {};
 
 function _importeMensual(c) {
   if (c.importe_mensual && parseFloat(c.importe_mensual) > 0) return parseFloat(c.importe_mensual);
@@ -1628,15 +1629,32 @@ async function cargarPagosCentro() {
       if (y === ahora.getFullYear()) opt.selected = true;
       selectAño.appendChild(opt);
     }
-    selectMes.onchange = renderPagosCentro;
-    selectAño.onchange = renderPagosCentro;
+    selectMes.onchange = cargarPagosCentro;
+    selectAño.onchange = cargarPagosCentro;
     const inputBuscar = $('buscar-pagos-centro');
     inputBuscar.addEventListener('input', renderPagosCentro);
     _pagosCentroIniciados = true;
   }
-  const todos = await API('/api/clientes?estado=activo');
+  const mes = parseInt($('pagos-centro-mes').value);
+  const anio = parseInt($('pagos-centro-año').value);
+  const [todos, marcados] = await Promise.all([
+    API('/api/clientes?estado=activo'),
+    API(`/api/pagos-centro?mes=${mes}&anio=${anio}`)
+  ]);
   _pagosCentroCache = todos.filter(c => c.metodo_pago === 'efectivo_tarjeta');
+  _pagosMarcados = {};
+  (marcados || []).forEach(p => { _pagosMarcados[p.cliente_id] = p; });
   renderPagosCentro();
+}
+
+async function togglePagoCentro(clienteId, importe) {
+  const mes = parseInt($('pagos-centro-mes').value);
+  const anio = parseInt($('pagos-centro-año').value);
+  const actual = _pagosMarcados[clienteId]?.pagado || false;
+  const nuevo = !actual;
+  await POST('/api/pagos-centro', { cliente_id: clienteId, mes, anio, pagado: nuevo, importe });
+  LOG('editar', 'pagos-centro', `${nuevo ? 'OK' : 'Quitar OK'} pago cliente #${clienteId} ${MESES_PC[mes]} ${anio}`);
+  cargarPagosCentro();
 }
 
 function renderPagosCentro() {
@@ -1648,10 +1666,13 @@ function renderPagosCentro() {
   const año = parseInt($('pagos-centro-año').value);
 
   // Resumen
-  let totalCobrar = 0, sinFianza = 0;
+  let totalCobrar = 0, totalCobrado = 0, sinFianza = 0, pagados = 0, pendientes = 0;
   lista.forEach(c => {
-    totalCobrar += _importeMensual(c);
+    const imp = _importeMensual(c);
+    totalCobrar += imp;
     if (!c.fianza_pagada) sinFianza++;
+    if (_pagosMarcados[c.id]?.pagado) { pagados++; totalCobrado += imp; }
+    else pendientes++;
   });
 
   const resumen = `<div style="display:flex;gap:.75rem;flex-wrap:wrap">
@@ -1660,8 +1681,12 @@ function renderPagosCentro() {
       <div style="font-size:.8rem;color:var(--text-light)">Clientes ${MESES_PC[mes]} ${año}</div>
     </div>
     <div style="padding:.6rem 1rem;background:white;border:2px solid var(--success);border-radius:10px">
-      <div style="font-size:1.4rem;font-weight:700;color:var(--success)">${totalCobrar.toFixed(2)}€</div>
-      <div style="font-size:.8rem;color:var(--text-light)">Total a cobrar</div>
+      <div style="font-size:1.4rem;font-weight:700;color:var(--success)">${pagados} / ${lista.length}</div>
+      <div style="font-size:.8rem;color:var(--text-light)">Pagados ${totalCobrado.toFixed(2)}€</div>
+    </div>
+    <div style="padding:.6rem 1rem;background:white;border:2px solid var(--danger);border-radius:10px">
+      <div style="font-size:1.4rem;font-weight:700;color:var(--danger)">${pendientes}</div>
+      <div style="font-size:.8rem;color:var(--text-light)">Pendientes ${(totalCobrar - totalCobrado).toFixed(2)}€</div>
     </div>
     <div style="padding:.6rem 1rem;background:white;border:2px solid var(--warning);border-radius:10px">
       <div style="font-size:1.4rem;font-weight:700;color:var(--warning)">${sinFianza}</div>
@@ -1701,18 +1726,25 @@ function renderPagosCentro() {
   orden.forEach(([titulo, items]) => {
     let totalGrupo = 0;
     items.forEach(c => totalGrupo += _importeMensual(c));
-    rows += `<tr><td colspan="8" style="background:var(--primary);color:white;font-weight:700;padding:.6rem 1rem;font-size:.9rem">${titulo} (${items.length}) — ${totalGrupo.toFixed(2)}€</td></tr>`;
+    rows += `<tr><td colspan="9" style="background:var(--primary);color:white;font-weight:700;padding:.6rem 1rem;font-size:.9rem">${titulo} (${items.length}) — ${totalGrupo.toFixed(2)}€</td></tr>`;
     items.forEach(c => {
       const tel = (c.telefono || '').replace(/\s/g, '');
       const msg = encodeURIComponent(`Hola ${c.nombre_completo.split(' ')[0]}, te recuerdo que tienes pendiente el pago de la mensualidad de ${MESES_PC[mes]} en Kalüna. Importe: ${_importeMensual(c).toFixed(2)}€. ¡Gracias!`);
       const wa = tel ? `https://wa.me/${tel.startsWith('+') ? tel.slice(1) : '34'+tel}?text=${msg}` : '';
-      rows += `<tr>
+      const pagado = _pagosMarcados[c.id]?.pagado || false;
+      const fechaMarcado = _pagosMarcados[c.id]?.fecha_marcado;
+      const tooltipFecha = fechaMarcado ? new Date(fechaMarcado).toLocaleDateString('es-ES') : '';
+      const importeActual = _importeMensual(c);
+      rows += `<tr style="${pagado ? 'background:#f0fdf4' : ''}">
         <td><b>${c.nombre_completo}</b></td>
         <td>${c.telefono || ''}</td>
         <td><span class="badge badge-purple">${c.dias || ''}</span></td>
         <td>${c.horario || ''}${c.horario2 ? ' / '+c.horario2 : ''}</td>
-        <td style="white-space:nowrap"><input type="number" step="0.01" value="${_importeMensual(c).toFixed(2)}" id="pc-importe-${c.id}" style="width:70px;padding:.3rem;border:1px solid var(--border);border-radius:6px;text-align:right;font-weight:700;color:var(--primary)"> €
+        <td style="white-space:nowrap"><input type="number" step="0.01" value="${importeActual.toFixed(2)}" id="pc-importe-${c.id}" style="width:70px;padding:.3rem;border:1px solid var(--border);border-radius:6px;text-align:right;font-weight:700;color:var(--primary)"> €
           <button class="btn btn-sm btn-outline" onclick="guardarImportePC(${c.id})" title="Guardar importe">💾</button></td>
+        <td style="text-align:center">${pagado
+          ? `<button class="btn btn-sm btn-success" onclick="togglePagoCentro(${c.id}, ${importeActual})" title="Marcado el ${tooltipFecha}. Click para deshacer">✅ OK</button>`
+          : `<button class="btn btn-sm btn-outline" onclick="togglePagoCentro(${c.id}, ${importeActual})" title="Marcar como pagado">Marcar OK</button>`}</td>
         <td>${c.fianza_pagada ? '<span class="badge badge-success">OK</span>' : `<button class="btn btn-sm btn-warning" onclick="marcarFianza(${c.id})">Pendiente</button>`}</td>
         <td style="max-width:160px;font-size:.8rem">${c.notas || ''}</td>
         <td style="white-space:nowrap">
@@ -1724,7 +1756,7 @@ function renderPagosCentro() {
     });
   });
   $('pagos-centro-tabla').innerHTML = `<table><thead><tr>
-    <th>Nombre</th><th>Teléfono</th><th>Días</th><th>Horario</th><th>Importe</th><th>Fianza</th><th>Notas</th><th></th>
+    <th>Nombre</th><th>Teléfono</th><th>Días</th><th>Horario</th><th>Importe</th><th>Pagado ${MESES_PC[mes]}</th><th>Fianza</th><th>Notas</th><th></th>
   </tr></thead><tbody>${rows}</tbody></table>`;
 }
 
