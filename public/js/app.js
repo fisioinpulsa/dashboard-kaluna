@@ -1838,7 +1838,7 @@ async function guardarIban(id) {
 // ==================== GASTOS ====================
 const MESES_GASTOS = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const CATEGORIAS_GASTOS = ['Local','Préstamos','Material','Impuestos','Sueldos','Otros'];
-const CONCEPTOS_DESGLOSE = ['Sueldos','Seguros Sociales']; // conceptos que admiten múltiples importes desglosados
+const CONCEPTOS_DESGLOSE = ['Sueldos','Seguros Sociales','Gastos Extraordinarios']; // conceptos que admiten múltiples importes desglosados
 let gastosIniciados = false;
 
 function _parseDetalles(g) {
