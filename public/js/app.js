@@ -1837,7 +1837,7 @@ async function guardarIban(id) {
 
 // ==================== GASTOS ====================
 const MESES_GASTOS = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-const CATEGORIAS_GASTOS = ['Local','Préstamos','Material','Impuestos','Sueldos','Seguros Sociales','Otros'];
+const CATEGORIAS_GASTOS = ['Local','Préstamos','Material','Impuestos','Sueldos','Otros'];
 const CONCEPTOS_DESGLOSE = ['Sueldos','Seguros Sociales']; // conceptos que admiten múltiples importes desglosados
 let gastosIniciados = false;
 
@@ -1869,7 +1869,12 @@ function _renderGastoItem(g, cat) {
         <span style="font-size:.8rem;color:var(--text-light)">Total:</span>
         <b style="font-size:1rem;color:var(--primary)">${realidad.toFixed(2)}€</b>
       </div>
-      <button class="btn btn-sm btn-primary" onclick="anadirDetalleGasto(${g.id})" style="width:100%;margin-top:.5rem;font-size:.8rem">+ Añadir importe</button>`;
+      <div style="margin-top:.5rem;display:flex;gap:.3rem;align-items:center">
+        <input id="g-${g.id}-newconcepto" placeholder="Concepto (ej: Lydia)" style="flex:1.2;padding:.35rem .5rem;border:1px solid var(--border);border-radius:6px;font-size:.8rem">
+        <input id="g-${g.id}-newimporte" type="number" step="0.01" placeholder="0,00" style="width:70px;padding:.35rem .4rem;border:2px solid var(--primary);border-radius:6px;font-size:.85rem;font-weight:600;text-align:right">
+        <span style="font-size:.85rem;font-weight:700">€</span>
+        <button class="btn btn-sm btn-primary" onclick="anadirDetalleGasto(${g.id})" title="Añadir" style="padding:.3rem .6rem;font-size:.85rem">+</button>
+      </div>`;
   } else {
     cuerpo = `<div style="display:flex;align-items:center;gap:.3rem">
       <input type="number" step="0.01" value="${g.realidad || ''}" id="g-${g.id}-real" placeholder="0.00" onchange="guardarRealidad(${g.id}, ${conceptoEsc}, ${catEsc}, ${est})" style="flex:1;padding:.5rem;border:2px solid var(--primary);border-radius:8px;font-size:1rem;font-weight:600;text-align:right">
@@ -1892,16 +1897,16 @@ function _renderGastoItem(g, cat) {
 }
 
 async function anadirDetalleGasto(gastoId) {
-  const importeStr = prompt('Importe:');
-  if (importeStr === null) return;
-  const importe = parseFloat((importeStr || '').replace(',', '.'));
-  if (isNaN(importe) || importe <= 0) { alert('Importe inválido'); return; }
-  const nota = prompt('Concepto/persona (opcional):') || '';
+  const inputImporte = document.getElementById(`g-${gastoId}-newimporte`);
+  const inputConcepto = document.getElementById(`g-${gastoId}-newconcepto`);
+  const importe = parseFloat((inputImporte?.value || '').replace(',', '.'));
+  const nota = (inputConcepto?.value || '').trim();
+  if (isNaN(importe) || importe <= 0) { alert('Importe inválido'); inputImporte?.focus(); return; }
   const gastos = await API(`/api/gastos?mes=${$('gastos-mes').value}&año=${$('gastos-año').value}`);
   const g = gastos.find(x => x.id === gastoId);
   if (!g) return;
   const detalles = _parseDetalles(g);
-  detalles.push({ importe, nota: nota.trim() });
+  detalles.push({ importe, nota });
   const total = detalles.reduce((s, d) => s + (parseFloat(d.importe) || 0), 0);
   await PUT(`/api/gastos/${gastoId}`, {
     categoria: g.categoria, concepto: g.concepto, estimacion: g.estimacion,
