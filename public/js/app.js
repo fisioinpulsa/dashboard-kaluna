@@ -1837,8 +1837,97 @@ async function guardarIban(id) {
 
 // ==================== GASTOS ====================
 const MESES_GASTOS = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-const CATEGORIAS_GASTOS = ['Local','Préstamos','Material','Impuestos','Sueldos','Otros'];
+const CATEGORIAS_GASTOS = ['Local','Préstamos','Material','Impuestos','Sueldos','Seguros Sociales','Otros'];
+const CONCEPTOS_DESGLOSE = ['Sueldos','Seguros Sociales']; // conceptos que admiten múltiples importes desglosados
 let gastosIniciados = false;
+
+function _parseDetalles(g) {
+  if (!g.realidad_detalles) return [];
+  try { const p = JSON.parse(g.realidad_detalles); return Array.isArray(p) ? p : []; } catch { return []; }
+}
+
+function _renderGastoItem(g, cat) {
+  const usaDesglose = CONCEPTOS_DESGLOSE.includes(g.concepto);
+  const detalles = _parseDetalles(g);
+  const sumaDetalles = detalles.reduce((s, d) => s + (parseFloat(d.importe) || 0), 0);
+  const realidad = usaDesglose ? sumaDetalles : parseFloat(g.realidad || 0);
+  const pagado = realidad > 0;
+  const conceptoEsc = JSON.stringify(g.concepto).replace(/"/g,"&quot;");
+  const catEsc = JSON.stringify(cat).replace(/"/g,"&quot;");
+  const est = parseFloat(g.estimacion || 0);
+
+  let cuerpo;
+  if (usaDesglose) {
+    const lista = detalles.length
+      ? detalles.map((d, i) => `<div style="display:flex;align-items:center;gap:.3rem;font-size:.8rem;padding:.25rem .4rem;background:#f9fafb;border-radius:6px;margin-bottom:.25rem">
+          <span style="flex:1">${d.nota ? `<b>${d.nota}:</b> ` : ''}${parseFloat(d.importe).toFixed(2)}€</span>
+          <button class="btn btn-sm btn-danger" onclick="quitarDetalleGasto(${g.id}, ${i})" style="padding:.1rem .35rem;font-size:.65rem">×</button>
+        </div>`).join('')
+      : '<div style="font-size:.75rem;color:var(--text-light);padding:.25rem 0">Sin importes añadidos</div>';
+    cuerpo = `<div>${lista}</div>
+      <div style="margin-top:.4rem;padding-top:.4rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:.8rem;color:var(--text-light)">Total:</span>
+        <b style="font-size:1rem;color:var(--primary)">${realidad.toFixed(2)}€</b>
+      </div>
+      <button class="btn btn-sm btn-primary" onclick="anadirDetalleGasto(${g.id})" style="width:100%;margin-top:.5rem;font-size:.8rem">+ Añadir importe</button>`;
+  } else {
+    cuerpo = `<div style="display:flex;align-items:center;gap:.3rem">
+      <input type="number" step="0.01" value="${g.realidad || ''}" id="g-${g.id}-real" placeholder="0.00" onchange="guardarRealidad(${g.id}, ${conceptoEsc}, ${catEsc}, ${est})" style="flex:1;padding:.5rem;border:2px solid var(--primary);border-radius:8px;font-size:1rem;font-weight:600;text-align:right">
+      <span style="font-size:1.1rem;font-weight:700">€</span>
+    </div>`;
+  }
+
+  return `<div style="padding:.75rem;border:2px solid ${pagado ? 'var(--success)' : 'var(--border)'};border-radius:10px;background:${pagado ? '#f0fff4' : 'white'}">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem">
+      <b style="font-size:.95rem">${g.concepto}</b>
+      ${pagado ? '<span style="color:var(--success);font-size:.75rem;font-weight:700">✓ Pagado</span>' : '<span style="color:var(--text-light);font-size:.7rem">Pendiente</span>'}
+    </div>
+    <div style="font-size:.75rem;color:var(--text-light);margin-bottom:.4rem">Estimado: ${est.toFixed(2)}€</div>
+    ${cuerpo}
+    ${!usaDesglose ? `<div style="margin-top:.4rem;display:flex;gap:.3rem">
+      <input value="${g.notas || ''}" id="g-${g.id}-notas" placeholder="Notas..." onchange="guardarRealidad(${g.id}, ${conceptoEsc}, ${catEsc}, ${est})" style="flex:1;padding:.3rem .5rem;border:1px solid var(--border);border-radius:6px;font-size:.75rem">
+      <button class="btn btn-sm btn-danger" onclick="eliminarGasto(${g.id})" style="padding:.2rem .5rem;font-size:.7rem">X</button>
+    </div>` : ''}
+  </div>`;
+}
+
+async function anadirDetalleGasto(gastoId) {
+  const importeStr = prompt('Importe:');
+  if (importeStr === null) return;
+  const importe = parseFloat((importeStr || '').replace(',', '.'));
+  if (isNaN(importe) || importe <= 0) { alert('Importe inválido'); return; }
+  const nota = prompt('Concepto/persona (opcional):') || '';
+  const gastos = await API(`/api/gastos?mes=${$('gastos-mes').value}&año=${$('gastos-año').value}`);
+  const g = gastos.find(x => x.id === gastoId);
+  if (!g) return;
+  const detalles = _parseDetalles(g);
+  detalles.push({ importe, nota: nota.trim() });
+  const total = detalles.reduce((s, d) => s + (parseFloat(d.importe) || 0), 0);
+  await PUT(`/api/gastos/${gastoId}`, {
+    categoria: g.categoria, concepto: g.concepto, estimacion: g.estimacion,
+    realidad: total, ahorro: 0, notas: g.notas || '',
+    realidad_detalles: JSON.stringify(detalles)
+  });
+  LOG('editar', 'gastos', `${g.concepto} +${importe}€${nota ? ' ('+nota+')' : ''}`);
+  cargarGastos();
+}
+
+async function quitarDetalleGasto(gastoId, indice) {
+  if (!confirm('¿Quitar este importe?')) return;
+  const gastos = await API(`/api/gastos?mes=${$('gastos-mes').value}&año=${$('gastos-año').value}`);
+  const g = gastos.find(x => x.id === gastoId);
+  if (!g) return;
+  const detalles = _parseDetalles(g);
+  detalles.splice(indice, 1);
+  const total = detalles.reduce((s, d) => s + (parseFloat(d.importe) || 0), 0);
+  await PUT(`/api/gastos/${gastoId}`, {
+    categoria: g.categoria, concepto: g.concepto, estimacion: g.estimacion,
+    realidad: total, ahorro: 0, notas: g.notas || '',
+    realidad_detalles: JSON.stringify(detalles)
+  });
+  LOG('editar', 'gastos', `${g.concepto} quitar importe`);
+  cargarGastos();
+}
 
 async function cargarGastos() {
   if (!gastosIniciados) {
@@ -1924,24 +2013,7 @@ async function cargarGastos() {
       </div>
       <div class="panel-body">
         <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:.75rem">
-          ${items.map(g => {
-            const pagado = parseFloat(g.realidad || 0) > 0;
-            return `<div style="padding:.75rem;border:2px solid ${pagado ? 'var(--success)' : 'var(--border)'};border-radius:10px;background:${pagado ? '#f0fff4' : 'white'}">
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem">
-                <b style="font-size:.95rem">${g.concepto}</b>
-                ${pagado ? '<span style="color:var(--success);font-size:.75rem;font-weight:700">✓ Pagado</span>' : '<span style="color:var(--text-light);font-size:.7rem">Pendiente</span>'}
-              </div>
-              <div style="font-size:.75rem;color:var(--text-light);margin-bottom:.4rem">Estimado: ${parseFloat(g.estimacion||0).toFixed(2)}€</div>
-              <div style="display:flex;align-items:center;gap:.3rem">
-                <input type="number" step="0.01" value="${g.realidad || ''}" id="g-${g.id}-real" placeholder="0.00" onchange="guardarRealidad(${g.id}, ${JSON.stringify(g.concepto).replace(/"/g,"&quot;")}, ${JSON.stringify(cat).replace(/"/g,"&quot;")}, ${parseFloat(g.estimacion||0)})" style="flex:1;padding:.5rem;border:2px solid var(--primary);border-radius:8px;font-size:1rem;font-weight:600;text-align:right">
-                <span style="font-size:1.1rem;font-weight:700">€</span>
-              </div>
-              <div style="margin-top:.4rem;display:flex;gap:.3rem">
-                <input value="${g.notas || ''}" id="g-${g.id}-notas" placeholder="Notas..." onchange="guardarRealidad(${g.id}, ${JSON.stringify(g.concepto).replace(/"/g,"&quot;")}, ${JSON.stringify(cat).replace(/"/g,"&quot;")}, ${parseFloat(g.estimacion||0)})" style="flex:1;padding:.3rem .5rem;border:1px solid var(--border);border-radius:6px;font-size:.75rem">
-                <button class="btn btn-sm btn-danger" onclick="eliminarGasto(${g.id})" style="padding:.2rem .5rem;font-size:.7rem">X</button>
-              </div>
-            </div>`;
-          }).join('')}
+          ${items.map(g => _renderGastoItem(g, cat)).join('')}
         </div>
       </div>
     </div>`;

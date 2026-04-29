@@ -114,11 +114,11 @@ router.post('/', async (req, res) => {
 // Editar gasto
 router.put('/:id', async (req, res) => {
   try {
-    const { categoria, concepto, estimacion, semana, realidad, ahorro, notas } = req.body;
+    const { categoria, concepto, estimacion, semana, realidad, ahorro, notas, realidad_detalles } = req.body;
     const { rows } = await query(
-      `UPDATE kaluna_gastos SET categoria=$1, concepto=$2, estimacion=$3, semana=$4, realidad=$5, ahorro=$6, notas=$7
-       WHERE id=$8 RETURNING *`,
-      [categoria, concepto, estimacion || 0, semana || null, realidad || 0, ahorro || 0, notas || '', req.params.id]
+      `UPDATE kaluna_gastos SET categoria=$1, concepto=$2, estimacion=$3, semana=$4, realidad=$5, ahorro=$6, notas=$7, realidad_detalles=$8
+       WHERE id=$9 RETURNING *`,
+      [categoria, concepto, estimacion || 0, semana || null, realidad || 0, ahorro || 0, notas || '', realidad_detalles || null, req.params.id]
     );
     res.json(rows[0]);
   } catch (err) { res.status(500).json({ error: err.message }); }
