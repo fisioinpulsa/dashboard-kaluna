@@ -57,7 +57,7 @@
       <div class="main-header">
         <h1>Clientes</h1>
         <div style="display:flex;gap:.5rem;align-items:center">
-          <input type="text" id="buscar-cliente" class="btn btn-outline" placeholder="Buscar por nombre..." style="padding:.45rem .8rem">
+          <input type="text" id="buscar-cliente" placeholder="🔍 Buscar cliente..." oninput="filtrarClientes()" style="padding:.5rem .8rem;border:1px solid #ddd;border-radius:8px;min-width:220px;font-size:.92rem">
           <select id="filtro-clientes" class="btn btn-outline" style="padding:.45rem .8rem"><option value="activo">Activos</option><option value="baja">Bajas</option><option value="todos">Todos</option></select>
           <button class="btn btn-primary" onclick="abrirModalCliente()">+ Nuevo cliente</button>
         </div>
@@ -276,6 +276,40 @@
 <!-- MODAL GENÉRICO -->
 <div class="modal-overlay" id="modal-overlay">
   <div class="modal" id="modal-content"></div>
+</div>
+
+<!-- MODAL CONSENTIMIENTO PRIMER LOGIN -->
+<div id="modal-consentimiento" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:99999;align-items:center;justify-content:center;padding:1rem">
+  <div style="background:#fff;max-width:720px;width:100%;max-height:92vh;overflow-y:auto;border-radius:12px;padding:2rem;box-shadow:0 20px 60px rgba(0,0,0,.4)">
+    <h2 style="color:#5a4f75;margin-top:0">Compromiso del equipo Kalüna</h2>
+    <p style="color:#666;font-size:.9rem;margin-bottom:1rem">Antes de empezar a trabajar con el dashboard, lee y firma este compromiso. Es obligatorio para continuar.</p>
+
+    <div style="background:#f5f3f8;border-left:4px solid #7c6f9c;padding:1rem 1.2rem;border-radius:6px;margin:1rem 0;font-size:.92rem;line-height:1.6;color:#333">
+      <p style="margin:.4rem 0"><strong>1. Confidencialidad:</strong> Toda la información de clientes (datos personales, IBAN, lesiones, conversaciones, ventas, agenda, fotos, vídeos) es <strong>estrictamente confidencial</strong>. No se puede compartir, fotografiar, capturar pantalla, ni comentar fuera del centro, ni con familiares, amistades, redes sociales o grupos de WhatsApp.</p>
+      <p style="margin:.4rem 0"><strong>2. Uso del dashboard:</strong> El acceso es <strong>personal e intransferible</strong>. No comparto mi PIN ni dejo la sesión abierta en ordenadores ajenos. Si detecto un acceso indebido lo notifico de inmediato a la responsable.</p>
+      <p style="margin:.4rem 0"><strong>3. Material del centro:</strong> No me llevo material físico, vídeos formativos, manuales ni grabaciones del centro. El contenido del Kalüna Campus es solo para uso interno y no puede compartirse fuera del equipo.</p>
+      <p style="margin:.4rem 0"><strong>4. Cámaras de seguridad:</strong> Reconozco que el centro dispone de <strong>cámaras de videovigilancia</strong> instaladas exclusivamente con fines de seguridad de personas, instalaciones y material, conforme a la LOPDGDD 3/2018 y al RGPD. Las grabaciones se conservan el tiempo legalmente permitido y solo accede la responsable del centro.</p>
+      <p style="margin:.4rem 0"><strong>5. Trato a clientes:</strong> Me comprometo a un trato respetuoso, profesional y empático con cada persona que entra al centro.</p>
+      <p style="margin:.4rem 0"><strong>6. Incumplimiento:</strong> Soy consciente de que cualquier incumplimiento de estos puntos puede dar lugar a medidas disciplinarias internas y, en su caso, a las acciones legales correspondientes.</p>
+    </div>
+
+    <label style="display:block;margin:.8rem 0;font-size:.95rem;cursor:pointer">
+      <input type="checkbox" id="consent-check" style="margin-right:.4rem;transform:scale(1.2)"> He leído y acepto todas las condiciones anteriores.
+    </label>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin-top:.6rem">
+      <input id="consent-nombre" placeholder="Nombre y apellidos completos" style="padding:.65rem;border:1px solid #ddd;border-radius:6px;font-size:.95rem">
+      <input id="consent-dni" placeholder="DNI" style="padding:.65rem;border:1px solid #ddd;border-radius:6px;font-size:.95rem">
+    </div>
+
+    <p style="margin:1.2rem 0 .3rem;font-size:.9rem;color:#5a4f75"><strong>Firma con el ratón o el dedo:</strong></p>
+    <canvas id="consent-canvas" width="600" height="180" style="border:2px dashed #7c6f9c;border-radius:8px;width:100%;background:#fff;touch-action:none;display:block"></canvas>
+    <button type="button" onclick="limpiarFirmaConsent()" style="margin-top:.4rem;background:none;border:none;color:#7c6f9c;cursor:pointer;font-size:.85rem;text-decoration:underline">↻ Limpiar firma</button>
+
+    <div style="display:flex;gap:.6rem;justify-content:flex-end;margin-top:1.4rem">
+      <button onclick="firmarConsentimiento()" class="btn btn-primary" style="padding:.8rem 1.6rem;font-size:1rem">Firmar y entrar</button>
+    </div>
+  </div>
 </div>
 
 <script src="/js/app.js"></script>

@@ -33,6 +33,7 @@ app.use('/api/documentos', require('./routes/documentos'));
 app.use('/api/iban', require('./routes/iban'));
 app.use('/api/gastos', require('./routes/gastos'));
 app.use('/api/pagos-centro', require('./routes/pagos-centro'));
+app.use('/api/consentimiento', require('./routes/consentimiento'));
 
 // Pages
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));

@@ -2163,5 +2163,97 @@ async function eliminarPlantilla(id) {
   abrirModalPlantilla();
 }
 
+// === CONSENTIMIENTO PRIMER LOGIN ===
+async function chequearConsentimiento(){
+  try{
+    const r = await fetch('/api/consentimiento/estado', {credentials:'include'});
+    if (!r.ok) return;
+    const data = await r.json();
+    if (!data.firmado) abrirModalConsentimiento();
+  } catch(e){ console.error('chequearConsentimiento', e); }
+}
+
+let consentCtx = null, consentDibujado = false;
+function abrirModalConsentimiento(){
+  const m = document.getElementById('modal-consentimiento');
+  if (!m) return;
+  m.style.display = 'flex';
+  const inp = document.getElementById('consent-nombre');
+  if (inp && window.USUARIO_ACTUAL && window.USUARIO_ACTUAL.nombre) {
+    inp.value = window.USUARIO_ACTUAL.nombre;
+  }
+  setTimeout(inicializarCanvasConsent, 100);
+}
+
+function inicializarCanvasConsent(){
+  const c = document.getElementById('consent-canvas');
+  if (!c) return;
+  consentCtx = c.getContext('2d');
+  consentCtx.strokeStyle = '#0D0D0D';
+  consentCtx.lineWidth = 2;
+  consentCtx.lineCap = 'round';
+  consentDibujado = false;
+  let drawing = false, last = null;
+  const pos = e => {
+    const r = c.getBoundingClientRect();
+    const t = e.touches ? e.touches[0] : e;
+    return { x:(t.clientX-r.left)*(c.width/r.width), y:(t.clientY-r.top)*(c.height/r.height) };
+  };
+  c.onmousedown = e => { e.preventDefault(); drawing=true; last=pos(e); consentDibujado=true; };
+  c.onmousemove = e => { if(!drawing) return; e.preventDefault(); const p=pos(e); consentCtx.beginPath(); consentCtx.moveTo(last.x,last.y); consentCtx.lineTo(p.x,p.y); consentCtx.stroke(); last=p; };
+  c.onmouseup = () => drawing=false;
+  c.onmouseleave = () => drawing=false;
+  c.ontouchstart = e => { e.preventDefault(); drawing=true; last=pos(e); consentDibujado=true; };
+  c.ontouchmove = e => { if(!drawing) return; e.preventDefault(); const p=pos(e); consentCtx.beginPath(); consentCtx.moveTo(last.x,last.y); consentCtx.lineTo(p.x,p.y); consentCtx.stroke(); last=p; };
+  c.ontouchend = () => drawing=false;
+}
+
+function limpiarFirmaConsent(){
+  const c = document.getElementById('consent-canvas');
+  if (!c || !consentCtx) return;
+  consentCtx.clearRect(0,0,c.width,c.height);
+  consentDibujado = false;
+}
+
+async function firmarConsentimiento(){
+  if (!document.getElementById('consent-check').checked) {
+    return alert('Debes marcar la casilla de aceptación.');
+  }
+  const nombre = document.getElementById('consent-nombre').value.trim();
+  const dni = document.getElementById('consent-dni').value.trim();
+  if (!nombre) return alert('Escribe tu nombre completo.');
+  if (!consentDibujado) return alert('Debes firmar antes de continuar.');
+  const firma = document.getElementById('consent-canvas').toDataURL('image/png');
+  try {
+    const r = await fetch('/api/consentimiento/firmar', {
+      method:'POST', credentials:'include',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({nombre_completo:nombre, dni, firma_data:firma})
+    });
+    if (!r.ok) return alert('Error al guardar. Inténtalo de nuevo.');
+    document.getElementById('modal-consentimiento').style.display = 'none';
+    try { LOG('firmar','consentimiento','Consentimiento equipo firmado'); } catch(e){}
+  } catch(e) {
+    alert('Error de red al firmar.');
+    console.error(e);
+  }
+}
+
+// === BUSCADOR DE CLIENTES (filtrado client-side, sin re-fetch) ===
+window.filtrarClientes = function(){
+  const inp = document.getElementById('buscar-cliente');
+  if (!inp) return;
+  const q = inp.value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  document.querySelectorAll('#tabla-clientes tbody tr').forEach(tr => {
+    const txt = tr.textContent.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    tr.style.display = txt.includes(q) ? '' : 'none';
+  });
+};
+
+// Disparar chequeo de consentimiento al cargar
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(chequearConsentimiento, 800);
+});
+
 // INIT
 init();
