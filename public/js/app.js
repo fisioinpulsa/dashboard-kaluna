@@ -923,10 +923,73 @@ function renderFichaLesion(id) {
         <button class="btn btn-sm" style="margin-top:.3rem;background:var(--info);color:white" onclick="añadirNotaLesion(${id},'fisio')">Añadir nota</button>
       </div>
     </div>
-    <div style="margin-top:.75rem;display:flex;gap:.5rem">
+    <div style="margin-top:.75rem;display:flex;gap:.5rem;flex-wrap:wrap">
       <button class="btn btn-primary btn-sm" onclick="guardarFichaLesion(${id})">Guardar ejercicios</button>
+      <button class="btn btn-sm" style="background:#7c6f9c;color:#fff" onclick="editarLesionCompleta(${id})">✏️ Editar ficha completa</button>
       ${esSuperAdmin() ? `<button class="btn btn-danger btn-sm" onclick="eliminarLesion(${id})">Eliminar ficha</button>` : ''}
     </div>`;
+}
+
+function editarLesionCompleta(id){
+  const f = lesionesData.find(x => x.id === id);
+  if (!f) return;
+  const fechaIso = f.fecha ? new Date(f.fecha).toISOString().slice(0,10) : '';
+  const html = `
+    <div style="padding:1rem;max-width:760px">
+      <h2 style="color:#5a4f75;margin-top:0">Editar ficha de ${f.cliente_nombre}</h2>
+      <p style="color:#666;font-size:.85rem;margin-bottom:1rem">Modifica cualquier campo y pulsa "Guardar cambios". Útil si olvidaste introducir algún dato.</p>
+
+      <div style="display:grid;grid-template-columns:2fr 1fr;gap:.75rem;margin-bottom:.75rem">
+        <div>
+          <label style="font-size:.85rem;color:#5a4f75;font-weight:600">Nombre del paciente</label>
+          <input id="ed-les-nombre" value="${(f.cliente_nombre||'').replace(/"/g,'&quot;')}" style="width:100%;padding:.55rem;border:1px solid #ddd;border-radius:6px;margin-top:.25rem">
+        </div>
+        <div>
+          <label style="font-size:.85rem;color:#5a4f75;font-weight:600">Fecha</label>
+          <input id="ed-les-fecha" type="date" value="${fechaIso}" style="width:100%;padding:.55rem;border:1px solid #ddd;border-radius:6px;margin-top:.25rem">
+        </div>
+      </div>
+
+      <div style="margin-bottom:.75rem">
+        <label style="font-size:.85rem;color:#c0392b;font-weight:600">Ejercicios NO recomendados</label>
+        <textarea id="ed-les-ejercicios" rows="5" style="width:100%;padding:.55rem;border:1px solid #ddd;border-radius:6px;margin-top:.25rem;font-family:inherit;resize:vertical">${f.ejercicios_no_recomendados||''}</textarea>
+      </div>
+
+      <div style="margin-bottom:.75rem">
+        <label style="font-size:.85rem;color:#7c6f9c;font-weight:600">Notas Pilates (texto completo editable)</label>
+        <textarea id="ed-les-pilates" rows="6" style="width:100%;padding:.55rem;border:1px solid #ddd;border-radius:6px;margin-top:.25rem;font-family:inherit;resize:vertical">${f.notas_pilates||''}</textarea>
+      </div>
+
+      <div style="margin-bottom:1rem">
+        <label style="font-size:.85rem;color:#2980b9;font-weight:600">Notas Fisio (texto completo editable)</label>
+        <textarea id="ed-les-fisio" rows="6" style="width:100%;padding:.55rem;border:1px solid #ddd;border-radius:6px;margin-top:.25rem;font-family:inherit;resize:vertical">${f.notas_fisio||''}</textarea>
+      </div>
+
+      <div style="display:flex;gap:.5rem;justify-content:flex-end">
+        <button class="btn btn-outline" onclick="cerrarModal()">Cancelar</button>
+        <button class="btn btn-primary" onclick="guardarLesionCompleta(${id})">Guardar cambios</button>
+      </div>
+    </div>`;
+  abrirModal(html);
+}
+
+async function guardarLesionCompleta(id){
+  const nombre = document.getElementById('ed-les-nombre').value.trim();
+  const fecha = document.getElementById('ed-les-fecha').value || null;
+  const ejercicios = document.getElementById('ed-les-ejercicios').value;
+  const pilates = document.getElementById('ed-les-pilates').value;
+  const fisio = document.getElementById('ed-les-fisio').value;
+  if (!nombre) return alert('El nombre del paciente es obligatorio.');
+  await PUT(`/api/lesiones/${id}`, {
+    cliente_nombre: nombre,
+    fecha,
+    ejercicios_no_recomendados: ejercicios,
+    notas_pilates: pilates,
+    notas_fisio: fisio
+  });
+  try { LOG('editar','lesiones',`Ficha ${nombre} editada (completa)`); } catch(e){}
+  cerrarModal();
+  cargarLesiones();
 }
 
 async function guardarFichaLesion(id) {
