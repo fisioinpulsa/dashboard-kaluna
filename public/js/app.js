@@ -927,72 +927,241 @@ async function eliminarLead(id) {
   if (confirm('¿Eliminar lead?')) { await DEL(`/api/leads/${id}`); cerrarModal(); cargarLeads(); }
 }
 
-// ==================== CONTROL LESIONES ====================
+// ==================== CONTROL LESIONES (vista historia clínica) ====================
 let lesionesData = [];
 
 async function cargarLesiones() {
   lesionesData = await API('/api/lesiones');
-  renderLesiones(lesionesData);
+  try {
+    const r = await API('/api/lesiones/resumen');
+    pintarResumenLesiones(r);
+  } catch(e){}
+  renderLesiones();
   const buscar = $('buscar-lesion');
-  buscar.oninput = () => {
-    const q = buscar.value.toLowerCase();
-    renderLesiones(q ? lesionesData.filter(l => l.cliente_nombre.toLowerCase().includes(q)) : lesionesData);
-  };
+  if (buscar && !buscar._listenerAdded) {
+    buscar.oninput = renderLesiones;
+    buscar._listenerAdded = true;
+  }
+  const filtro = $('filtro-lesiones');
+  if (filtro && !filtro._listenerAdded) {
+    filtro.onchange = renderLesiones;
+    filtro._listenerAdded = true;
+  }
 }
 
-function renderLesiones(fichas) {
-  $('lista-lesiones').innerHTML = fichas.length ? `<table><thead><tr>
-    <th>Paciente</th><th>Fecha</th><th>Ejercicios no recomendados</th><th></th>
-  </tr></thead><tbody>
-    ${fichas.map(f => `<tr style="cursor:pointer" onclick="toggleFichaLesion(${f.id})">
-      <td><b>${f.cliente_nombre}</b></td>
-      <td>${f.fecha ? new Date(f.fecha).toLocaleDateString('es-ES') : ''}</td>
-      <td style="max-width:300px;font-size:.8rem;color:var(--text-light);white-space:pre-wrap">${(f.ejercicios_no_recomendados || '').substring(0, 80)}${(f.ejercicios_no_recomendados||'').length > 80 ? '...' : ''}</td>
-      <td><span style="font-size:.7rem;color:var(--text-light)">▼</span></td>
-    </tr>
-    <tr id="ficha-lesion-${f.id}" style="display:none">
-      <td colspan="4" style="padding:0;background:var(--bg)">
-        <div style="padding:1.25rem" id="ficha-lesion-content-${f.id}"></div>
-      </td>
-    </tr>`).join('')}
-  </tbody></table>` : '<p style="color:var(--text-light)">No hay fichas de lesiones. Crea una con "+ Nueva ficha".</p>';
+function pintarResumenLesiones(r) {
+  const cont = document.getElementById('resumen-lesiones');
+  if (!cont) return;
+  const card = (label, val, color, sub='') => `
+    <div style="background:${color};color:#fff;padding:.7rem 1rem;border-radius:10px;min-width:140px;flex:1">
+      <div style="font-size:.7rem;opacity:.9;text-transform:uppercase;letter-spacing:.5px">${label}</div>
+      <div style="font-size:1.5rem;font-weight:700;line-height:1.1">${val}</div>
+      ${sub?`<div style="font-size:.7rem;opacity:.85;margin-top:.15rem">${sub}</div>`:''}
+    </div>`;
+  cont.innerHTML = `
+    <div style="display:flex;gap:.7rem;flex-wrap:wrap;margin:.6rem 0 1rem">
+      ${card('Activas', r.activas, 'linear-gradient(135deg,#27ae60,#16a085)', 'pacientes en activo')}
+      ${card('Con restricciones', r.con_restricciones, 'linear-gradient(135deg,#c0392b,#e74c3c)', '🔴 ejercicios prohibidos')}
+      ${card('Actualizadas este mes', r.actualizadas_mes, 'linear-gradient(135deg,#2980b9,#3498db)', 'movimiento reciente')}
+      ${card('Fichas de bajas', r.bajas, 'linear-gradient(135deg,#7f8c8d,#95a5a6)', 'pacientes dados de baja')}
+    </div>`;
 }
 
-function toggleFichaLesion(id) {
-  const fila = document.getElementById(`ficha-lesion-${id}`);
-  if (!fila) return;
-  const visible = fila.style.display !== 'none';
-  document.querySelectorAll('[id^="ficha-lesion-"]').forEach(el => { if (el.id.includes('content')) return; el.style.display = 'none'; });
-  if (!visible) { fila.style.display = 'table-row'; renderFichaLesion(id); }
+// Parsea las notas tipo "[autor - dd/mm/aaaa, hh:mm]\n texto" en array de entradas
+function parsearNotas(textoCompleto, tipo) {
+  if (!textoCompleto || !textoCompleto.trim()) return [];
+  // Las notas se separan por doble salto de línea, cada una empieza con [autor - fecha]
+  const bloques = textoCompleto.split(/\n\n+/);
+  return bloques.map(bloque => {
+    const m = bloque.match(/^\[([^\-\]]+)\s*-\s*([^\]]+)\]\s*\n?([\s\S]*)/);
+    if (m) {
+      return { autor: m[1].trim(), fecha: m[2].trim(), texto: m[3].trim(), tipo };
+    }
+    // Sin formato → nota legacy
+    return { autor: '?', fecha: '', texto: bloque.trim(), tipo };
+  }).filter(n => n.texto);
 }
 
-function renderFichaLesion(id) {
+// Convierte fecha tipo "dd/mm/aaaa, hh:mm" a timestamp para ordenar
+function fechaNotaToTs(f) {
+  if (!f) return 0;
+  const m = f.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})(?:,\s*(\d{1,2}):(\d{1,2}))?/);
+  if (!m) return 0;
+  return new Date(parseInt(m[3]), parseInt(m[2])-1, parseInt(m[1]), parseInt(m[5]||0), parseInt(m[6]||0)).getTime();
+}
+
+function renderLesiones() {
+  const buscar = $('buscar-lesion');
+  const filtro = $('filtro-lesiones');
+  const q = buscar ? _normalizar(buscar.value) : '';
+  const estadoFiltro = filtro ? filtro.value : 'activo';
+
+  let fichas = lesionesData;
+  if (estadoFiltro !== 'todos') {
+    fichas = fichas.filter(f => (f.cliente_estado || 'sin_cliente') === estadoFiltro);
+  }
+  if (q) fichas = fichas.filter(f => _normalizar(f.cliente_nombre).includes(q));
+
+  if (!fichas.length) {
+    $('lista-lesiones').innerHTML = `<div class="panel" style="padding:2rem;text-align:center;color:var(--text-light)">
+      No hay fichas que coincidan con el filtro.
+      ${estadoFiltro === 'baja' ? '<br>(Las fichas de bajas son las de pacientes que ya no vienen al centro)' : ''}
+    </div>`;
+    return;
+  }
+
+  const cards = fichas.map(f => {
+    const tieneEjer = f.ejercicios_no_recomendados && f.ejercicios_no_recomendados.trim();
+    const totalNotas = parsearNotas(f.notas_pilates, 'pilates').length + parsearNotas(f.notas_fisio, 'fisio').length;
+    const ultima = [...parsearNotas(f.notas_pilates, 'pilates'), ...parsearNotas(f.notas_fisio, 'fisio')]
+      .sort((a,b) => fechaNotaToTs(b.fecha) - fechaNotaToTs(a.fecha))[0];
+    const iniciales = f.cliente_nombre.split(' ').filter(Boolean).slice(0,2).map(s=>s[0]).join('').toUpperCase();
+    const badgeEstado = f.cliente_estado === 'baja'
+      ? '<span style="background:#7f8c8d;color:#fff;padding:.15rem .5rem;border-radius:10px;font-size:.7rem;font-weight:600">BAJA</span>'
+      : f.cliente_estado === 'sin_cliente'
+      ? '<span style="background:#bbb;color:#fff;padding:.15rem .5rem;border-radius:10px;font-size:.7rem;font-weight:600;font-style:italic" title="No coincide con un cliente activo del centro">SIN CLIENTE</span>'
+      : '';
+    const badgeAlerta = tieneEjer
+      ? '<span style="background:#c0392b;color:#fff;padding:.15rem .55rem;border-radius:10px;font-size:.7rem;font-weight:700">🔴 RESTRICCIONES</span>'
+      : '<span style="background:#27ae60;color:#fff;padding:.15rem .55rem;border-radius:10px;font-size:.7rem;font-weight:600">✓ SIN RESTRICCIÓN</span>';
+    const ejerPreview = tieneEjer
+      ? `<div style="background:#fdebe9;border-left:3px solid #c0392b;padding:.5rem .7rem;margin-top:.5rem;border-radius:6px;font-size:.82rem;color:#7c2517">
+           ⚠️ <b>NO realizar:</b> ${f.ejercicios_no_recomendados.substring(0,90)}${f.ejercicios_no_recomendados.length>90?'…':''}
+         </div>`
+      : '';
+    const ultimaPreview = ultima
+      ? `<div style="margin-top:.5rem;font-size:.78rem;color:#666;border-top:1px dashed #eee;padding-top:.4rem">
+           📝 Última nota (${ultima.tipo}): <i>${ultima.fecha} · ${ultima.autor}</i>
+         </div>`
+      : '<div style="margin-top:.5rem;font-size:.78rem;color:#bbb;border-top:1px dashed #eee;padding-top:.4rem"><i>Sin notas todavía</i></div>';
+
+    return `<div onclick="abrirFichaLesion(${f.id})" style="background:#fff;border:1px solid #eee;border-radius:12px;padding:1rem;cursor:pointer;transition:all .15s;box-shadow:0 1px 3px rgba(0,0,0,.04)"
+      onmouseover="this.style.boxShadow='0 4px 12px rgba(124,111,156,.18)';this.style.borderColor='#7c6f9c'"
+      onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.04)';this.style.borderColor='#eee'">
+      <div style="display:flex;align-items:center;gap:.7rem;margin-bottom:.4rem">
+        <div style="background:linear-gradient(135deg,#5a4f75,#7c6f9c);color:#fff;width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.95rem">${iniciales}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:700;color:#3a3344;font-size:1rem">${f.cliente_nombre}</div>
+          <div style="display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.2rem">
+            ${badgeAlerta} ${badgeEstado}
+            ${f.cliente_dias ? `<span style="font-size:.7rem;color:#888">· ${f.cliente_dias} ${f.cliente_horario||''}</span>`:''}
+          </div>
+        </div>
+        <div style="font-size:.7rem;color:#bbb;white-space:nowrap">${totalNotas} ${totalNotas===1?'nota':'notas'}</div>
+      </div>
+      ${ejerPreview}
+      ${ultimaPreview}
+    </div>`;
+  }).join('');
+
+  $('lista-lesiones').innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:.85rem">${cards}</div>`;
+}
+
+// Modal "historia clínica" completa
+function abrirFichaLesion(id) {
   const f = lesionesData.find(x => x.id === id);
   if (!f) return;
-  document.getElementById(`ficha-lesion-content-${id}`).innerHTML = `
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem">
-      <div>
-        <h4 style="color:var(--danger);margin-bottom:.5rem">Ejercicios NO recomendados</h4>
-        <textarea id="lesion-${id}-ejercicios" rows="8" style="width:100%;padding:.5rem;border:2px solid var(--border);border-radius:8px;font-size:.85rem;font-family:inherit;resize:vertical">${f.ejercicios_no_recomendados || ''}</textarea>
+  const notasPilates = parsearNotas(f.notas_pilates, 'pilates');
+  const notasFisio = parsearNotas(f.notas_fisio, 'fisio');
+  // Timeline mezclada por fecha (descendente)
+  const timeline = [...notasPilates, ...notasFisio].sort((a,b) => fechaNotaToTs(b.fecha) - fechaNotaToTs(a.fecha));
+  const tieneEjer = f.ejercicios_no_recomendados && f.ejercicios_no_recomendados.trim();
+  const fechaCreacion = f.fecha ? new Date(f.fecha).toLocaleDateString('es-ES') : '—';
+
+  const timelineHtml = timeline.length ? timeline.map(n => {
+    const color = n.tipo === 'pilates' ? '#7c6f9c' : '#2980b9';
+    const fondo = n.tipo === 'pilates' ? '#f5f3f8' : '#eaf3f9';
+    const labelTipo = n.tipo === 'pilates' ? '🟣 PILATES' : '🔵 FISIO';
+    return `<div style="background:${fondo};border-left:3px solid ${color};border-radius:6px;padding:.6rem .8rem;margin-bottom:.5rem">
+      <div style="font-size:.7rem;color:${color};font-weight:700;letter-spacing:.3px;margin-bottom:.2rem">
+        ${labelTipo} · ${n.fecha || 'sin fecha'} · ${n.autor}
       </div>
-      <div>
-        <h4 style="color:var(--primary);margin-bottom:.5rem">Notas Pilates</h4>
-        <div style="background:var(--bg);border-radius:8px;padding:.5rem;max-height:200px;overflow-y:auto;margin-bottom:.5rem;font-size:.82rem;white-space:pre-wrap">${f.notas_pilates || '<span style="color:var(--text-light)">Sin notas</span>'}</div>
-        <textarea id="lesion-${id}-nueva-pilates" rows="2" placeholder="Añadir nota de pilates..." style="width:100%;padding:.4rem;border:2px solid var(--primary);border-radius:8px;font-size:.85rem;font-family:inherit;resize:vertical"></textarea>
-        <button class="btn btn-sm btn-primary" style="margin-top:.3rem" onclick="añadirNotaLesion(${id},'pilates')">Añadir nota</button>
+      <div style="font-size:.88rem;color:#333;white-space:pre-wrap;line-height:1.45">${n.texto}</div>
+    </div>`;
+  }).join('') : '<p style="color:#bbb;font-style:italic">Aún no hay notas en esta ficha.</p>';
+
+  abrirModal(`
+    <div style="max-width:780px;padding:.5rem">
+      <div style="display:flex;align-items:center;gap:.8rem;border-bottom:2px solid #eee;padding-bottom:.8rem;margin-bottom:1rem">
+        <div style="background:linear-gradient(135deg,#5a4f75,#7c6f9c);color:#fff;width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.2rem">
+          ${f.cliente_nombre.split(' ').filter(Boolean).slice(0,2).map(s=>s[0]).join('').toUpperCase()}
+        </div>
+        <div style="flex:1">
+          <h2 style="margin:0;color:#3a3344">${f.cliente_nombre}</h2>
+          <div style="font-size:.8rem;color:#888;margin-top:.15rem">
+            Ficha creada: ${fechaCreacion}
+            ${f.cliente_estado === 'baja' ? '<span style="background:#7f8c8d;color:#fff;padding:.1rem .45rem;border-radius:10px;font-size:.7rem;margin-left:.4rem">BAJA</span>' : ''}
+          </div>
+        </div>
       </div>
-      <div>
-        <h4 style="color:var(--info);margin-bottom:.5rem">Notas Fisio</h4>
-        <div style="background:var(--bg);border-radius:8px;padding:.5rem;max-height:200px;overflow-y:auto;margin-bottom:.5rem;font-size:.82rem;white-space:pre-wrap">${f.notas_fisio || '<span style="color:var(--text-light)">Sin notas</span>'}</div>
-        <textarea id="lesion-${id}-nueva-fisio" rows="2" placeholder="Añadir nota de fisio..." style="width:100%;padding:.4rem;border:2px solid var(--info);border-radius:8px;font-size:.85rem;font-family:inherit;resize:vertical"></textarea>
-        <button class="btn btn-sm" style="margin-top:.3rem;background:var(--info);color:white" onclick="añadirNotaLesion(${id},'fisio')">Añadir nota</button>
+
+      ${tieneEjer ? `
+        <div style="background:#fdebe9;border:2px solid #c0392b;border-radius:10px;padding:.85rem 1rem;margin-bottom:1.2rem">
+          <div style="font-size:.78rem;color:#c0392b;font-weight:700;letter-spacing:.5px;margin-bottom:.3rem">🔴 EJERCICIOS NO RECOMENDADOS</div>
+          <div style="font-size:.92rem;color:#7c2517;white-space:pre-wrap;line-height:1.5">${f.ejercicios_no_recomendados}</div>
+        </div>
+      ` : `
+        <div style="background:#e8f5e9;border:1px solid #27ae60;border-radius:10px;padding:.6rem .8rem;margin-bottom:1.2rem;font-size:.85rem;color:#1e6a3c">
+          ✓ Sin restricciones de ejercicios anotadas.
+        </div>
+      `}
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem">
+        <h3 style="margin:0;color:#5a4f75;font-size:1rem">📋 TIMELINE</h3>
+        <div style="display:flex;gap:.4rem">
+          <button class="btn btn-sm" style="background:#7c6f9c;color:#fff" onclick="abrirAnadirNota(${id},'pilates')">+ Nota Pilates</button>
+          <button class="btn btn-sm" style="background:#2980b9;color:#fff" onclick="abrirAnadirNota(${id},'fisio')">+ Nota Fisio</button>
+        </div>
+      </div>
+      <div style="max-height:340px;overflow-y:auto;padding-right:.3rem">${timelineHtml}</div>
+
+      <div style="display:flex;gap:.5rem;justify-content:flex-end;margin-top:1.2rem;border-top:1px solid #eee;padding-top:.8rem">
+        <button class="btn btn-sm" style="background:#7c6f9c;color:#fff" onclick="cerrarModal();editarLesionCompleta(${id})">✏️ Editar ficha completa</button>
+        ${esSuperAdmin() ? `<button class="btn btn-danger btn-sm" onclick="cerrarModal();eliminarLesion(${id})">🗑 Eliminar</button>` : ''}
+        <button class="btn btn-outline btn-sm" onclick="cerrarModal()">Cerrar</button>
       </div>
     </div>
-    <div style="margin-top:.75rem;display:flex;gap:.5rem;flex-wrap:wrap">
-      <button class="btn btn-primary btn-sm" onclick="guardarFichaLesion(${id})">Guardar ejercicios</button>
-      <button class="btn btn-sm" style="background:#7c6f9c;color:#fff" onclick="editarLesionCompleta(${id})">✏️ Editar ficha completa</button>
-      ${esSuperAdmin() ? `<button class="btn btn-danger btn-sm" onclick="eliminarLesion(${id})">Eliminar ficha</button>` : ''}
-    </div>`;
+  `);
+}
+
+function abrirAnadirNota(id, tipo) {
+  const color = tipo === 'pilates' ? '#7c6f9c' : '#2980b9';
+  const labelTipo = tipo === 'pilates' ? 'Pilates' : 'Fisio';
+  abrirModal(`
+    <div style="max-width:500px;padding:.5rem">
+      <h3 style="margin-top:0;color:${color}">+ Nueva nota ${labelTipo}</h3>
+      <p style="font-size:.85rem;color:#666;margin-bottom:.5rem">Se firmará automáticamente con tu nombre y la fecha actual.</p>
+      <textarea id="nueva-nota-${tipo}" rows="6" placeholder="Escribe la nota..." style="width:100%;padding:.6rem;border:2px solid ${color};border-radius:8px;font-family:inherit;font-size:.9rem;resize:vertical"></textarea>
+      <div style="display:flex;gap:.5rem;justify-content:flex-end;margin-top:.8rem">
+        <button class="btn btn-outline" onclick="cerrarModal();abrirFichaLesion(${id})">Cancelar</button>
+        <button class="btn btn-primary" onclick="guardarNotaTimeline(${id},'${tipo}')">Guardar nota</button>
+      </div>
+    </div>
+  `);
+}
+
+async function guardarNotaTimeline(id, tipo) {
+  const texto = document.getElementById(`nueva-nota-${tipo}`).value.trim();
+  if (!texto) return alert('Escribe algo antes de guardar.');
+  const f = lesionesData.find(x => x.id === id);
+  if (!f) return;
+  const fecha = new Date().toLocaleString('es-ES', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  const nuevaNota = `[${currentUser.nombre} - ${fecha}]\n${texto}`;
+  const campo = tipo === 'pilates' ? 'notas_pilates' : 'notas_fisio';
+  const notasActuales = f[campo] || '';
+  const notasNuevas = notasActuales ? notasActuales + '\n\n' + nuevaNota : nuevaNota;
+  await PUT(`/api/lesiones/${id}`, {
+    cliente_nombre: f.cliente_nombre,
+    fecha: f.fecha,
+    ejercicios_no_recomendados: f.ejercicios_no_recomendados,
+    notas_pilates: tipo === 'pilates' ? notasNuevas : f.notas_pilates,
+    notas_fisio: tipo === 'fisio' ? notasNuevas : f.notas_fisio
+  });
+  f[campo] = notasNuevas;
+  try { LOG('crear','lesiones',`Nota ${tipo} en ${f.cliente_nombre}`); } catch(e){}
+  cerrarModal();
+  await cargarLesiones();
+  abrirFichaLesion(id);
 }
 
 function editarLesionCompleta(id){

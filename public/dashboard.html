@@ -117,13 +117,19 @@
     <!-- CONTROL LESIONES -->
     <div class="section" id="sec-lesiones">
       <div class="main-header">
-        <h1>Control de Lesiones</h1>
-        <button class="btn btn-primary" onclick="abrirModalLesion()">+ Nueva ficha</button>
+        <h1>🩺 Lesiones</h1>
+        <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
+          <input type="text" id="buscar-lesion" placeholder="🔍 Buscar paciente..." style="padding:.5rem .8rem;border:1px solid #ddd;border-radius:8px;min-width:220px;font-size:.92rem">
+          <select id="filtro-lesiones" class="btn btn-outline" style="padding:.45rem .8rem">
+            <option value="activo">Solo activos</option>
+            <option value="baja">Solo bajas</option>
+            <option value="todos">Todos</option>
+          </select>
+          <button class="btn btn-primary" onclick="abrirModalLesion()">+ Nueva ficha</button>
+        </div>
       </div>
-      <div class="panel"><div class="panel-body">
-        <input type="text" id="buscar-lesion" placeholder="Buscar paciente..." style="width:100%;max-width:400px;padding:.5rem .8rem;border:2px solid var(--border);border-radius:8px;margin-bottom:1rem;font-size:.9rem">
-        <div id="lista-lesiones"></div>
-      </div></div>
+      <div id="resumen-lesiones"></div>
+      <div id="lista-lesiones"></div>
     </div>
 
     <!-- CAMBIOS / BAJAS -->
