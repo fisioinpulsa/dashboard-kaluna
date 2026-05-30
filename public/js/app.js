@@ -347,6 +347,18 @@ async function guardarCliente(e, id) {
   }
   cerrarModal();
   refrescarClientes();
+  // Avisar si algún grupo estaba lleno
+  const sync = result?._plazas_sync;
+  if (sync) {
+    if (sync.llenos?.length) {
+      const lista = sync.llenos.map(l => `• ${l.grupo} (${l.ocupados}/${l.max})`).join('\n');
+      alert(`⚠️ ATENCIÓN: ${sync.creadas > 0 ? `Asignado a ${sync.creadas} grupo${sync.creadas===1?'':'s'}, pero ` : ''}NO se pudo asignar a:\n\n${lista}\n\nMotivo: están llenos.\n\nOpciones:\n1) Buscar otro horario libre\n2) Aumentar la capacidad del grupo\n3) Apuntar al cliente en Lista de espera`);
+    }
+    if (sync.no_existe?.length) {
+      const lista = sync.no_existe.map(l => `• ${l.dia} a las ${l.hora}`).join('\n');
+      alert(`ℹ️ Aviso: no existe grupo para:\n\n${lista}\n\nCrea el grupo desde la pestaña Plazas o cambia el horario del cliente.`);
+    }
+  }
 }
 
 async function marcarFianza(id) {

@@ -30,7 +30,7 @@ function extraerHora(horario) {
 
 // Sincroniza las plazas de un cliente: borra las suyas y vuelve a crearlas según sus días/horarios
 async function sincronizarPlazasCliente(cliente) {
-  if (!cliente || !cliente.nombre_completo) return { borradas: 0, creadas: 0 };
+  if (!cliente || !cliente.nombre_completo) return { borradas: 0, creadas: 0, llenos: [], no_existe: [] };
   const nombre = cliente.nombre_completo.trim();
 
   // 1) Borrar plazas previas de este cliente (matching por nombre)
@@ -41,42 +41,47 @@ async function sincronizarPlazasCliente(cliente) {
   const borradas = del.rowCount;
 
   // 2) Si está de baja o sin datos suficientes, no creamos nada
-  if (cliente.estado === 'baja') return { borradas, creadas: 0 };
+  if (cliente.estado === 'baja') return { borradas, creadas: 0, llenos: [], no_existe: [] };
   const dias = parsearDias(cliente.dias);
-  if (!dias.length) return { borradas, creadas: 0 };
+  if (!dias.length) return { borradas, creadas: 0, llenos: [], no_existe: [] };
 
   const horarios = [extraerHora(cliente.horario), extraerHora(cliente.horario2)].filter(Boolean);
-  if (!horarios.length) return { borradas, creadas: 0 };
+  if (!horarios.length) return { borradas, creadas: 0, llenos: [], no_existe: [] };
 
   // 3) Para cada combinación día + hora, buscar grupo y crear ocupante
   let creadas = 0;
+  const llenos = [];       // [{grupo, max, ocupados}]
+  const no_existe = [];    // [{dia, hora}] cuando no hay grupo creado
   for (const dia of dias) {
     for (const h of horarios) {
-      // Buscar grupo cuyo nombre coincida exactamente o por dia+hora
       const grupos = await query(
-        `SELECT id FROM kaluna_grupos
+        `SELECT id, nombre, max_plazas FROM kaluna_grupos
          WHERE dia = $1 AND (hora = $2 OR hora = $3) LIMIT 1`,
         [dia, `${h}:00`, h]
       );
-      if (grupos.rows.length) {
-        // Verificar que no haya excedido capacidad antes de añadir
-        const ocupados = await query(
-          'SELECT COUNT(*) as n FROM kaluna_plaza_ocupantes WHERE grupo_id = $1',
-          [grupos.rows[0].id]
+      if (!grupos.rows.length) {
+        no_existe.push({ dia, hora: `${h}:00` });
+        continue;
+      }
+      const g = grupos.rows[0];
+      const ocupados = await query(
+        'SELECT COUNT(*) as n FROM kaluna_plaza_ocupantes WHERE grupo_id = $1',
+        [g.id]
+      );
+      const nOcup = parseInt(ocupados.rows[0].n);
+      const maxP = parseInt(g.max_plazas || 5);
+      if (nOcup < maxP) {
+        await query(
+          'INSERT INTO kaluna_plaza_ocupantes (grupo_id, nombre, es_vacio) VALUES ($1, $2, false)',
+          [g.id, nombre]
         );
-        const cap = await query('SELECT max_plazas FROM kaluna_grupos WHERE id=$1', [grupos.rows[0].id]);
-        const maxP = parseInt(cap.rows[0]?.max_plazas || 5);
-        if (parseInt(ocupados.rows[0].n) < maxP) {
-          await query(
-            'INSERT INTO kaluna_plaza_ocupantes (grupo_id, nombre, es_vacio) VALUES ($1, $2, false)',
-            [grupos.rows[0].id, nombre]
-          );
-          creadas++;
-        }
+        creadas++;
+      } else {
+        llenos.push({ grupo: g.nombre, max: maxP, ocupados: nOcup });
       }
     }
   }
-  return { borradas, creadas };
+  return { borradas, creadas, llenos, no_existe };
 }
 
 // ============================================================
