@@ -28,6 +28,7 @@
       <button class="nav-item" data-section="documentos"><span class="icon">📄</span><span>Documentos</span></button>
       <button class="nav-item" data-section="avisos"><span class="icon">📋</span><span>Avisos</span></button>
       <button class="nav-item" data-section="pagos-centro"><span class="icon">💵</span><span>Pagos en centro</span></button>
+      <button class="nav-item admin-only" data-section="gastos-centro"><span class="icon">🏢</span><span>Gastos del Centro</span></button>
       <button class="nav-item admin-only" data-section="fichajes"><span class="icon">🕐</span><span>Fichajes</span></button>
       <button class="nav-item superadmin-only" data-section="iban"><span class="icon">🏦</span><span>IBAN/Remesas</span></button>
       <button class="nav-item superadmin-only" data-section="gastos"><span class="icon">💰</span><span>Gastos</span></button>
@@ -212,6 +213,22 @@
       </div>
       <div id="pagos-centro-resumen" style="margin-bottom:1rem"></div>
       <div id="pagos-centro-tabla"></div>
+    </div>
+
+    <!-- GASTOS DEL CENTRO (admin + superadmin, compartido con colaboradora) -->
+    <div class="section admin-only" id="sec-gastos-centro">
+      <div class="main-header">
+        <h1>🏢 Gastos del Centro</h1>
+        <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
+          <select id="gc-mes" style="padding:.5rem;border:2px solid var(--border);border-radius:8px"></select>
+          <select id="gc-anio" style="padding:.5rem;border:2px solid var(--border);border-radius:8px"></select>
+          <button class="btn btn-outline" onclick="duplicarMesGC()">📋 Copiar mes anterior</button>
+          <button class="btn btn-primary" onclick="abrirModalGastoCentro()">+ Nuevo gasto</button>
+        </div>
+      </div>
+      <p style="color:var(--text-light);font-size:.85rem;margin:.4rem 0 1rem">Gastos compartidos entre titular y colaboradora. Se descuentan de los ingresos antes del reparto de beneficios.</p>
+      <div id="gc-resumen" style="margin-bottom:1rem"></div>
+      <div id="gc-tabla"></div>
     </div>
 
     <!-- IBAN/REMESAS (solo superadmin) -->

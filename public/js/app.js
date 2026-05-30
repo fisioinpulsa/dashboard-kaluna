@@ -44,7 +44,7 @@ function setupNav() {
       btn.classList.add('active');
       const sec = btn.dataset.section;
       $(`sec-${sec}`).classList.add('active');
-      const loaders = { inicio: cargarInicio, clientes: cargarClientes, plazas: cargarPlazas, ventas: cargarSoloVentas, caja: cargarSoloCaja, leads: cargarLeads, lesiones: cargarLesiones, cambios: cargarCambios, espera: cargarEspera, diario: cargarDiario, documentos: cargarDocumentos, avisos: cargarAvisos, 'pagos-centro': cargarPagosCentro, fichajes: cargarFichajesAdmin, iban: cargarIban, gastos: cargarGastos, config: cargarConfig };
+      const loaders = { inicio: cargarInicio, clientes: cargarClientes, plazas: cargarPlazas, ventas: cargarSoloVentas, caja: cargarSoloCaja, leads: cargarLeads, lesiones: cargarLesiones, cambios: cargarCambios, espera: cargarEspera, diario: cargarDiario, documentos: cargarDocumentos, avisos: cargarAvisos, 'pagos-centro': cargarPagosCentro, 'gastos-centro': cargarGastosCentro, fichajes: cargarFichajesAdmin, iban: cargarIban, gastos: cargarGastos, config: cargarConfig };
       if (loaders[sec]) loaders[sec]();
     });
   });
@@ -2317,6 +2317,167 @@ window.filtrarClientes = function(){
 document.addEventListener('DOMContentLoaded', () => {
   setTimeout(chequearConsentimiento, 800);
 });
+
+// ============================================================
+// GASTOS DEL CENTRO (compartido titular + colaboradora)
+// ============================================================
+const GC_CATEGORIAS = {
+  fijo: { label: 'Fijo', color: '#5a4f75' },
+  suministro: { label: 'Suministro', color: '#2980b9' },
+  software: { label: 'Software', color: '#16a085' },
+  servicio: { label: 'Servicio', color: '#8e44ad' },
+  financiero: { label: 'Financiero', color: '#c0392b' },
+  marketing: { label: 'Marketing', color: '#e67e22' },
+  material: { label: 'Material', color: '#7f8c8d' },
+  otro: { label: 'Otro', color: '#95a5a6' }
+};
+
+async function cargarGastosCentro() {
+  const selMes = $('gc-mes'), selAnio = $('gc-anio');
+  if (!selMes.options.length) {
+    const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    const now = new Date();
+    selMes.innerHTML = meses.map((m,i) => `<option value="${i+1}" ${i+1===now.getMonth()+1?'selected':''}>${m}</option>`).join('');
+    const a = now.getFullYear();
+    selAnio.innerHTML = [a-1, a, a+1].map(y => `<option value="${y}" ${y===a?'selected':''}>${y}</option>`).join('');
+    selMes.onchange = cargarGastosCentro;
+    selAnio.onchange = cargarGastosCentro;
+  }
+  const mes = selMes.value, anio = selAnio.value;
+  const data = await API(`/api/gastos-centro?mes=${mes}&anio=${anio}`);
+  renderGastosCentro(data);
+}
+
+function renderGastosCentro(data) {
+  const { gastos, total } = data;
+  // Resumen por categoría
+  const porCat = {};
+  gastos.forEach(g => { porCat[g.categoria] = (porCat[g.categoria] || 0) + parseFloat(g.importe); });
+  const chips = Object.entries(porCat).map(([cat, val]) => {
+    const c = GC_CATEGORIAS[cat] || GC_CATEGORIAS.otro;
+    return `<span style="display:inline-block;background:${c.color};color:#fff;padding:.3rem .7rem;border-radius:14px;font-size:.8rem;margin-right:.3rem;margin-bottom:.3rem">${c.label}: ${val.toFixed(2)} €</span>`;
+  }).join('');
+
+  $('gc-resumen').innerHTML = `
+    <div class="panel" style="padding:1rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem">
+      <div>
+        <div style="font-size:.85rem;color:var(--text-light)">Total del mes</div>
+        <div style="font-size:1.8rem;font-weight:700;color:var(--primary)">${parseFloat(total).toFixed(2)} €</div>
+        <div style="font-size:.8rem;color:var(--text-light)">${gastos.length} concepto${gastos.length===1?'':'s'}</div>
+      </div>
+      <div style="flex:1;text-align:right;min-width:200px">${chips || '<span style="color:var(--text-light)">Sin gastos</span>'}</div>
+    </div>`;
+
+  if (!gastos.length) {
+    $('gc-tabla').innerHTML = '<div class="panel" style="padding:2rem;text-align:center;color:var(--text-light)">No hay gastos registrados en este mes.<br><br>Pulsa <b>+ Nuevo gasto</b> o <b>📋 Copiar mes anterior</b>.</div>';
+    return;
+  }
+
+  const filas = gastos.map(g => {
+    const c = GC_CATEGORIAS[g.categoria] || GC_CATEGORIAS.otro;
+    return `<tr>
+      <td><span style="background:${c.color};color:#fff;padding:.15rem .5rem;border-radius:10px;font-size:.72rem">${c.label}</span></td>
+      <td><b>${g.concepto}</b>${g.recurrente ? ' <span style="font-size:.7rem;color:#27ae60" title="Recurrente">🔁</span>' : ''}</td>
+      <td style="text-align:right;font-weight:600">${parseFloat(g.importe).toFixed(2)} €</td>
+      <td style="font-size:.75rem;color:var(--text-light)">${g.notas || ''}</td>
+      <td style="text-align:right;white-space:nowrap">
+        <button class="btn btn-sm btn-outline" onclick="editarGastoCentro(${g.id})">✏️</button>
+        ${esSuperAdmin() ? `<button class="btn btn-sm btn-danger" onclick="eliminarGastoCentro(${g.id})">🗑</button>` : ''}
+      </td>
+    </tr>`;
+  }).join('');
+
+  $('gc-tabla').innerHTML = `<div class="panel"><div class="panel-body"><div class="table-wrapper">
+    <table><thead><tr><th>Cat.</th><th>Concepto</th><th style="text-align:right">Importe</th><th>Notas</th><th></th></tr></thead>
+    <tbody>${filas}</tbody></table></div></div></div>`;
+}
+
+let gcGastosCache = [];
+async function abrirModalGastoCentro(id) {
+  const mes = $('gc-mes').value, anio = $('gc-anio').value;
+  let g = { concepto:'', importe:'', categoria:'fijo', recurrente:true, notas:'' };
+  if (id) {
+    const data = await API(`/api/gastos-centro?mes=${mes}&anio=${anio}`);
+    g = data.gastos.find(x => x.id === id) || g;
+  }
+  const opciones = Object.entries(GC_CATEGORIAS).map(([k,v]) => `<option value="${k}" ${k===g.categoria?'selected':''}>${v.label}</option>`).join('');
+  abrirModal(`
+    <div style="padding:1rem;max-width:500px">
+      <h2 style="color:#5a4f75;margin-top:0">${id ? 'Editar' : 'Nuevo'} gasto del centro</h2>
+      <div style="display:grid;gap:.7rem">
+        <div>
+          <label style="font-size:.85rem;color:#5a4f75;font-weight:600">Concepto</label>
+          <input id="gc-concepto" value="${(g.concepto||'').replace(/"/g,'&quot;')}" style="width:100%;padding:.55rem;border:1px solid #ddd;border-radius:6px;margin-top:.25rem">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem">
+          <div>
+            <label style="font-size:.85rem;color:#5a4f75;font-weight:600">Importe (€)</label>
+            <input id="gc-importe" type="number" step="0.01" value="${g.importe||''}" style="width:100%;padding:.55rem;border:1px solid #ddd;border-radius:6px;margin-top:.25rem">
+          </div>
+          <div>
+            <label style="font-size:.85rem;color:#5a4f75;font-weight:600">Categoría</label>
+            <select id="gc-categoria" style="width:100%;padding:.55rem;border:1px solid #ddd;border-radius:6px;margin-top:.25rem">${opciones}</select>
+          </div>
+        </div>
+        <label style="display:flex;align-items:center;gap:.4rem;font-size:.9rem;cursor:pointer">
+          <input id="gc-recurrente" type="checkbox" ${g.recurrente?'checked':''}> Recurrente (se podrá copiar al mes siguiente)
+        </label>
+        <div>
+          <label style="font-size:.85rem;color:#5a4f75;font-weight:600">Notas (opcional)</label>
+          <textarea id="gc-notas" rows="2" style="width:100%;padding:.55rem;border:1px solid #ddd;border-radius:6px;margin-top:.25rem;font-family:inherit;resize:vertical">${g.notas||''}</textarea>
+        </div>
+      </div>
+      <div style="display:flex;gap:.5rem;justify-content:flex-end;margin-top:1rem">
+        <button class="btn btn-outline" onclick="cerrarModal()">Cancelar</button>
+        <button class="btn btn-primary" onclick="guardarGastoCentro(${id||'null'})">${id?'Guardar cambios':'Crear gasto'}</button>
+      </div>
+    </div>
+  `);
+}
+
+async function guardarGastoCentro(id) {
+  const body = {
+    concepto: $('gc-concepto').value.trim(),
+    importe: parseFloat($('gc-importe').value),
+    categoria: $('gc-categoria').value,
+    recurrente: $('gc-recurrente').checked,
+    notas: $('gc-notas').value.trim(),
+    mes: parseInt($('gc-mes').value),
+    anio: parseInt($('gc-anio').value)
+  };
+  if (!body.concepto) return alert('Falta el concepto');
+  if (isNaN(body.importe) || body.importe < 0) return alert('Importe inválido');
+  if (id) await PUT(`/api/gastos-centro/${id}`, body);
+  else await POST('/api/gastos-centro', body);
+  try { LOG(id?'editar':'crear', 'gastos-centro', `${body.concepto} (${body.importe}€)`); } catch(e){}
+  cerrarModal();
+  cargarGastosCentro();
+}
+
+async function editarGastoCentro(id) { abrirModalGastoCentro(id); }
+
+async function eliminarGastoCentro(id) {
+  if (!confirm('¿Eliminar este gasto del centro?')) return;
+  await DEL(`/api/gastos-centro/${id}`);
+  try { LOG('eliminar','gastos-centro',`Gasto #${id}`); } catch(e){}
+  cargarGastosCentro();
+}
+
+async function duplicarMesGC() {
+  const hacia_mes = parseInt($('gc-mes').value);
+  const hacia_anio = parseInt($('gc-anio').value);
+  let desde_mes = hacia_mes - 1;
+  let desde_anio = hacia_anio;
+  if (desde_mes < 1) { desde_mes = 12; desde_anio--; }
+  if (!confirm(`¿Copiar todos los gastos recurrentes de ${desde_mes}/${desde_anio} a ${hacia_mes}/${hacia_anio}?`)) return;
+  try {
+    const r = await POST('/api/gastos-centro/duplicar-mes', { desde_mes, desde_anio, hacia_mes, hacia_anio });
+    alert(`Copiados ${r.copiados} gastos.`);
+    cargarGastosCentro();
+  } catch (e) {
+    alert(e.message || 'Error al copiar');
+  }
+}
 
 // INIT
 init();
