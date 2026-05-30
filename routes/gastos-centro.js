@@ -22,11 +22,19 @@ router.get('/', async (req, res) => {
        FROM kaluna_gastos_centro g
        LEFT JOIN kaluna_usuarios u ON u.id = g.created_by
        WHERE g.mes = $1 AND g.anio = $2
-       ORDER BY g.categoria, g.concepto`,
+       ORDER BY g.orden NULLS LAST, g.id`,
       [mes, anio]
     );
-    const total = rows.reduce((s, g) => s + parseFloat(g.importe || 0), 0);
-    res.json({ gastos: rows, total: total.toFixed(2), mes, anio });
+    const totalPresupuesto = rows.reduce((s, g) => s + parseFloat(g.importe || 0), 0);
+    const totalReal = rows.reduce((s, g) => s + parseFloat(g.importe_real || 0), 0);
+    const diferencia = totalPresupuesto - totalReal;
+    res.json({
+      gastos: rows,
+      total: totalPresupuesto.toFixed(2),
+      total_real: totalReal.toFixed(2),
+      diferencia: diferencia.toFixed(2),
+      mes, anio
+    });
   } catch (e) {
     console.error('gastos-centro list', e);
     res.status(500).json({ error: e.message });
@@ -51,15 +59,21 @@ router.get('/historico', async (req, res) => {
 // POST crear gasto
 router.post('/', async (req, res) => {
   try {
-    const { concepto, importe, mes, anio, recurrente, categoria, notas } = req.body;
+    const { concepto, importe, mes, anio, recurrente, categoria, notas, orden, importe_real } = req.body;
     if (!concepto || importe === undefined) return res.status(400).json({ error: 'Faltan datos' });
     const now = new Date();
     const m = mes || (now.getMonth() + 1);
     const a = anio || now.getFullYear();
+    // Si no se pasa orden, lo ponemos como el siguiente disponible (excluyendo reserva con 999)
+    let ord = orden;
+    if (ord === undefined || ord === null) {
+      const r = await query('SELECT COALESCE(MAX(orden),0)+1 as nxt FROM kaluna_gastos_centro WHERE mes=$1 AND anio=$2 AND orden < 900', [m, a]);
+      ord = parseInt(r.rows[0].nxt);
+    }
     const { rows } = await query(
-      `INSERT INTO kaluna_gastos_centro (concepto, importe, mes, anio, recurrente, categoria, notas, created_by)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
-      [concepto, importe, m, a, recurrente !== false, categoria || 'fijo', notas || null, req.user.id]
+      `INSERT INTO kaluna_gastos_centro (concepto, importe, mes, anio, recurrente, categoria, notas, orden, importe_real, created_by)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`,
+      [concepto, importe, m, a, recurrente !== false, categoria || 'fijo', notas || null, ord, importe_real || null, req.user.id]
     );
     res.json(rows[0]);
   } catch (e) {
@@ -67,14 +81,36 @@ router.post('/', async (req, res) => {
   }
 });
 
-// PUT editar gasto
+// PUT editar gasto completo
 router.put('/:id', async (req, res) => {
   try {
-    const { concepto, importe, recurrente, categoria, notas } = req.body;
+    const { concepto, importe, recurrente, categoria, notas, orden, importe_real } = req.body;
     const { rows } = await query(
-      `UPDATE kaluna_gastos_centro SET concepto=$1, importe=$2, recurrente=$3, categoria=$4, notas=$5, updated_at=now()
-       WHERE id=$6 RETURNING *`,
-      [concepto, importe, recurrente !== false, categoria || 'fijo', notas || null, req.params.id]
+      `UPDATE kaluna_gastos_centro
+       SET concepto=$1, importe=$2, recurrente=$3, categoria=$4, notas=$5,
+           orden=COALESCE($6, orden), importe_real=$7, updated_at=now()
+       WHERE id=$8 RETURNING *`,
+      [concepto, importe, recurrente !== false, categoria || 'fijo', notas || null,
+       (orden === undefined || orden === null || orden === '') ? null : parseInt(orden),
+       (importe_real === undefined || importe_real === null || importe_real === '') ? null : parseFloat(importe_real),
+       req.params.id]
+    );
+    if (!rows.length) return res.status(404).json({ error: 'No encontrado' });
+    res.json(rows[0]);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// PATCH actualizar solo importe_real (edición rápida inline)
+router.patch('/:id/real', async (req, res) => {
+  try {
+    const { importe_real } = req.body;
+    const val = (importe_real === '' || importe_real === null || importe_real === undefined) ? null : parseFloat(importe_real);
+    if (val !== null && (isNaN(val) || val < 0)) return res.status(400).json({ error: 'Importe inválido' });
+    const { rows } = await query(
+      `UPDATE kaluna_gastos_centro SET importe_real=$1, updated_at=now() WHERE id=$2 RETURNING *`,
+      [val, req.params.id]
     );
     if (!rows.length) return res.status(404).json({ error: 'No encontrado' });
     res.json(rows[0]);

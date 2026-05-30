@@ -2349,23 +2349,31 @@ async function cargarGastosCentro() {
 }
 
 function renderGastosCentro(data) {
-  const { gastos, total } = data;
-  // Resumen por categoría
-  const porCat = {};
-  gastos.forEach(g => { porCat[g.categoria] = (porCat[g.categoria] || 0) + parseFloat(g.importe); });
-  const chips = Object.entries(porCat).map(([cat, val]) => {
-    const c = GC_CATEGORIAS[cat] || GC_CATEGORIAS.otro;
-    return `<span style="display:inline-block;background:${c.color};color:#fff;padding:.3rem .7rem;border-radius:14px;font-size:.8rem;margin-right:.3rem;margin-bottom:.3rem">${c.label}: ${val.toFixed(2)} €</span>`;
-  }).join('');
+  const { gastos, total, total_real, diferencia } = data;
+  const totalPresup = parseFloat(total);
+  const totalReal = parseFloat(total_real || 0);
+  const provis = parseFloat(diferencia || 0); // presupuesto - real
+  const conReal = gastos.filter(g => g.importe_real !== null && g.importe_real !== undefined).length;
 
   $('gc-resumen').innerHTML = `
-    <div class="panel" style="padding:1rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem">
-      <div>
-        <div style="font-size:.85rem;color:var(--text-light)">Total del mes</div>
-        <div style="font-size:1.8rem;font-weight:700;color:var(--primary)">${parseFloat(total).toFixed(2)} €</div>
-        <div style="font-size:.8rem;color:var(--text-light)">${gastos.length} concepto${gastos.length===1?'':'s'}</div>
+    <div class="panel" style="padding:1rem">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:1rem">
+        <div style="background:linear-gradient(135deg,#5a4f75,#7c6f9c);color:#fff;padding:1rem;border-radius:10px">
+          <div style="font-size:.75rem;opacity:.9">PRESUPUESTADO</div>
+          <div style="font-size:1.55rem;font-weight:700">${totalPresup.toFixed(2)} €</div>
+          <div style="font-size:.72rem;opacity:.85">${gastos.length} conceptos · acordado</div>
+        </div>
+        <div style="background:linear-gradient(135deg,#16a085,#27ae60);color:#fff;padding:1rem;border-radius:10px">
+          <div style="font-size:.75rem;opacity:.9">GASTO REAL</div>
+          <div style="font-size:1.55rem;font-weight:700">${totalReal.toFixed(2)} €</div>
+          <div style="font-size:.72rem;opacity:.85">${conReal} / ${gastos.length} con dato real</div>
+        </div>
+        <div style="background:linear-gradient(135deg,${provis >= 0 ? '#2980b9,#3498db' : '#c0392b,#e74c3c'});color:#fff;padding:1rem;border-radius:10px">
+          <div style="font-size:.75rem;opacity:.9">${provis >= 0 ? 'PROVISIÓN RESTANTE' : 'EXCESO DE GASTO'}</div>
+          <div style="font-size:1.55rem;font-weight:700">${Math.abs(provis).toFixed(2)} €</div>
+          <div style="font-size:.72rem;opacity:.85">${provis >= 0 ? 'sobra del presupuesto' : '⚠️ pasa del presupuesto'}</div>
+        </div>
       </div>
-      <div style="flex:1;text-align:right;min-width:200px">${chips || '<span style="color:var(--text-light)">Sin gastos</span>'}</div>
     </div>`;
 
   if (!gastos.length) {
@@ -2375,11 +2383,25 @@ function renderGastosCentro(data) {
 
   const filas = gastos.map(g => {
     const c = GC_CATEGORIAS[g.categoria] || GC_CATEGORIAS.otro;
+    const presup = parseFloat(g.importe);
+    const real = (g.importe_real !== null && g.importe_real !== undefined) ? parseFloat(g.importe_real) : null;
+    const dif = real !== null ? (presup - real) : null;
+    let difCol = '#95a5a6', difTxt = '<span style="color:#bbb">—</span>';
+    if (dif !== null) {
+      if (dif > 0.001) { difCol = '#27ae60'; difTxt = `+${dif.toFixed(2)} €`; }
+      else if (dif < -0.001) { difCol = '#c0392b'; difTxt = `${dif.toFixed(2)} €`; }
+      else { difCol = '#7f8c8d'; difTxt = '0,00 €'; }
+    }
     return `<tr>
       <td><span style="background:${c.color};color:#fff;padding:.15rem .5rem;border-radius:10px;font-size:.72rem">${c.label}</span></td>
-      <td><b>${g.concepto}</b>${g.recurrente ? ' <span style="font-size:.7rem;color:#27ae60" title="Recurrente">🔁</span>' : ''}</td>
-      <td style="text-align:right;font-weight:600">${parseFloat(g.importe).toFixed(2)} €</td>
-      <td style="font-size:.75rem;color:var(--text-light)">${g.notas || ''}</td>
+      <td><b>${g.concepto}</b>${g.recurrente ? ' <span style="font-size:.7rem;color:#27ae60" title="Recurrente">🔁</span>' : ''}${g.notas ? `<br><span style="font-size:.7rem;color:var(--text-light)">${g.notas.substring(0,60)}${g.notas.length>60?'...':''}</span>` : ''}</td>
+      <td style="text-align:right;font-weight:600;white-space:nowrap">${presup.toFixed(2)} €</td>
+      <td style="text-align:right;white-space:nowrap">
+        <input type="number" step="0.01" placeholder="—" value="${real !== null ? real : ''}"
+          onchange="guardarRealGC(${g.id}, this.value)"
+          style="width:95px;padding:.35rem .4rem;border:1px solid #ddd;border-radius:6px;text-align:right;font-size:.88rem">
+      </td>
+      <td style="text-align:right;white-space:nowrap;font-weight:600;color:${difCol}">${difTxt}</td>
       <td style="text-align:right;white-space:nowrap">
         <button class="btn btn-sm btn-outline" onclick="editarGastoCentro(${g.id})">✏️</button>
         ${esSuperAdmin() ? `<button class="btn btn-sm btn-danger" onclick="eliminarGastoCentro(${g.id})">🗑</button>` : ''}
@@ -2388,8 +2410,31 @@ function renderGastosCentro(data) {
   }).join('');
 
   $('gc-tabla').innerHTML = `<div class="panel"><div class="panel-body"><div class="table-wrapper">
-    <table><thead><tr><th>Cat.</th><th>Concepto</th><th style="text-align:right">Importe</th><th>Notas</th><th></th></tr></thead>
-    <tbody>${filas}</tbody></table></div></div></div>`;
+    <table>
+      <thead><tr>
+        <th>Cat.</th><th>Concepto</th>
+        <th style="text-align:right">Presupuesto</th>
+        <th style="text-align:right">Gasto real</th>
+        <th style="text-align:right">Diferencia</th>
+        <th></th>
+      </tr></thead>
+      <tbody>${filas}</tbody>
+    </table></div></div></div>`;
+}
+
+// PATCH rápido: actualizar solo el importe_real desde la tabla
+async function guardarRealGC(id, valor) {
+  try {
+    const body = { importe_real: valor === '' ? null : parseFloat(valor) };
+    const r = await fetch(`/api/gastos-centro/${id}/real`, {
+      method: 'PATCH', credentials: 'include',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(body)
+    });
+    if (!r.ok) { alert('Error al guardar el importe real'); return; }
+    try { LOG('editar','gastos-centro',`Real #${id}: ${valor || 'sin dato'}€`); } catch(e){}
+    cargarGastosCentro();
+  } catch(e) { alert('Error de red'); }
 }
 
 let gcGastosCache = [];
