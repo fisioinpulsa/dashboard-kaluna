@@ -48,12 +48,22 @@ async function sincronizarPlazasCliente(cliente) {
   const horarios = [extraerHora(cliente.horario), extraerHora(cliente.horario2)].filter(Boolean);
   if (!horarios.length) return { borradas, creadas: 0, llenos: [], no_existe: [] };
 
-  // 3) Para cada combinación día + hora, buscar grupo y crear ocupante
+  // 3) Determinar combinaciones día+hora
+  // - Si hay tantos horarios como días → emparejar 1:1 (dia[i] con horario[i])
+  // - Si solo hay 1 horario → aplicarlo a todos los días
+  // - Si hay más horarios que días o viceversa → producto cartesiano
+  let combinaciones = [];
+  if (horarios.length === dias.length && dias.length > 1) {
+    for (let i = 0; i < dias.length; i++) combinaciones.push({ dia: dias[i], h: horarios[i] });
+  } else {
+    for (const dia of dias) for (const h of horarios) combinaciones.push({ dia, h });
+  }
+
   let creadas = 0;
   const llenos = [];       // [{grupo, max, ocupados}]
   const no_existe = [];    // [{dia, hora}] cuando no hay grupo creado
-  for (const dia of dias) {
-    for (const h of horarios) {
+  for (const { dia, h } of combinaciones) {
+    {
       const grupos = await query(
         `SELECT id, nombre, max_plazas FROM kaluna_grupos
          WHERE dia = $1 AND (hora = $2 OR hora = $3) LIMIT 1`,
