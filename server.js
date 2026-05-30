@@ -35,6 +35,7 @@ app.use('/api/gastos', require('./routes/gastos'));
 app.use('/api/pagos-centro', require('./routes/pagos-centro'));
 app.use('/api/consentimiento', require('./routes/consentimiento'));
 app.use('/api/gastos-centro', require('./routes/gastos-centro'));
+app.use('/api/ventas-centro', require('./routes/ventas-centro'));
 
 // Pages
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));

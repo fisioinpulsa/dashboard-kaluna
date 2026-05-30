@@ -44,7 +44,7 @@ function setupNav() {
       btn.classList.add('active');
       const sec = btn.dataset.section;
       $(`sec-${sec}`).classList.add('active');
-      const loaders = { inicio: cargarInicio, clientes: cargarClientes, plazas: cargarPlazas, ventas: cargarSoloVentas, caja: cargarSoloCaja, leads: cargarLeads, lesiones: cargarLesiones, cambios: cargarCambios, espera: cargarEspera, diario: cargarDiario, documentos: cargarDocumentos, avisos: cargarAvisos, 'pagos-centro': cargarPagosCentro, 'gastos-centro': cargarGastosCentro, fichajes: cargarFichajesAdmin, iban: cargarIban, gastos: cargarGastos, config: cargarConfig };
+      const loaders = { inicio: cargarInicio, clientes: cargarClientes, plazas: cargarPlazas, ventas: cargarSoloVentas, caja: cargarSoloCaja, leads: cargarLeads, lesiones: cargarLesiones, cambios: cargarCambios, espera: cargarEspera, diario: cargarDiario, documentos: cargarDocumentos, avisos: cargarAvisos, 'pagos-centro': cargarPagosCentro, 'gastos-centro': cargarGastosCentro, 'ventas-centro': cargarVentasCentro, fichajes: cargarFichajesAdmin, iban: cargarIban, gastos: cargarGastos, config: cargarConfig };
       if (loaders[sec]) loaders[sec]();
     });
   });
@@ -2477,6 +2477,225 @@ async function duplicarMesGC() {
   } catch (e) {
     alert(e.message || 'Error al copiar');
   }
+}
+
+// ============================================================
+// VENTAS DEL CENTRO (compartido titular + colaboradora)
+// ============================================================
+const VC_TIPOS = {
+  suscripcion:   { label: 'Suscripción',  color: '#5a4f75', icon: '📅' },
+  calcetines:    { label: 'Calcetines',   color: '#7f8c8d', icon: '🧦' },
+  bebida:        { label: 'Bebida',       color: '#16a085', icon: '🥤' },
+  clase_suelta:  { label: 'Clase suelta', color: '#e67e22', icon: '🧘' },
+  fianza:        { label: 'Fianza',       color: '#2980b9', icon: '🔒' },
+  otros:         { label: 'Otros',        color: '#95a5a6', icon: '📦' }
+};
+const VC_PAGOS = {
+  tarjeta:       { label: 'Tarjeta',       color: '#5a4f75', icon: '💳' },
+  efectivo:      { label: 'Efectivo',      color: '#27ae60', icon: '💵' },
+  domiciliacion: { label: 'Domiciliación', color: '#2980b9', icon: '🏦' }
+};
+
+async function cargarVentasCentro() {
+  const selMes = $('vc-mes'), selAnio = $('vc-anio');
+  if (!selMes.options.length) {
+    const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    const now = new Date();
+    selMes.innerHTML = meses.map((m,i) => `<option value="${i+1}" ${i+1===now.getMonth()+1?'selected':''}>${m}</option>`).join('');
+    const a = now.getFullYear();
+    selAnio.innerHTML = [a-1, a, a+1].map(y => `<option value="${y}" ${y===a?'selected':''}>${y}</option>`).join('');
+    selMes.onchange = cargarVentasCentro;
+    selAnio.onchange = cargarVentasCentro;
+  }
+  const mes = selMes.value, anio = selAnio.value;
+  const data = await API(`/api/ventas-centro?mes=${mes}&anio=${anio}`);
+  renderVentasCentro(data);
+}
+
+function renderVentasCentro(data) {
+  const { ventas, resumen } = data;
+  const chipsTipo = Object.entries(resumen.por_tipo).map(([k,v]) => {
+    const t = VC_TIPOS[k] || VC_TIPOS.otros;
+    return `<span style="display:inline-block;background:${t.color};color:#fff;padding:.25rem .65rem;border-radius:14px;font-size:.78rem;margin:.15rem .2rem .15rem 0">${t.icon} ${t.label}: ${v.toFixed(2)}€</span>`;
+  }).join('');
+  const chipsPago = Object.entries(resumen.por_pago).map(([k,v]) => {
+    const p = VC_PAGOS[k] || {};
+    return `<span style="display:inline-block;background:${p.color||'#888'};color:#fff;padding:.25rem .65rem;border-radius:14px;font-size:.78rem;margin:.15rem .2rem .15rem 0">${p.icon||''} ${p.label||k}: ${v.toFixed(2)}€</span>`;
+  }).join('');
+
+  $('vc-resumen').innerHTML = `
+    <div class="panel" style="padding:1rem">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-bottom:1rem">
+        <div style="background:linear-gradient(135deg,#5a4f75,#7c6f9c);color:#fff;padding:1rem;border-radius:10px">
+          <div style="font-size:.78rem;opacity:.9">VENTA TOTAL</div>
+          <div style="font-size:1.6rem;font-weight:700">${resumen.total.toFixed(2)} €</div>
+          <div style="font-size:.75rem;opacity:.85">${resumen.num} ventas</div>
+        </div>
+        <div style="background:linear-gradient(135deg,#27ae60,#16a085);color:#fff;padding:1rem;border-radius:10px">
+          <div style="font-size:.78rem;opacity:.9">DINERO NETO (base imp.)</div>
+          <div style="font-size:1.6rem;font-weight:700">${resumen.base.toFixed(2)} €</div>
+          <div style="font-size:.75rem;opacity:.85">lo que ingresas tras IVA</div>
+        </div>
+        <div style="background:linear-gradient(135deg,#c0392b,#e67e22);color:#fff;padding:1rem;border-radius:10px">
+          <div style="font-size:.78rem;opacity:.9">IVA REPERCUTIDO</div>
+          <div style="font-size:1.6rem;font-weight:700">${resumen.iva.toFixed(2)} €</div>
+          <div style="font-size:.75rem;opacity:.85">a liquidar a Hacienda</div>
+        </div>
+      </div>
+      <div style="border-top:1px solid var(--border);padding-top:.6rem">
+        <div style="font-size:.75rem;color:var(--text-light);margin-bottom:.3rem;text-transform:uppercase;letter-spacing:.5px">Por servicio</div>
+        ${chipsTipo || '<span style="color:var(--text-light);font-size:.85rem">sin ventas</span>'}
+      </div>
+      <div style="margin-top:.5rem">
+        <div style="font-size:.75rem;color:var(--text-light);margin-bottom:.3rem;text-transform:uppercase;letter-spacing:.5px">Por método de pago</div>
+        ${chipsPago || '<span style="color:var(--text-light);font-size:.85rem">sin ventas</span>'}
+      </div>
+    </div>`;
+
+  if (!ventas.length) {
+    $('vc-tabla').innerHTML = '<div class="panel" style="padding:2rem;text-align:center;color:var(--text-light)">No hay ventas registradas este mes. Pulsa <b>+ Nueva venta</b> para empezar.</div>';
+    return;
+  }
+
+  const filas = ventas.map(v => {
+    const t = VC_TIPOS[v.tipo] || VC_TIPOS.otros;
+    const p = VC_PAGOS[v.metodo_pago] || {};
+    const fecha = new Date(v.fecha).toLocaleDateString('es-ES', {day:'2-digit',month:'2-digit'});
+    return `<tr>
+      <td style="white-space:nowrap;font-size:.85rem">${fecha}</td>
+      <td><span style="background:${t.color};color:#fff;padding:.15rem .5rem;border-radius:10px;font-size:.72rem">${t.icon} ${t.label}</span></td>
+      <td>${v.cliente_nombre ? `<b>${v.cliente_nombre}</b>` : '<span style="color:var(--text-light)">—</span>'}${v.descripcion?`<br><span style="font-size:.75rem;color:var(--text-light)">${v.descripcion}</span>`:''}</td>
+      <td><span style="font-size:.78rem">${p.icon||''} ${p.label||v.metodo_pago}</span></td>
+      <td style="text-align:right;font-size:.8rem;color:var(--text-light)">${parseFloat(v.base_imponible).toFixed(2)}€</td>
+      <td style="text-align:right;font-size:.8rem;color:var(--text-light)">${parseFloat(v.iva_importe).toFixed(2)}€<br><span style="font-size:.65rem">(${parseFloat(v.iva_pct).toFixed(0)}%)</span></td>
+      <td style="text-align:right;font-weight:700">${parseFloat(v.importe_total).toFixed(2)}€</td>
+      <td style="text-align:right;white-space:nowrap">
+        <button class="btn btn-sm btn-outline" onclick="editarVentaCentro(${v.id})">✏️</button>
+        ${esSuperAdmin() ? `<button class="btn btn-sm btn-danger" onclick="eliminarVentaCentro(${v.id})">🗑</button>` : ''}
+      </td>
+    </tr>`;
+  }).join('');
+
+  $('vc-tabla').innerHTML = `<div class="panel"><div class="panel-body"><div class="table-wrapper">
+    <table>
+      <thead><tr>
+        <th>Fecha</th><th>Servicio</th><th>Cliente / Descripción</th><th>Pago</th>
+        <th style="text-align:right">Base</th><th style="text-align:right">IVA</th><th style="text-align:right">Total</th><th></th>
+      </tr></thead>
+      <tbody>${filas}</tbody>
+    </table></div></div></div>`;
+}
+
+async function abrirModalVentaCentro(id) {
+  let v = { fecha: new Date().toISOString().slice(0,10), tipo:'suscripcion', descripcion:'', cliente_nombre:'', importe_total:'', iva_pct:21, metodo_pago:'tarjeta', notas:'' };
+  if (id) {
+    const mes = $('vc-mes').value, anio = $('vc-anio').value;
+    const data = await API(`/api/ventas-centro?mes=${mes}&anio=${anio}`);
+    v = data.ventas.find(x => x.id === id) || v;
+    v.fecha = new Date(v.fecha).toISOString().slice(0,10);
+  }
+  const opcionesTipo = Object.entries(VC_TIPOS).map(([k,t]) => `<option value="${k}" ${k===v.tipo?'selected':''}>${t.icon} ${t.label}</option>`).join('');
+  const opcionesPago = Object.entries(VC_PAGOS).map(([k,p]) => `<option value="${k}" ${k===v.metodo_pago?'selected':''}>${p.icon} ${p.label}</option>`).join('');
+  abrirModal(`
+    <div style="padding:1rem;max-width:520px">
+      <h2 style="color:#5a4f75;margin-top:0">${id ? 'Editar' : 'Nueva'} venta</h2>
+      <div style="display:grid;gap:.7rem">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem">
+          <div>
+            <label style="font-size:.85rem;color:#5a4f75;font-weight:600">Fecha</label>
+            <input id="vc-fecha" type="date" value="${v.fecha}" style="width:100%;padding:.55rem;border:1px solid #ddd;border-radius:6px;margin-top:.25rem">
+          </div>
+          <div>
+            <label style="font-size:.85rem;color:#5a4f75;font-weight:600">Servicio</label>
+            <select id="vc-tipo" onchange="vcAjustarIva()" style="width:100%;padding:.55rem;border:1px solid #ddd;border-radius:6px;margin-top:.25rem">${opcionesTipo}</select>
+          </div>
+        </div>
+        <div>
+          <label style="font-size:.85rem;color:#5a4f75;font-weight:600">Cliente (opcional)</label>
+          <input id="vc-cliente" value="${(v.cliente_nombre||'').replace(/"/g,'&quot;')}" placeholder="Nombre cliente" style="width:100%;padding:.55rem;border:1px solid #ddd;border-radius:6px;margin-top:.25rem">
+        </div>
+        <div>
+          <label style="font-size:.85rem;color:#5a4f75;font-weight:600">Descripción (opcional)</label>
+          <input id="vc-descripcion" value="${(v.descripcion||'').replace(/"/g,'&quot;')}" placeholder="Ej: Bono 8 sesiones, par calcetines, etc." style="width:100%;padding:.55rem;border:1px solid #ddd;border-radius:6px;margin-top:.25rem">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem">
+          <div>
+            <label style="font-size:.85rem;color:#5a4f75;font-weight:600">Importe total (€)</label>
+            <input id="vc-total" type="number" step="0.01" value="${v.importe_total||''}" oninput="vcPrevisualizar()" style="width:100%;padding:.55rem;border:1px solid #ddd;border-radius:6px;margin-top:.25rem">
+          </div>
+          <div>
+            <label style="font-size:.85rem;color:#5a4f75;font-weight:600">IVA %</label>
+            <select id="vc-iva" onchange="vcPrevisualizar()" style="width:100%;padding:.55rem;border:1px solid #ddd;border-radius:6px;margin-top:.25rem">
+              <option value="21" ${parseFloat(v.iva_pct)===21?'selected':''}>21%</option>
+              <option value="10" ${parseFloat(v.iva_pct)===10?'selected':''}>10%</option>
+              <option value="4" ${parseFloat(v.iva_pct)===4?'selected':''}>4%</option>
+              <option value="0" ${parseFloat(v.iva_pct)===0?'selected':''}>0% (exento)</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:.85rem;color:#5a4f75;font-weight:600">Método pago</label>
+            <select id="vc-pago" style="width:100%;padding:.55rem;border:1px solid #ddd;border-radius:6px;margin-top:.25rem">${opcionesPago}</select>
+          </div>
+        </div>
+        <div id="vc-preview" style="background:#f5f3f8;border-left:3px solid #7c6f9c;padding:.6rem .8rem;border-radius:6px;font-size:.85rem;color:#5a4f75"></div>
+        <div>
+          <label style="font-size:.85rem;color:#5a4f75;font-weight:600">Notas (opcional)</label>
+          <textarea id="vc-notas" rows="2" style="width:100%;padding:.55rem;border:1px solid #ddd;border-radius:6px;margin-top:.25rem;font-family:inherit;resize:vertical">${v.notas||''}</textarea>
+        </div>
+      </div>
+      <div style="display:flex;gap:.5rem;justify-content:flex-end;margin-top:1rem">
+        <button class="btn btn-outline" onclick="cerrarModal()">Cancelar</button>
+        <button class="btn btn-primary" onclick="guardarVentaCentro(${id||'null'})">${id?'Guardar cambios':'Crear venta'}</button>
+      </div>
+    </div>
+  `);
+  setTimeout(() => { vcAjustarIva(); vcPrevisualizar(); }, 30);
+}
+
+function vcAjustarIva() {
+  const tipo = $('vc-tipo')?.value;
+  if (tipo === 'fianza') $('vc-iva').value = '0';
+  vcPrevisualizar();
+}
+
+function vcPrevisualizar() {
+  const total = parseFloat($('vc-total')?.value || 0);
+  const ivaPct = parseFloat($('vc-iva')?.value || 0);
+  const div = $('vc-preview');
+  if (!div) return;
+  if (!total || total <= 0) { div.innerHTML = '<i>Introduce el importe total para ver el desglose.</i>'; return; }
+  const base = total / (1 + ivaPct/100);
+  const iva = total - base;
+  div.innerHTML = `<b>Desglose automático:</b><br>
+    Base imponible: <b>${base.toFixed(2)}€</b> &nbsp;·&nbsp; IVA (${ivaPct}%): <b>${iva.toFixed(2)}€</b> &nbsp;·&nbsp; Total: <b>${total.toFixed(2)}€</b>`;
+}
+
+async function guardarVentaCentro(id) {
+  const body = {
+    fecha: $('vc-fecha').value,
+    tipo: $('vc-tipo').value,
+    cliente_nombre: $('vc-cliente').value.trim(),
+    descripcion: $('vc-descripcion').value.trim(),
+    importe_total: parseFloat($('vc-total').value),
+    iva_pct: parseFloat($('vc-iva').value),
+    metodo_pago: $('vc-pago').value,
+    notas: $('vc-notas').value.trim()
+  };
+  if (isNaN(body.importe_total) || body.importe_total < 0) return alert('Importe inválido');
+  if (id) await PUT(`/api/ventas-centro/${id}`, body);
+  else await POST('/api/ventas-centro', body);
+  try { LOG(id?'editar':'crear', 'ventas-centro', `${VC_TIPOS[body.tipo]?.label} ${body.importe_total}€`); } catch(e){}
+  cerrarModal();
+  cargarVentasCentro();
+}
+
+async function editarVentaCentro(id) { abrirModalVentaCentro(id); }
+
+async function eliminarVentaCentro(id) {
+  if (!confirm('¿Eliminar esta venta?')) return;
+  await DEL(`/api/ventas-centro/${id}`);
+  try { LOG('eliminar','ventas-centro',`Venta #${id}`); } catch(e){}
+  cargarVentasCentro();
 }
 
 // INIT
