@@ -164,6 +164,10 @@ function _normalizar(str) {
 async function cargarClientes() {
   const estado = $('filtro-clientes').value;
   _clientesCache = await API(`/api/clientes?estado=${estado}`);
+  try {
+    const resumen = await API('/api/clientes/resumen');
+    pintarResumenClientes(resumen);
+  } catch(e) {}
   renderClientes();
   const inputBuscar = $('buscar-cliente');
   if (inputBuscar && !inputBuscar._listenerAdded) {
@@ -171,17 +175,36 @@ async function cargarClientes() {
     inputBuscar._listenerAdded = true;
   }
 }
+
+function pintarResumenClientes(r) {
+  const cont = document.getElementById('resumen-clientes');
+  if (!cont) return;
+  const card = (label, val, color, sub='') => `
+    <div style="background:${color};color:#fff;padding:.7rem 1rem;border-radius:10px;min-width:140px;flex:1">
+      <div style="font-size:.7rem;opacity:.9;text-transform:uppercase;letter-spacing:.5px">${label}</div>
+      <div style="font-size:1.5rem;font-weight:700;line-height:1.1">${val}</div>
+      ${sub?`<div style="font-size:.7rem;opacity:.85;margin-top:.15rem">${sub}</div>`:''}
+    </div>`;
+  cont.innerHTML = `
+    <div style="display:flex;gap:.7rem;flex-wrap:wrap;margin-bottom:1rem">
+      ${card('Activos', r.activos, 'linear-gradient(135deg,#27ae60,#16a085)')}
+      ${card('Bajas', r.bajas, 'linear-gradient(135deg,#7f8c8d,#95a5a6)')}
+      ${card('Domiciliación', r.domiciliacion, 'linear-gradient(135deg,#2980b9,#3498db)', `${r.sin_iban} sin IBAN ⚠️`)}
+      ${card('Efectivo/Tarjeta', r.efectivo_tarjeta, 'linear-gradient(135deg,#5a4f75,#7c6f9c)', `${r.sin_fianza} sin fianza ⚠️`)}
+    </div>`;
+}
+
 function renderClientes() {
   const inputBuscar = $('buscar-cliente');
   const filtro = inputBuscar ? _normalizar(inputBuscar.value) : '';
   const clientes = filtro
-    ? _clientesCache.filter(c => _normalizar(c.nombre_completo).includes(filtro))
+    ? _clientesCache.filter(c => _normalizar(c.nombre_completo).includes(filtro)
+        || _normalizar(c.telefono||'').includes(filtro))
     : _clientesCache;
   if (!clientes.length) {
     $('tabla-clientes').innerHTML = '<p style="color:var(--text-light)">No hay clientes</p>';
     return;
   }
-  // Agrupar por días (clave normalizada para unir "Lunes y Miércoles" / "Lunes y Miercoles")
   const grupos = new Map();
   clientes.forEach(c => {
     const label = c.dias || 'Sin asignar';
@@ -189,37 +212,67 @@ function renderClientes() {
     if (!grupos.has(key)) grupos.set(key, { label, items: [] });
     grupos.get(key).items.push(c);
   });
-  // Reordenar: "clase suelta" al final
   const entradas = Array.from(grupos.entries()).sort((a, b) => {
     const aSuelta = a[0].includes('suelta') ? 1 : 0;
     const bSuelta = b[0].includes('suelta') ? 1 : 0;
     return aSuelta - bSuelta;
   });
+
+  const renderHorario = (c) => {
+    const partes = [c.horario, c.horario2].filter(Boolean);
+    return partes.length ? `<span style="font-weight:600;color:#5a4f75">${partes.join(' · ')}</span>` : '<span style="color:#bbb">—</span>';
+  };
+
+  const renderPago = (c) => {
+    if (c.metodo_pago === 'domiciliacion') {
+      if (c.iban_entregado) return '<span class="badge badge-success" title="Domiciliación · IBAN entregado">🏦 IBAN ✓</span>';
+      return `<button class="btn btn-sm btn-warning" onclick="marcarIban(${c.id})" title="Marcar IBAN entregado">🏦 Sin IBAN</button>`;
+    }
+    if (c.metodo_pago === 'efectivo_tarjeta') {
+      if (c.fianza_pagada) return '<span class="badge badge-success" title="Efectivo/Tarjeta · Fianza pagada">💳 Fianza ✓</span>';
+      return `<button class="btn btn-sm btn-warning" onclick="marcarFianza(${c.id})" title="Marcar fianza pagada">💳 Sin fianza</button>`;
+    }
+    return '<span class="badge badge-gray">—</span>';
+  };
+
+  const truncar = (txt, n) => {
+    if (!txt) return '';
+    const t = String(txt);
+    return t.length > n ? `<span title="${t.replace(/"/g,'&quot;')}">${t.substring(0, n)}…</span>` : t;
+  };
+
   let rows = '';
   entradas.forEach(([, { label, items }]) => {
-    rows += `<tr><td colspan="11" style="background:var(--primary);color:white;font-weight:700;padding:.6rem 1rem;font-size:.9rem">${label}</td></tr>`;
-    items.forEach(c => {
-      rows += `<tr>
-      <td><b>${c.nombre_completo}</b></td>
-      <td>${c.telefono || ''}</td>
-      <td><span class="badge badge-purple">${c.dias || ''}</span></td>
-      <td>${c.horario || ''}${c.horario2 ? ' / '+c.horario2 : ''}</td>
-      <td>${c.dias_semana || ''}</td>
-      <td>${c.mes_inicio || ''}</td>
-      <td>${c.estado === 'activo' ? '<span class="badge badge-success">Activo</span>' : '<span class="badge badge-danger">Baja '+(c.mes_baja||'')+'</span>'}</td>
-      <td>${c.metodo_pago === 'domiciliacion' ? '<span class="badge badge-purple">Domiciliación</span>' : c.metodo_pago === 'efectivo_tarjeta' ? '<span class="badge badge-warning">Efectivo/Tarjeta</span>' : '<span class="badge badge-gray">-</span>'}</td>
-      <td>${c.metodo_pago === 'domiciliacion' ? (c.iban_entregado ? '<span class="badge badge-success">IBAN OK</span>' : `<button class="btn btn-sm btn-warning" onclick="marcarIban(${c.id})">Sin IBAN</button>`) : c.metodo_pago === 'efectivo_tarjeta' ? (c.fianza_pagada ? '<span class="badge badge-success">Fianza OK</span>' : `<button class="btn btn-sm btn-warning" onclick="marcarFianza(${c.id})">Sin fianza</button>`) : ''}</td>
-      <td style="max-width:200px;font-size:.8rem">${c.notas || ''}</td>
-      <td style="white-space:nowrap">
-        <button class="btn btn-sm btn-outline" onclick='editarCliente(${JSON.stringify(c).replace(/'/g,"&#39;")})'>Editar</button>
-        ${esSuperAdmin() && c.estado === 'activo' ? `<button class="btn btn-sm btn-danger" onclick="darBaja(${c.id})">Baja</button>` : ''}
+    rows += `<tr>
+      <td colspan="6" style="background:linear-gradient(90deg,#5a4f75,#7c6f9c);color:white;font-weight:700;padding:.55rem 1rem;font-size:.88rem;letter-spacing:.3px">
+        📅 ${label} <span style="opacity:.75;font-weight:400;font-size:.78rem">· ${items.length} ${items.length===1?'cliente':'clientes'}</span>
       </td>
     </tr>`;
+    items.forEach(c => {
+      const estadoBadge = c.estado === 'activo'
+        ? '<span class="badge badge-success">Activo</span>'
+        : `<span class="badge badge-danger">Baja ${c.mes_baja||''}</span>`;
+      rows += `<tr>
+        <td><b>${c.nombre_completo}</b>${c.mes_inicio?`<br><span style="font-size:.72rem;color:var(--text-light)">📌 desde ${c.mes_inicio}</span>`:''}</td>
+        <td>${renderHorario(c)}</td>
+        <td style="text-align:center"><span style="background:#f5f3f8;color:#5a4f75;padding:.15rem .45rem;border-radius:10px;font-size:.78rem;font-weight:600">${c.dias_semana || '?'}/sem</span></td>
+        <td>${estadoBadge}</td>
+        <td>${renderPago(c)}</td>
+        <td style="white-space:nowrap;text-align:right">
+          <button class="btn btn-sm btn-outline" onclick='editarCliente(${JSON.stringify(c).replace(/'/g,"&#39;")})' title="Editar (incluye teléfono y notas)">✏️</button>
+          ${esSuperAdmin() && c.estado === 'activo' ? `<button class="btn btn-sm btn-danger" onclick="darBaja(${c.id})" title="Dar de baja">🚫</button>` : ''}
+        </td>
+      </tr>`;
     });
   });
-  $('tabla-clientes').innerHTML = `<table><thead><tr>
-    <th>Nombre</th><th>Teléfono</th><th>Días</th><th>Horario</th><th>Días/sem</th><th>Inicio</th><th>Estado</th><th>Pago</th><th>IBAN/Fianza</th><th>Notas</th><th></th>
-  </tr></thead><tbody>${rows}</tbody></table>`;
+  $('tabla-clientes').innerHTML = `<div class="panel"><div class="panel-body"><div class="table-wrapper">
+    <table>
+      <thead><tr>
+        <th>Nombre</th><th>Horario</th><th>Frec.</th><th>Estado</th><th>Pago</th><th></th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </div></div></div>`;
 }
 
 function abrirModalCliente(c) {
