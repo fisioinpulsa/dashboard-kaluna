@@ -158,14 +158,14 @@ Si en algún mes el resultado fuera negativo (es decir, los ingresos netos del c
 
 #### 🟡 Excepción de inicio: junio 2026 (mes de incorporación)
 
-Inma se incorpora el **15 de junio de 2026**. Como en junio solo se podrá facturar **media mensualidad** (la segunda quincena), se aplica la siguiente regla excepcional:
+Inma se incorpora el **8 de junio de 2026**. Como junio será un **mes parcial** (no se factura el mes completo), se aplica la siguiente regla excepcional:
 
 ##### Junio 2026
 
 1. **Fisio Inpulsa S.L.** abona los **1.800 € de gastos del centro de junio** entre los días **1-5 de junio**, asumiéndolos íntegramente. *(Estos gastos NO se descuentan a Inma porque corresponden a un mes en el que Inma todavía no estaba incorporada — gastos de junio = facturación de mayo, que es íntegramente del centro pre-Inma).*
-2. Inma se incorpora el **15 de junio** y trabaja la segunda quincena.
-3. El **último viernes de junio** se hace el recuento de la facturación generada desde el día 15.
-4. De esa facturación se descuentan **900 €** (el 50 % de los gastos del centro de julio), aplicando el modelo de "gastos por adelantado" pero **proporcional a la media mensualidad facturada**.
+2. Inma se incorpora el **8 de junio** y trabaja desde esa fecha hasta fin de mes.
+3. El **último viernes de junio** se hace el recuento de la facturación generada desde el día 8.
+4. De esa facturación se descuentan **900 €** (el 50 % de los gastos del centro de julio), aplicando el modelo de "gastos por adelantado" con una **reducción pactada por arranque parcial de mes**.
 5. **El resto** (facturación neta junio − 900 €) constituye el **beneficio repartible de junio**:
    - **70 % Inma**
    - **30 % Fisio Inpulsa**
@@ -183,7 +183,7 @@ Inma se incorpora el **15 de junio de 2026**. Como en junio solo se podrá factu
 ##### Agosto 2026 en adelante
 Reparto **estándar completo** descrito en los apartados 3.1, 3.2 y 4 (cada mes se descuentan los 1.800 € de gastos del mes siguiente).
 
-> *Lógica del ajuste*: como junio solo factura media mensualidad por la incorporación a mitad de mes, se descuenta solo media mensualidad de gastos (900 €), no los 1.800 € que tocarían en un mes normal. A partir de julio el sistema funciona en régimen normal: la facturación de cada mes paga los gastos del mes siguiente.
+> *Lógica del ajuste*: como junio es un mes parcial por la incorporación a comienzos de mes (no completo), se descuenta solo la mitad de gastos (900 €) en lugar de los 1.800 € que tocarían en un mes normal. A partir de julio el sistema funciona en régimen normal: la facturación de cada mes paga los gastos del mes siguiente.
 
 > Este ajuste de inicio es **único y excepcional**, no constituye precedente para futuras incorporaciones, vacaciones ni bajas.
 
@@ -192,8 +192,8 @@ Reparto **estándar completo** descrito en los apartados 3.1, 3.2 y 4 (cada mes 
 > Supongamos que Inma factura **2.500 € netos en la segunda quincena de junio** y **5.000 € netos en julio**:
 >
 > **Cierre junio (30 jun, pago 1-5 jul):**
-> - Facturación neta (15-30 jun): 2.500,00 €
-> - − Gastos descontados (50 % de 1.800 € por media mensualidad): 900,00 €
+> - Facturación neta (8-30 jun): 2.500,00 €
+> - − Gastos descontados (50 % de 1.800 € por arranque parcial): 900,00 €
 > - = Beneficio repartible junio: **1.600,00 €**
 > - → 70 % Inma: **1.120,00 €**
 > - → 30 % Fisio Inpulsa: 480,00 €
