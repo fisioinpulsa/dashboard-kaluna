@@ -2595,6 +2595,13 @@ async function cargarGastosCentro() {
     selMes.onchange = cargarGastosCentro;
     selAnio.onchange = cargarGastosCentro;
   }
+  // Si es colaboradora: ocultar botones de edición del header (solo lectura)
+  if (esColaboradora()) {
+    document.querySelectorAll('#sec-gastos-centro .main-header button').forEach(b => {
+      const txt = b.textContent.toLowerCase();
+      if (txt.includes('nuevo gasto') || txt.includes('copiar mes')) b.style.display = 'none';
+    });
+  }
   const mes = selMes.value, anio = selAnio.value;
   const data = await API(`/api/gastos-centro?mes=${mes}&anio=${anio}`);
   renderGastosCentro(data);
@@ -2644,18 +2651,21 @@ function renderGastosCentro(data) {
       else if (dif < -0.001) { difCol = '#c0392b'; difTxt = `${dif.toFixed(2)} €`; }
       else { difCol = '#7f8c8d'; difTxt = '0,00 €'; }
     }
+    const puedeEditar = esAdmin();
     return `<tr>
       <td><span style="background:${c.color};color:#fff;padding:.15rem .5rem;border-radius:10px;font-size:.72rem">${c.label}</span></td>
       <td><b>${g.concepto}</b>${g.recurrente ? ' <span style="font-size:.7rem;color:#27ae60" title="Recurrente">🔁</span>' : ''}${g.notas ? `<br><span style="font-size:.7rem;color:var(--text-light)">${g.notas.substring(0,60)}${g.notas.length>60?'...':''}</span>` : ''}</td>
       <td style="text-align:right;font-weight:600;white-space:nowrap">${presup.toFixed(2)} €</td>
       <td style="text-align:right;white-space:nowrap">
-        <input type="number" step="0.01" placeholder="—" value="${real !== null ? real : ''}"
-          onchange="guardarRealGC(${g.id}, this.value)"
-          style="width:95px;padding:.35rem .4rem;border:1px solid #ddd;border-radius:6px;text-align:right;font-size:.88rem">
+        ${puedeEditar
+          ? `<input type="number" step="0.01" placeholder="—" value="${real !== null ? real : ''}"
+              onchange="guardarRealGC(${g.id}, this.value)"
+              style="width:95px;padding:.35rem .4rem;border:1px solid #ddd;border-radius:6px;text-align:right;font-size:.88rem">`
+          : `<span style="font-weight:600">${real !== null ? real.toFixed(2)+' €' : '—'}</span>`}
       </td>
       <td style="text-align:right;white-space:nowrap;font-weight:600;color:${difCol}">${difTxt}</td>
       <td style="text-align:right;white-space:nowrap">
-        <button class="btn btn-sm btn-outline" onclick="editarGastoCentro(${g.id})">✏️</button>
+        ${puedeEditar ? `<button class="btn btn-sm btn-outline" onclick="editarGastoCentro(${g.id})">✏️</button>` : ''}
         ${esSuperAdmin() ? `<button class="btn btn-sm btn-danger" onclick="eliminarGastoCentro(${g.id})">🗑</button>` : ''}
       </td>
     </tr>`;

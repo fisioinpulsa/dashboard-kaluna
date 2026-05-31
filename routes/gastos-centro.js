@@ -4,12 +4,17 @@ const { verificarToken } = require('../middleware/auth');
 
 router.use(verificarToken);
 
-// Solo admin (superadmin y admin) — no trabajadoras
-function soloAdminOColab(req, res, next) {
-  if (req.user.rol !== 'admin' && req.user.rol !== 'colaboradora') return res.status(403).json({ error: 'Solo admin o colaboradora' });
+// Lectura: admin o colaboradora
+function lecturaAdminOColab(req, res, next) {
+  if (req.user.rol !== 'admin' && req.user.rol !== 'colaboradora') return res.status(403).json({ error: 'Acceso restringido' });
   next();
 }
-router.use(soloAdminOColab);
+// Escritura: solo admin (Lydia y futuros admin), NO colaboradora
+function soloAdminEscritura(req, res, next) {
+  if (req.user.rol !== 'admin') return res.status(403).json({ error: 'Solo Lydia puede editar los gastos del centro' });
+  next();
+}
+router.use(lecturaAdminOColab);
 
 // GET listar por mes/año
 router.get('/', async (req, res) => {
@@ -57,7 +62,7 @@ router.get('/historico', async (req, res) => {
 });
 
 // POST crear gasto
-router.post('/', async (req, res) => {
+router.post('/', soloAdminEscritura, async (req, res) => {
   try {
     const { concepto, importe, mes, anio, recurrente, categoria, notas, orden, importe_real } = req.body;
     if (!concepto || importe === undefined) return res.status(400).json({ error: 'Faltan datos' });
@@ -82,7 +87,7 @@ router.post('/', async (req, res) => {
 });
 
 // PUT editar gasto completo
-router.put('/:id', async (req, res) => {
+router.put('/:id', soloAdminEscritura, async (req, res) => {
   try {
     const { concepto, importe, recurrente, categoria, notas, orden, importe_real } = req.body;
     const { rows } = await query(
@@ -103,7 +108,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // PATCH actualizar solo importe_real (edición rápida inline)
-router.patch('/:id/real', async (req, res) => {
+router.patch('/:id/real', soloAdminEscritura, async (req, res) => {
   try {
     const { importe_real } = req.body;
     const val = (importe_real === '' || importe_real === null || importe_real === undefined) ? null : parseFloat(importe_real);
@@ -120,7 +125,7 @@ router.patch('/:id/real', async (req, res) => {
 });
 
 // DELETE solo superadmin (id=1)
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', soloAdminEscritura, async (req, res) => {
   if (req.user.id !== 1) return res.status(403).json({ error: 'Solo superadmin puede eliminar' });
   try {
     await query('DELETE FROM kaluna_gastos_centro WHERE id=$1', [req.params.id]);
@@ -131,7 +136,7 @@ router.delete('/:id', async (req, res) => {
 });
 
 // POST duplicar gastos recurrentes del mes anterior al mes actual
-router.post('/duplicar-mes', async (req, res) => {
+router.post('/duplicar-mes', soloAdminEscritura, async (req, res) => {
   try {
     const { desde_mes, desde_anio, hacia_mes, hacia_anio } = req.body;
     if (!desde_mes || !desde_anio || !hacia_mes || !hacia_anio) {
