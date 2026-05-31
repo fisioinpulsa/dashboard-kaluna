@@ -2891,15 +2891,18 @@ function renderVentasCentro(data) {
       const t = VC_TIPOS[v.tipo] || VC_TIPOS.otros;
       const p = VC_PAGOS[v.metodo_pago] || {};
       const fecha = new Date(v.fecha).toLocaleDateString('es-ES', {day:'2-digit',month:'2-digit'});
+      const base = parseFloat(v.base_imponible);
       const com = parseFloat(v.comision || 0);
+      const neto = base - com; // dinero que realmente queda al centro de esta venta
       return `<tr>
         <td style="white-space:nowrap;font-size:.85rem">${fecha}</td>
         <td><span style="background:${t.color};color:#fff;padding:.15rem .5rem;border-radius:10px;font-size:.72rem">${t.icon} ${t.label}</span></td>
         <td>${v.cliente_nombre ? `<b>${v.cliente_nombre}</b>` : '<span style="color:var(--text-light)">—</span>'}${v.descripcion?`<br><span style="font-size:.75rem;color:var(--text-light)">${v.descripcion}</span>`:''}</td>
         <td><span style="font-size:.78rem">${p.icon||''} ${p.label||v.metodo_pago}</span></td>
-        <td style="text-align:right;font-size:.8rem;color:var(--text-light)">${parseFloat(v.base_imponible).toFixed(2)}€</td>
+        <td style="text-align:right;font-size:.8rem;color:var(--text-light)">${base.toFixed(2)}€</td>
         <td style="text-align:right;font-size:.8rem;color:var(--text-light)">${parseFloat(v.iva_importe).toFixed(2)}€<br><span style="font-size:.65rem">(${parseFloat(v.iva_pct).toFixed(0)}%)</span></td>
         <td style="text-align:right;font-size:.8rem;color:${com>0?'#7b241c':'#bbb'}">${com>0?'-'+com.toFixed(2)+'€':'—'}${v.comision_descripcion?`<br><span style="font-size:.62rem;color:#888">${v.comision_descripcion}</span>`:''}</td>
+        <td style="text-align:right;font-weight:700;color:#16a085">${neto.toFixed(2)}€</td>
         <td style="text-align:right;font-weight:700">${parseFloat(v.importe_total).toFixed(2)}€</td>
         <td style="text-align:right;white-space:nowrap">
           <button class="btn btn-sm btn-outline" onclick="editarVentaCentro(${v.id})">✏️</button>
@@ -2917,6 +2920,7 @@ function renderVentasCentro(data) {
             <th>Fecha</th><th>Servicio</th><th>Cliente / Descripción</th><th>Pago</th>
             <th style="text-align:right">Base</th><th style="text-align:right">IVA</th>
             <th style="text-align:right">Comisión</th>
+            <th style="text-align:right;color:#16a085">Neto</th>
             <th style="text-align:right">Total</th><th></th>
           </tr></thead>
           <tbody>${filas}</tbody>
