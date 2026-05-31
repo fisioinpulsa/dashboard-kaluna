@@ -155,24 +155,24 @@ Esta tabla muestra, para cada bono ofrecido por el centro, **cuánto paga el cli
 
 #### 🟡 Excepción de inicio: junio y julio 2026
 
-Inma se incorpora a **mediados de junio** y durante ese mes solo se podrá cobrar **media mensualidad** a los clientes por la situación extraordinaria del arranque. Para que el reparto sea justo, se aplica la siguiente regla excepcional:
+Inma se incorpora el **15 de junio de 2026**. Como solo se podrá facturar **media mensualidad** durante junio, se aplica la siguiente regla excepcional para que el reparto sea justo:
 
 ##### Junio 2026 (mes de incorporación)
-- Los **gastos del centro de junio (1.800 €)** los asume **íntegramente Fisio Inpulsa S.L.**.
-- Inma **no participa en los gastos** ese mes (no se le descuenta nada).
-- Inma cobra su **70 % sobre el neto generado** desde su incorporación, **sin deducir los 1.800 €** de gastos fijos.
+- **Fisio Inpulsa S.L.** abona los **gastos del centro de junio (1.800 €) entre los días 1-5 de junio**, como cualquier otro mes. Estos gastos los asume íntegramente Fisio Inpulsa.
+- Inma se incorpora el **15 de junio**.
+- La **facturación generada desde el 15 al 30 de junio** (con Inma ya trabajando) **NO se reparte en junio**: se acumula y se traslada al cálculo de la liquidación de julio.
+- Inma **no recibe pago de reparto en junio** (porque su facturación se reserva para cubrir los gastos del siguiente mes con la compensación pactada).
 
-##### Julio 2026 (mes de transición — ajuste de compensación)
-Dado que la facturación de junio (que sirve también como aportación al funcionamiento del centro) se computa para la liquidación de julio, en el cálculo de julio se aplica una **reducción de gastos al 50 %**:
+##### Julio 2026 (mes de transición — compensación al 50 %)
+- **Ingresos a computar**: facturación neta de **junio (desde el 15) + julio completo**.
+- **Gastos a descontar**: **900 €** (el 50 % de los 1.800 € habituales) como **compensación** por el inicio a media mensualidad.
+- Reparto estándar **70 % Inma / 30 % Fisio Inpulsa** sobre el beneficio resultante.
+- La transferencia del 70 % a Inma se realiza entre el día 1 y el día 5 de **agosto**.
 
-- Ingresos a computar: facturación neta de **junio + julio** (todo lo generado en ambos meses).
-- Gastos a descontar: **900 €** (mitad de los 1.800 € habituales) en lugar de los 1.800 € completos.
-- Reparto estándar 70 % / 30 % sobre el beneficio resultante.
-
-> *Motivo*: como Fisio Inpulsa asumió los 1.800 € de gastos de junio pese a que solo hubo media mensualidad facturada, en julio se aplica una compensación equivalente (medio mes de gastos), reflejando que la facturación de junio cubre parcialmente los gastos del centro de ambos meses.
+> *Motivo*: como Fisio Inpulsa asumió íntegramente los 1.800 € de gastos de junio, en julio se descuenta solo la mitad para compensar a Inma por el arranque parcial. La facturación de junio (15-30) sirve precisamente como aportación para cubrir los gastos del centro de julio junto con la propia facturación de julio.
 
 ##### Agosto 2026 en adelante
-Se aplica el reparto **estándar completo** descrito en los apartados 3.1, 3.2 y 4 (gastos del centro 1.800 € íntegros cada mes).
+Reparto **estándar completo** descrito en los apartados 3.1, 3.2 y 4 (gastos del centro 1.800 € íntegros cada mes, abonados los días 1-5).
 
 > Este ajuste de inicio (junio + julio) es **único y excepcional**, no constituye precedente para futuras incorporaciones, vacaciones ni bajas.
 
