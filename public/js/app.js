@@ -2859,14 +2859,14 @@ function renderVentasCentro(data) {
           <div style="font-size:.7rem;opacity:.85">TPV 0,20% + remesa 0,35€</div>
         </div>
         <div style="background:linear-gradient(135deg,#7b241c,#922b21);color:#fff;padding:.85rem 1rem;border-radius:10px">
-          <div style="font-size:.72rem;opacity:.9">INCIDENCIAS</div>
-          <div style="font-size:1.45rem;font-weight:700">-${resumen.incidencias.toFixed(2)} €</div>
-          <div style="font-size:.7rem;opacity:.85">${resumen.num_incidencias} eventos</div>
+          <div style="font-size:.72rem;opacity:.9">INCIDENCIAS (info)</div>
+          <div style="font-size:1.45rem;font-weight:700">${resumen.incidencias.toFixed(2)} €</div>
+          <div style="font-size:.7rem;opacity:.85">${resumen.num_incidencias} eventos · no descuentan</div>
         </div>
         <div style="background:linear-gradient(135deg,#2980b9,#3498db);color:#fff;padding:.85rem 1rem;border-radius:10px">
           <div style="font-size:.72rem;opacity:.9">NETO REAL</div>
           <div style="font-size:1.45rem;font-weight:700">${resumen.neto.toFixed(2)} €</div>
-          <div style="font-size:.7rem;opacity:.85">tras IVA, comisiones e incidencias</div>
+          <div style="font-size:.7rem;opacity:.85">base − comisiones (IVA aparte)</div>
         </div>
       </div>
       <div style="border-top:1px solid var(--border);padding-top:.6rem">
@@ -2955,7 +2955,7 @@ function renderVentasCentro(data) {
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem">
         <div>
           <h3 style="margin:0;color:#7b241c;font-size:1rem">⛔ Incidencias del mes</h3>
-          <p style="margin:.2rem 0 0;font-size:.78rem;color:var(--text-light)">Rechazos de transferencia y devoluciones de recibos (descontados del neto real)</p>
+          <p style="margin:.2rem 0 0;font-size:.78rem;color:var(--text-light)">Rechazos de transferencia y devoluciones de recibos · solo informativos, NO restan del neto</p>
         </div>
         <button class="btn btn-sm" style="background:#922b21;color:#fff" onclick="abrirModalIncidencia()">+ Registrar incidencia</button>
       </div>

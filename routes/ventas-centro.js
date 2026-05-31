@@ -102,8 +102,8 @@ router.get('/', async (req, res) => {
       resumen.incidencias += im;
       resumen.por_incidencia[x.tipo] = (resumen.por_incidencia[x.tipo] || 0) + im;
     });
-    // Neto real = base imponible - comisiones - incidencias
-    resumen.neto = resumen.base - resumen.comisiones - resumen.incidencias;
+    // Neto real = base imponible - comisiones (las incidencias quedan SOLO informativas, no descuentan)
+    resumen.neto = resumen.base - resumen.comisiones;
     // Redondeos
     ['total','base','iva','comisiones','incidencias','neto'].forEach(k => {
       resumen[k] = Math.round(resumen[k] * 100) / 100;

@@ -37,16 +37,55 @@ Las partes acuerdan formalizar un **contrato de cuenta en participación** (arts
 
 ### 3.1 Fórmula mensual
 
+El reparto se calcula sobre el **dinero real que llega a caja**, es decir, después de descontar a cada cobro lo que se queda Hacienda (IVA) y lo que se queda el banco (comisiones). El esquema mensual es el siguiente:
+
+#### Paso 1 — De cada cobro al centro se descuenta:
+
+| Método de cobro | Descuentos automáticos |
+|---|---|
+| **Tarjeta (TPV)** | IVA del 21% + comisión TPV del **0,20%** sobre el importe |
+| **Domiciliación (remesa)** | IVA del 21% + comisión de transacción **0,35 €** por recibo |
+| **Efectivo** | IVA del 21% (no hay comisión bancaria) |
+
+#### Paso 2 — Suma mensual
+
 ```
-Facturación bruta del centro (con IVA)
-−  IVA repercutido (21% sobre clases de Pilates no terapéutico)
-=  Ingresos netos / Base imponible
-−  Gastos del centro acordados (ver apartado 4)
-─────────────────────────────────────────────
-=  BENEFICIO NETO REPARTIBLE
-   → 70% para Inma
-   → 30% para Lydia
+Facturación bruta del centro (con IVA)                     = X €
+  − IVA repercutido (21% sobre cada venta)                 − X €
+  − Comisiones bancarias (TPV 0,20% / remesa 0,35€)        − X €
+─────────────────────────────────────────────────────────────
+INGRESO NETO REAL DEL CENTRO                               = X €
+  − Gastos del centro acordados (apartado 4: 1.800 €/mes)  − 1.800 €
+─────────────────────────────────────────────────────────────
+BENEFICIO NETO REPARTIBLE                                  = X €
+  → 70% para Inma                                          = X €
+  → 30% para Lydia                                         = X €
 ```
+
+#### Ejemplo numérico (cifras ficticias para ilustrar)
+
+```
+Facturación bruta del mes:                        6.000,00 €
+  − IVA repercutido (21%):                       −1.041,32 €
+  − Comisión TPV 0,20% (sobre 3.000 € tarjeta):  −     6,00 €
+  − Comisión remesa 0,35 € × 50 recibos:         −    17,50 €
+─────────────────────────────────────────────────────────────
+INGRESO NETO REAL DEL CENTRO:                     4.935,18 €
+  − Gastos del centro:                           −1.800,00 €
+─────────────────────────────────────────────────────────────
+BENEFICIO NETO REPARTIBLE:                        3.135,18 €
+  → 70% Inma:                                     2.194,63 €
+  → 30% Lydia:                                      940,55 €
+```
+
+#### Incidencias bancarias (rechazos y devoluciones)
+
+Aparte de las comisiones automáticas, el banco también cobra cuando una transacción falla. Estos cargos **se registran en el dashboard a título informativo** pero **NO se descuentan** del beneficio repartible (los asume íntegramente Lydia como titular del negocio):
+
+- **Rechazo de transferencia**: 3,50 € por cada rechazo
+- **Devolución de recibo domiciliado**: 15,50 € por cada devolución
+
+> *Motivo*: estos cargos pueden ser puntuales y derivar de problemas con el cliente final. Quedan reflejados en la pestaña "Ventas del Centro" para que ambas partes los vean, pero no afectan al cálculo del reparto.
 
 ### 3.2 Asunción de pérdidas
 
