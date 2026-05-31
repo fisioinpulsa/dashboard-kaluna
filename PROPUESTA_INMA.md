@@ -157,24 +157,50 @@ Esta tabla muestra, para cada bono ofrecido por el centro, **cuánto paga el cli
 
 Inma se incorpora el **15 de junio de 2026**. Como solo se podrá facturar **media mensualidad** durante junio, se aplica la siguiente regla excepcional para que el reparto sea justo:
 
-##### Junio 2026 (mes de incorporación)
-- **Fisio Inpulsa S.L.** abona los **gastos del centro de junio (1.800 €) entre los días 1-5 de junio**, como cualquier otro mes. Estos gastos los asume íntegramente Fisio Inpulsa.
-- Inma se incorpora el **15 de junio**.
-- La **facturación generada desde el 15 al 30 de junio** (con Inma ya trabajando) **NO se reparte en junio**: se acumula y se traslada al cálculo de la liquidación de julio.
-- Inma **no recibe pago de reparto en junio** (porque su facturación se reserva para cubrir los gastos del siguiente mes con la compensación pactada).
+##### Junio 2026 (mes de incorporación) — sí hay reparto
 
-##### Julio 2026 (mes de transición — compensación al 50 %)
-- **Ingresos a computar**: facturación neta de **junio (desde el 15) + julio completo**.
-- **Gastos a descontar**: **900 €** (el 50 % de los 1.800 € habituales) como **compensación** por el inicio a media mensualidad.
-- Reparto estándar **70 % Inma / 30 % Fisio Inpulsa** sobre el beneficio resultante.
-- La transferencia del 70 % a Inma se realiza entre el día 1 y el día 5 de **agosto**.
+1. **Fisio Inpulsa S.L.** abona los **1.800 € de gastos del centro entre los días 1-5 de junio**, como cualquier otro mes.
+2. Inma se incorpora el **15 de junio**.
+3. El **último viernes de junio** se hace el recuento de la facturación generada por Inma (desde el día 15).
+4. De esa facturación se **reservan 900 €** (el 50 % de los gastos del centro) y se trasladan a la cuenta del centro para cubrir la mitad de los gastos de julio.
+5. **El resto** (facturación neta de junio − 900 €) constituye el **beneficio repartible de junio** y se reparte:
+   - **70 % Inma**
+   - **30 % Fisio Inpulsa**
+6. Transferencia a Inma entre el **día 1 y el día 5 de julio**.
 
-> *Motivo*: como Fisio Inpulsa asumió íntegramente los 1.800 € de gastos de junio, en julio se descuenta solo la mitad para compensar a Inma por el arranque parcial. La facturación de junio (15-30) sirve precisamente como aportación para cubrir los gastos del centro de julio junto con la propia facturación de julio.
+##### Julio 2026 (mes de transición — gastos descontados al 50 %)
+
+1. Fisio Inpulsa abona los **1.800 € de gastos del centro** entre los días 1-5 de julio.
+2. Inma trabaja el mes completo.
+3. El **último viernes de julio** se hace el recuento de la facturación.
+4. Del neto facturado se descuentan **solo 900 €** (la otra mitad de los gastos), porque los 900 € restantes ya quedaron cubiertos por la reserva trasladada desde junio.
+5. El resto se reparte **70 % Inma / 30 % Fisio Inpulsa**.
+6. Transferencia a Inma entre el **día 1 y el día 5 de agosto**.
+
+> *Lógica*: en total, durante los dos primeros meses, Inma asume vía descuento 1.800 € de gastos (900 + 900). Esto equivale a un mes completo de gastos, lo cual es proporcionado porque Inma trabaja efectivamente 1,5 meses (junio parcial + julio completo). El reparto resulta justo para ambas partes y Fisio Inpulsa recupera vía facturación lo adelantado en junio.
 
 ##### Agosto 2026 en adelante
 Reparto **estándar completo** descrito en los apartados 3.1, 3.2 y 4 (gastos del centro 1.800 € íntegros cada mes, abonados los días 1-5).
 
 > Este ajuste de inicio (junio + julio) es **único y excepcional**, no constituye precedente para futuras incorporaciones, vacaciones ni bajas.
+
+##### Ejemplo numérico de la excepción
+
+> Supongamos que Inma factura 2.500 € netos en la segunda quincena de junio y 5.000 € netos en julio:
+>
+> **Junio (cierre 30 jun, pago 1-5 jul):**
+> - Facturación neta junio (15-30): 2.500,00 €
+> - − Reserva para gastos julio: 900,00 €
+> - = Beneficio repartible junio: **1.600,00 €**
+> - → 70 % Inma: **1.120,00 €**
+> - → 30 % Fisio Inpulsa: 480,00 €
+>
+> **Julio (cierre 31 jul, pago 1-5 ago):**
+> - Facturación neta julio: 5.000,00 €
+> - − Gastos descontados: 900,00 € (otra mitad)
+> - = Beneficio repartible julio: **4.100,00 €**
+> - → 70 % Inma: **2.870,00 €**
+> - → 30 % Fisio Inpulsa: 1.230,00 €
 
 ### 3.4 Periodicidad y forma de pago
 
