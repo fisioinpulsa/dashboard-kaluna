@@ -290,6 +290,13 @@ Los **1.800 € mensuales** acordados se ingresan en una cuenta específica del 
 - Llevar la contabilidad oficial con la gestoría.
 - Supervisar y resolver cualquier incidencia que requiera decisión de titular.
 
+### Horario de Inma — acordado entre ambas partes
+- El **horario de trabajo de Inma se acuerda conjuntamente** entre ambas partes.
+- Como punto de partida, Inma elige sus franjas dentro del **horario actualmente ofrecido por el centro** (mañanas y tardes de lunes a viernes según calendario vigente de clases en el dashboard).
+- Las franjas elegidas quedan fijadas en el calendario semanal del centro.
+- Cualquier **cambio posterior** (añadir, quitar o reubicar franjas) puede hacerse de mutuo acuerdo, con **15 días de preaviso** (apartado 9), siempre que no perjudique al funcionamiento del centro ni a los clientes ya asignados a esas franjas.
+- Las **vacaciones, ausencias programadas o días libres** se comunican también con un mínimo de 15 días de antelación.
+
 ---
 
 ## 6. Régimen fiscal (a confirmar con gestoría)

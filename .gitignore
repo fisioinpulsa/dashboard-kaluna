@@ -1,2 +1,6 @@
 node_modules/
 .env
+
+# Generados localmente
+PROPUESTA_INMA.html
+_gen_propuesta_html.js
