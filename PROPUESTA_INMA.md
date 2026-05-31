@@ -6,18 +6,19 @@
 ## 1. Las partes
 
 **Titular del negocio**
-- Lydia Campillo
-- DNI: [TU DNI]
-- Centro de Pilates Kalüna
-- Dirección: [DIRECCIÓN COMPLETA DEL CENTRO]
-- Régimen: autónoma estimación directa, alta en IAE [EPÍGRAFE]
-- IBAN: [TU IBAN]
+- Razón social: **Fisio Inpulsa S.L.**
+- CIF: **B75589937**
+- Centro: Centro de Pilates Kalüna
+- Domicilio social y del centro: **Calle Alameda del Río, 4**
+- Representada en este contrato por: Lydia Campillo (administradora)
+- IBAN: [IBAN DE FISIO INPULSA]
+- Régimen fiscal: [confirmar con gestoría — estimación directa / módulos]
 
 **Colaboradora**
-- Inma [APELLIDOS]
+- Nombre: Inma [APELLIDOS]
 - DNI: [DNI DE INMA]
 - Dirección: [DIRECCIÓN]
-- Estado actual: [¿alta autónoma sí/no?]
+- Estado actual: [¿alta autónoma sí/no? — necesario para el contrato]
 - IBAN: [IBAN DE INMA]
 
 ---
@@ -26,7 +27,7 @@
 
 Las partes acuerdan formalizar un **contrato de cuenta en participación** (arts. 239-243 del Código de Comercio español) por el cual:
 
-- **Lydia** mantiene la titularidad íntegra del Centro Kalüna, sus contratos con clientes, marca, alquiler, instalaciones, mobiliario y permisos administrativos.
+- **Fisio Inpulsa S.L.** mantiene la titularidad íntegra del Centro Kalüna, sus contratos con clientes, marca, alquiler, instalaciones, mobiliario y permisos administrativos.
 - **Inma** aporta su trabajo personal para la gestión integral del centro (impartición de clases de Pilates y dirección operativa del día a día) a cambio de un porcentaje sobre el beneficio neto repartible.
 
 > **Nota para la gestoría**: confirmar idoneidad de esta figura frente a otras alternativas (TRADE con variable, sociedad civil, etc.) en función de la fiscalidad y obligaciones que mejor encajen.
@@ -59,7 +60,7 @@ INGRESO NETO REAL DEL CENTRO                               = X €
 ─────────────────────────────────────────────────────────────
 BENEFICIO NETO REPARTIBLE                                  = X €
   → 70% para Inma                                          = X €
-  → 30% para Lydia                                         = X €
+  → 30% para Fisio Inpulsa                                 = X €
 ```
 
 #### Ejemplo numérico (cifras ficticias para ilustrar)
@@ -75,12 +76,12 @@ INGRESO NETO REAL DEL CENTRO:                     4.935,18 €
 ─────────────────────────────────────────────────────────────
 BENEFICIO NETO REPARTIBLE:                        3.135,18 €
   → 70% Inma:                                     2.194,63 €
-  → 30% Lydia:                                      940,55 €
+  → 30% Fisio Inpulsa:                              940,55 €
 ```
 
 #### Incidencias bancarias (rechazos y devoluciones)
 
-Aparte de las comisiones automáticas, el banco también cobra cuando una transacción falla. Estos cargos **se registran en el dashboard a título informativo** pero **NO se descuentan** del beneficio repartible (los asume íntegramente Lydia como titular del negocio):
+Aparte de las comisiones automáticas, el banco también cobra cuando una transacción falla. Estos cargos **se registran en el dashboard a título informativo** pero **NO se descuentan** del beneficio repartible (los asume íntegramente Fisio Inpulsa como titular del negocio):
 
 - **Rechazo de transferencia**: 3,50 € por cada rechazo
 - **Devolución de recibo domiciliado**: 15,50 € por cada devolución
@@ -133,13 +134,13 @@ Esta tabla muestra, para cada bono ofrecido por el centro, **cuánto paga el cli
 >
 > - Si el centro vende **40 bonos de 8 clases** en el mes → **40 × 74,20 € = 2.968,00 €** netos
 > - Menos gastos del centro (1.800 €) = **1.168,00 €** de beneficio repartible
-> - **70 % Inma = 817,60 €** · **30 % Lydia = 350,40 €**
+> - **70 % Inma = 817,60 €** · **30 % Fisio Inpulsa = 350,40 €**
 
 > Mismo volumen pero pagado **todo en transferencia**:
 >
 > - 40 × 74,03 € = **2.961,20 €** netos
 > - − 1.800 € = **1.161,20 €** de beneficio
-> - 70 % Inma = 812,84 € · 30 % Lydia = 348,36 €
+> - 70 % Inma = 812,84 € · 30 % Fisio Inpulsa = 348,36 €
 >
 > Diferencia de unos **5 € por las 40 comisiones de remesa**. Para volúmenes mayores conviene priorizar efectivo o tarjeta.
 
@@ -150,24 +151,36 @@ Esta tabla muestra, para cada bono ofrecido por el centro, **cuánto paga el cli
 [ELEGIR UNA OPCIÓN — preguntar a gestoría]:
 - **Opción A — Reparto simétrico**: si en algún mes el beneficio es negativo, Inma asume el 70% de la pérdida (cobra 0 y arrastra deuda para descontar de meses siguientes).
 - **Opción B — Solo participa en beneficios**: Inma cobra 0 los meses sin beneficio, sin arrastrar pérdidas.
-- **Opción C — Garantía mínima**: Lydia garantiza un mínimo de [X €] mensuales a Inma, pase lo que pase.
+- **Opción C — Garantía mínima**: Fisio Inpulsa garantiza un mínimo de [X €] mensuales a Inma, pase lo que pase.
 
-#### 🟡 Excepción: mes de inicio (junio 2026)
+#### 🟡 Excepción de inicio: junio y julio 2026
 
-Dado que Inma se incorpora a **mediados de junio** y que durante ese mes solo se podrá cobrar **media mensualidad** a los clientes por la situación extraordinaria del arranque:
+Inma se incorpora a **mediados de junio** y durante ese mes solo se podrá cobrar **media mensualidad** a los clientes por la situación extraordinaria del arranque. Para que el reparto sea justo, se aplica la siguiente regla excepcional:
 
-- Los **gastos del centro de junio** los asume **íntegramente Fisio Inpulsa (Lydia)**.
-- Inma **no participa en gastos** durante ese primer mes (no se le descuenta nada).
-- Sí cobra su **70% sobre el neto generado** desde su incorporación, sin que se le aplique la deducción de los 1.800 € de gastos fijos ese mes.
-- A partir de **julio 2026** entra en vigor el reparto estándar descrito en los apartados 3.1, 3.2 y 4.
+##### Junio 2026 (mes de incorporación)
+- Los **gastos del centro de junio (1.800 €)** los asume **íntegramente Fisio Inpulsa S.L.**.
+- Inma **no participa en los gastos** ese mes (no se le descuenta nada).
+- Inma cobra su **70 % sobre el neto generado** desde su incorporación, **sin deducir los 1.800 €** de gastos fijos.
 
-> *Motivo*: no sería justo que Inma asuma gastos de un mes en el que el centro factura solo la mitad por su propia incorporación a mitad de mes. Este es un ajuste único y excepcional, no un precedente.
+##### Julio 2026 (mes de transición — ajuste de compensación)
+Dado que la facturación de junio (que sirve también como aportación al funcionamiento del centro) se computa para la liquidación de julio, en el cálculo de julio se aplica una **reducción de gastos al 50 %**:
+
+- Ingresos a computar: facturación neta de **junio + julio** (todo lo generado en ambos meses).
+- Gastos a descontar: **900 €** (mitad de los 1.800 € habituales) en lugar de los 1.800 € completos.
+- Reparto estándar 70 % / 30 % sobre el beneficio resultante.
+
+> *Motivo*: como Fisio Inpulsa asumió los 1.800 € de gastos de junio pese a que solo hubo media mensualidad facturada, en julio se aplica una compensación equivalente (medio mes de gastos), reflejando que la facturación de junio cubre parcialmente los gastos del centro de ambos meses.
+
+##### Agosto 2026 en adelante
+Se aplica el reparto **estándar completo** descrito en los apartados 3.1, 3.2 y 4 (gastos del centro 1.800 € íntegros cada mes).
+
+> Este ajuste de inicio (junio + julio) es **único y excepcional**, no constituye precedente para futuras incorporaciones, vacaciones ni bajas.
 
 ### 3.4 Periodicidad y forma de pago
 
-- **Cierre mensual**: el día [X] de cada mes Lydia entrega a Inma el desglose completo del mes anterior (ingresos, gastos, beneficio, reparto) extraído del dashboard.
-- **Pago**: dentro de los [X] días siguientes al cierre, vía transferencia bancaria al IBAN de Inma.
-- **Factura de Inma**: Inma emite factura mensual a Lydia por el importe de su 70%, con IVA (21%) y retención IRPF según corresponda ([7% si está en los 2 primeros años de alta, 15% en adelante] — confirmar con gestoría).
+- **Cierre mensual**: el **último viernes de cada mes** Fisio Inpulsa realiza el cierre del mes y entrega a Inma el desglose completo (ingresos, gastos, beneficio, reparto) extraído del dashboard.
+- **Pago del reparto**: la transferencia bancaria del 70 % a Inma se realiza entre el **día 1 y el día 5 del mes siguiente** al cierre.
+- **Factura de Inma**: Inma emite factura mensual a Fisio Inpulsa S.L. por el importe de su 70 %, con IVA (21 %) y retención IRPF según corresponda ([7 % si está en los 2 primeros años de alta, 15 % en adelante] — confirmar con gestoría).
 
 ### 3.5 Derecho de información
 
@@ -212,7 +225,7 @@ Algunas partidas pueden modificarse de mutuo acuerdo según evolucione el centro
 |---|---:|---|
 | **Limpieza** | 100,00 € | Se puede **eliminar** si Inma asume la limpieza del centro semanalmente. En ese caso, esos 100 € pasan al fondo de previsión (ver 4.3) o se reasignan a otra partida por acuerdo. |
 | **Suministros** (Luz 50 + Agua 67 + Internet 25 = 142 €) | 142,00 € | Son una **estimación**. Por eso se reserva el fondo de imprevistos: si en verano sube el consumo de aire acondicionado o varía cualquier suministro, se cubre con dicho fondo. No se renegocia mes a mes. |
-| **Publicidad (Meta Ads)** | 100,00 € | El presupuesto puede **dividirse en varias campañas**. Las campañas las administra Lydia, pero la estrategia y reparto es **acuerdo conjunto** entre ambas partes. |
+| **Publicidad (Meta Ads)** | 100,00 € | El presupuesto puede **dividirse en varias campañas**. Las campañas las administra Fisio Inpulsa (Lydia), pero la estrategia y reparto es **acuerdo conjunto** entre ambas partes. |
 
 ### 4.3 Fondo de previsión y destino del sobrante
 
@@ -241,11 +254,11 @@ Los **1.800 € mensuales** acordados se ingresan en una cuenta específica del 
 - Gestionar Meta Ads y leads entrantes.
 - Respetar el contrato de confidencialidad del equipo (ya firmado en su primer acceso al dashboard).
 
-### Lydia (titularidad y supervisión)
-- Mantener al corriente alquiler, suministros, autónomos y seguros del centro.
+### Fisio Inpulsa S.L. (titularidad y supervisión)
+- Mantener al corriente alquiler, suministros, seguros y obligaciones fiscales del centro.
 - Gestionar el IBAN/remesas y la facturación a clientes con IVA.
-- Hacer el cierre mensual y entregar los números a Inma.
-- Pagar a Inma su 70% mensual dentro del plazo acordado.
+- Hacer el cierre mensual (último viernes) y entregar los números a Inma.
+- Pagar a Inma su 70 % mensual dentro del plazo acordado (1-5 del mes siguiente).
 - Llevar la contabilidad oficial con la gestoría.
 - Supervisar y resolver cualquier incidencia que requiera decisión de titular.
 
@@ -253,14 +266,14 @@ Los **1.800 € mensuales** acordados se ingresan en una cuenta específica del 
 
 ## 6. Régimen fiscal (a confirmar con gestoría)
 
-| Concepto | Lydia | Inma |
+| Concepto | Fisio Inpulsa S.L. | Inma (autónoma) |
 |---|---|---|
-| Tributación IRPF | Estimación directa | Estimación directa |
+| Tributación | Impuesto de Sociedades (modelo 200) | IRPF — Estimación directa |
 | Modelo IVA trimestral | 303 | 303 |
-| Modelo IRPF trimestral | 130 | 130 |
-| Resumen anual | 390, 100 | 390, 100 |
-| Retención IRPF en factura emitida | — | [7% / 15% — confirmar] |
-| Cuota autónomos | A cargo de cada parte por separado |
+| Pago fraccionado | Modelo 202 | Modelo 130 |
+| Resumen anual | 390 + 200 | 390, 100 |
+| Retención IRPF en factura emitida | — (es S.L.) | [7 % / 15 % — confirmar] |
+| Cuota autónomos | — | A cargo de Inma |
 
 ### Puntos a aclarar con la gestoría
 
@@ -276,7 +289,7 @@ Los **1.800 € mensuales** acordados se ingresan en una cuenta específica del 
 ## 7. Confidencialidad y propiedad
 
 - Inma reconoce el carácter confidencial de la información de clientes y se compromete a no compartirla bajo ningún concepto (ya firmado vía dashboard al acceder por primera vez).
-- La marca, logotipo, metodología, contenido formativo y materiales del Centro Kalüna son propiedad exclusiva de Lydia.
+- La marca, logotipo, metodología, contenido formativo y materiales del Centro Kalüna son propiedad exclusiva de Fisio Inpulsa S.L.
 - A la finalización del acuerdo, Inma se compromete a no abrir centro similar en un radio de [X km] durante [X meses], y a no captar de forma directa a clientes que conoció durante la colaboración.
 
 ---
@@ -289,15 +302,16 @@ El centro dispone de cámaras de seguridad instaladas conforme a la LOPDGDD 3/20
 
 ## 9. Duración y extinción
 
-- **Duración**: indefinida, con un periodo inicial de prueba de [X meses] durante el cual cualquiera puede terminar el contrato con preaviso de [15 días].
-- **Tras el periodo de prueba**: preaviso obligatorio de [1 mes / 2 meses] por cualquiera de las partes.
-- **Causas de extinción inmediata**:
+- **Duración**: **1 año natural**, **prorrogable** por periodos iguales salvo denuncia expresa de cualquiera de las partes con 15 días de antelación al vencimiento.
+- **Periodo de prueba**: los **primeros 3 meses** son periodo de prueba. Durante este tiempo cualquiera de las partes puede dar por terminado el contrato comunicándolo a la otra **con 15 días de preaviso**.
+- **Preavisos durante la vigencia del contrato**: cualquier cambio relevante, abandono, periodo de vacaciones, ausencias programadas o terminación anticipada debe comunicarse **con un mínimo de 15 días de antelación por ambas partes**.
+- **Causas de extinción inmediata** (sin necesidad de preaviso):
   - Incumplimiento grave de cualquier punto del contrato.
-  - Acuerdo mutuo.
-  - Fallecimiento o incapacidad permanente de una de las partes.
-  - Cese de actividad del centro.
+  - Acuerdo mutuo escrito.
+  - Fallecimiento o incapacidad permanente de la colaboradora.
+  - Cese definitivo de actividad del centro por parte de Fisio Inpulsa S.L.
 
-A la extinción, se hace cierre y reparto del mes en curso prorrateado según los días trabajados.
+A la extinción, se realiza cierre y reparto del mes en curso **prorrateado según los días trabajados**.
 
 ---
 
@@ -316,26 +330,38 @@ Las partes se comprometen a intentar resolver cualquier desacuerdo mediante diá
 
 ---
 
-## ❓ Datos que necesito de ti para cerrar el documento
+## ❓ Datos que aún necesito para cerrar el documento
 
-Cuando me los pases, los inserto y te dejo el documento final:
+Cuando me los pases, los inserto y te dejo el documento final listo para gestoría y abogado:
 
-1. **Apellidos completos de Inma**
-2. **DNI de Inma** y **dirección**
-3. **IBAN de Inma** (para los pagos mensuales)
-4. **¿Inma ya está dada de alta como autónoma?** Si no, fecha prevista de alta.
-5. **Fecha prevista de inicio** del acuerdo
-6. **Tu DNI y dirección completa del centro** + **epígrafe IAE**
-7. **Día del mes** para el cierre (sugiero día 5 del mes siguiente)
-8. **Plazo de pago** (sugiero 5 días desde el cierre)
-9. **Decisión sobre asunción de pérdidas** (Opción A, B o C del apartado 3.2)
-10. **Periodo de prueba** (sugiero 3 meses)
-11. **Preaviso de terminación** (sugiero 1 mes)
-12. **Radio y duración del pacto de no competencia** (típico: 5 km × 12 meses)
-13. **Tu ciudad** para jurisdicción
+### Sobre Inma
+1. **Apellidos completos**
+2. **DNI** y **dirección**
+3. **IBAN** (para los pagos mensuales)
+4. **¿Está dada de alta como autónoma?** Si no, fecha prevista de alta
 
-Y para la gestoría:
-14. ¿Quieres que añada algún tema concreto que ya te haya planteado dudas tu gestoría?
+### Sobre Fisio Inpulsa S.L.
+5. **IBAN de la sociedad** (para domiciliaciones y cobros)
+6. **Régimen fiscal de la S.L.** (estimación directa normal / módulos / etc. — lo sabe tu gestoría)
+
+### Acuerdos pendientes de decidir
+7. **Asunción de pérdidas** (Opción A, B o C del apartado 3.3)
+8. **Radio y duración del pacto de no competencia** post-contrato (típico: 5 km × 12 meses)
+9. **Ciudad** para jurisdicción en el apartado 10
+10. **Tema concreto adicional** que quieras incluir y que tu gestoría te haya planteado
+
+### Datos ya integrados
+- ✅ Titular: Fisio Inpulsa S.L. (B75589937)
+- ✅ Domicilio: Calle Alameda del Río, 4
+- ✅ Cierre mensual: último viernes
+- ✅ Pago reparto: día 1-5 del mes siguiente
+- ✅ Preavisos: 15 días por ambas partes
+- ✅ Duración: 1 año prorrogable
+- ✅ Periodo de prueba: 3 meses
+- ✅ Excepción de inicio: junio 100% Fisio Inpulsa + julio con gastos al 50%
+- ✅ Precios bonos: 4cl/50€ · 8cl/90€ · 12cl/120€ con tabla de neto por método de pago
+- ✅ Lista de gastos cerrada en 1.800€ con flexibilidad en limpieza/suministros/publicidad
+- ✅ Fondo de previsión: sobrante no se reparte, queda en cuenta del centro
 
 ---
 
