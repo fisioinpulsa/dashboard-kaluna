@@ -1,0 +1,212 @@
+# Propuesta de colaboración profesional — Centro Kalüna
+**Borrador para revisión de gestoría y posterior envío a la colaboradora**
+
+---
+
+## 1. Las partes
+
+**Titular del negocio**
+- Lydia Campillo
+- DNI: [TU DNI]
+- Centro de Pilates Kalüna
+- Dirección: [DIRECCIÓN COMPLETA DEL CENTRO]
+- Régimen: autónoma estimación directa, alta en IAE [EPÍGRAFE]
+- IBAN: [TU IBAN]
+
+**Colaboradora**
+- Inma [APELLIDOS]
+- DNI: [DNI DE INMA]
+- Dirección: [DIRECCIÓN]
+- Estado actual: [¿alta autónoma sí/no?]
+- IBAN: [IBAN DE INMA]
+
+---
+
+## 2. Naturaleza del acuerdo
+
+Las partes acuerdan formalizar un **contrato de cuenta en participación** (arts. 239-243 del Código de Comercio español) por el cual:
+
+- **Lydia** mantiene la titularidad íntegra del Centro Kalüna, sus contratos con clientes, marca, alquiler, instalaciones, mobiliario y permisos administrativos.
+- **Inma** aporta su trabajo personal para la gestión integral del centro (impartición de clases de Pilates y dirección operativa del día a día) a cambio de un porcentaje sobre el beneficio neto repartible.
+
+> **Nota para la gestoría**: confirmar idoneidad de esta figura frente a otras alternativas (TRADE con variable, sociedad civil, etc.) en función de la fiscalidad y obligaciones que mejor encajen.
+
+---
+
+## 3. Reparto de beneficios y método de cálculo
+
+### 3.1 Fórmula mensual
+
+```
+Facturación bruta del centro (con IVA)
+−  IVA repercutido (21% sobre clases de Pilates no terapéutico)
+=  Ingresos netos / Base imponible
+−  Gastos del centro acordados (ver apartado 4)
+─────────────────────────────────────────────
+=  BENEFICIO NETO REPARTIBLE
+   → 70% para Inma
+   → 30% para Lydia
+```
+
+### 3.2 Asunción de pérdidas
+
+[ELEGIR UNA OPCIÓN — preguntar a gestoría]:
+- **Opción A — Reparto simétrico**: si en algún mes el beneficio es negativo, Inma asume el 70% de la pérdida (cobra 0 y arrastra deuda para descontar de meses siguientes).
+- **Opción B — Solo participa en beneficios**: Inma cobra 0 los meses sin beneficio, sin arrastrar pérdidas.
+- **Opción C — Garantía mínima**: Lydia garantiza un mínimo de [X €] mensuales a Inma, pase lo que pase.
+
+### 3.3 Periodicidad y forma de pago
+
+- **Cierre mensual**: el día [X] de cada mes Lydia entrega a Inma el desglose completo del mes anterior (ingresos, gastos, beneficio, reparto) extraído del dashboard.
+- **Pago**: dentro de los [X] días siguientes al cierre, vía transferencia bancaria al IBAN de Inma.
+- **Factura de Inma**: Inma emite factura mensual a Lydia por el importe de su 70%, con IVA (21%) y retención IRPF según corresponda ([7% si está en los 2 primeros años de alta, 15% en adelante] — confirmar con gestoría).
+
+### 3.4 Derecho de información
+
+Inma tiene derecho a consultar en cualquier momento la contabilidad y los justificantes a través del dashboard (pestañas "Ventas del Centro" y "Gastos del Centro"). El dashboard registra automáticamente todos los movimientos.
+
+---
+
+## 4. Lista cerrada de gastos del centro
+
+Estos son los gastos fijos y variables que se descuentan ANTES del reparto de beneficios. Importe pactado: **1.800 € mensuales** (incluye margen de reserva para imprevistos).
+
+| # | Concepto | Importe |
+|---|---|---:|
+| 1 | Alquiler local | 561,00 € |
+| 2 | IRPF local | 104,00 € |
+| 3 | Luz | 50,00 € |
+| 4 | Agua | 67,00 € |
+| 5 | Internet y móvil | 25,00 € |
+| 6 | Plataforma (software gestión) | 80,60 € |
+| 7 | Protección de datos (LOPD) | 5,50 € |
+| 8 | Spotify | 21,00 € |
+| 9 | Préstamo | 430,00 € |
+| 10 | Seguro | 46,00 € |
+| 11 | Dashboard (hosting + BBDD) | 90,00 € |
+| 12 | Calcetines (reposición material) | 30,00 € |
+| 13 | Publicidad (Meta Ads) | 100,00 € |
+| 14 | Limpieza | 100,00 € |
+| 15 | Reserva imprevistos | 89,90 € |
+| | **TOTAL MENSUAL FIJO** | **1.800,00 €** |
+
+### Cláusulas de la lista de gastos
+
+- **Inmodificable sin acuerdo**: ningún concepto se añade ni se quita sin acuerdo escrito de ambas partes.
+- **Reserva de imprevistos (89,90 €/mes)**: si no se usa, se acumula como fondo del centro para reparaciones, averías o eventos no previstos (decisión sobre uso: [¿conjunta?]).
+- **Gastos extraordinarios** (sustitución de máquina averiada, reforma, etc.): se decide caso a caso y se descuenta del fondo de reserva si lo cubre; si no, requiere acuerdo previo de las partes para descontarlo del reparto.
+- **NO descontables**: el propio reparto, gastos personales de cualquiera de las partes, IVA (no es gasto real).
+
+---
+
+## 5. Responsabilidades de cada parte
+
+### Inma (gestión operativa)
+- Impartir las clases de Pilates según calendario semanal acordado.
+- Atender a clientes en el centro, gestionar altas, bajas y cambios.
+- Mantener el dashboard al día: clientes, plazas, ventas, lesiones.
+- Velar por el mantenimiento básico del material y la limpieza diaria.
+- Atender llamadas, WhatsApp y correos del centro en horario laboral.
+- Gestionar Meta Ads y leads entrantes.
+- Respetar el contrato de confidencialidad del equipo (ya firmado en su primer acceso al dashboard).
+
+### Lydia (titularidad y supervisión)
+- Mantener al corriente alquiler, suministros, autónomos y seguros del centro.
+- Gestionar el IBAN/remesas y la facturación a clientes con IVA.
+- Hacer el cierre mensual y entregar los números a Inma.
+- Pagar a Inma su 70% mensual dentro del plazo acordado.
+- Llevar la contabilidad oficial con la gestoría.
+- Supervisar y resolver cualquier incidencia que requiera decisión de titular.
+
+---
+
+## 6. Régimen fiscal (a confirmar con gestoría)
+
+| Concepto | Lydia | Inma |
+|---|---|---|
+| Tributación IRPF | Estimación directa | Estimación directa |
+| Modelo IVA trimestral | 303 | 303 |
+| Modelo IRPF trimestral | 130 | 130 |
+| Resumen anual | 390, 100 | 390, 100 |
+| Retención IRPF en factura emitida | — | [7% / 15% — confirmar] |
+| Cuota autónomos | A cargo de cada parte por separado |
+
+### Puntos a aclarar con la gestoría
+
+1. ¿Es viable la cuenta en participación con aportación únicamente de trabajo, o conviene formalizarlo como TRADE con tarifa variable?
+2. ¿Cómo se documenta la entrega del beneficio: como factura ordinaria de servicios profesionales o como "rendimiento de cuenta en participación"?
+3. ¿Qué retención IRPF aplica?
+4. Riesgos de inspección laboral por considerar la relación como laboral encubierta — ¿cómo blindarlo en el contrato?
+5. ¿Qué pasa con las bajas médicas, vacaciones, maternidad? ¿Hay derecho a alguna prestación o queda totalmente al margen?
+6. Coste adicional de gestoría por gestionar esta segunda autónoma y los pagos mensuales.
+
+---
+
+## 7. Confidencialidad y propiedad
+
+- Inma reconoce el carácter confidencial de la información de clientes y se compromete a no compartirla bajo ningún concepto (ya firmado vía dashboard al acceder por primera vez).
+- La marca, logotipo, metodología, contenido formativo y materiales del Centro Kalüna son propiedad exclusiva de Lydia.
+- A la finalización del acuerdo, Inma se compromete a no abrir centro similar en un radio de [X km] durante [X meses], y a no captar de forma directa a clientes que conoció durante la colaboración.
+
+---
+
+## 8. Cámaras de videovigilancia
+
+El centro dispone de cámaras de seguridad instaladas conforme a la LOPDGDD 3/2018 y al RGPD. Las grabaciones se conservan el tiempo legalmente permitido y solo accede la titular del centro. Inma queda informada y consiente.
+
+---
+
+## 9. Duración y extinción
+
+- **Duración**: indefinida, con un periodo inicial de prueba de [X meses] durante el cual cualquiera puede terminar el contrato con preaviso de [15 días].
+- **Tras el periodo de prueba**: preaviso obligatorio de [1 mes / 2 meses] por cualquiera de las partes.
+- **Causas de extinción inmediata**:
+  - Incumplimiento grave de cualquier punto del contrato.
+  - Acuerdo mutuo.
+  - Fallecimiento o incapacidad permanente de una de las partes.
+  - Cese de actividad del centro.
+
+A la extinción, se hace cierre y reparto del mes en curso prorrateado según los días trabajados.
+
+---
+
+## 10. Resolución de conflictos
+
+Las partes se comprometen a intentar resolver cualquier desacuerdo mediante diálogo directo. En caso de no llegar a acuerdo, se someten a mediación profesional antes de acudir a la vía judicial. Jurisdicción: tribunales de [TU CIUDAD].
+
+---
+
+## 11. Anexos
+
+- Anexo I: Lista detallada de gastos del centro (apartado 4)
+- Anexo II: Compromiso del equipo Kalüna (confidencialidad, PIN, cámaras) — ya firmado por Inma vía dashboard
+- Anexo III: [opcional] Inventario de material del centro a fecha de inicio
+- Anexo IV: [opcional] Calendario semanal de clases pactado
+
+---
+
+## ❓ Datos que necesito de ti para cerrar el documento
+
+Cuando me los pases, los inserto y te dejo el documento final:
+
+1. **Apellidos completos de Inma**
+2. **DNI de Inma** y **dirección**
+3. **IBAN de Inma** (para los pagos mensuales)
+4. **¿Inma ya está dada de alta como autónoma?** Si no, fecha prevista de alta.
+5. **Fecha prevista de inicio** del acuerdo
+6. **Tu DNI y dirección completa del centro** + **epígrafe IAE**
+7. **Día del mes** para el cierre (sugiero día 5 del mes siguiente)
+8. **Plazo de pago** (sugiero 5 días desde el cierre)
+9. **Decisión sobre asunción de pérdidas** (Opción A, B o C del apartado 3.2)
+10. **Periodo de prueba** (sugiero 3 meses)
+11. **Preaviso de terminación** (sugiero 1 mes)
+12. **Radio y duración del pacto de no competencia** (típico: 5 km × 12 meses)
+13. **Tu ciudad** para jurisdicción
+
+Y para la gestoría:
+14. ¿Quieres que añada algún tema concreto que ya te haya planteado dudas tu gestoría?
+
+---
+
+**Versión**: borrador v1 · 31/05/2026
+**Estado**: pendiente de revisión por gestoría y abogado mercantilista antes de envío a Inma

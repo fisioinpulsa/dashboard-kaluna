@@ -2819,8 +2819,13 @@ async function cargarVentasCentro() {
   renderVentasCentro(data);
 }
 
+const VC_INCIDENCIAS = {
+  rechazo_transferencia: { label: 'Rechazo transferencia', color: '#e67e22', icon: '↩️', defaultImp: 3.50 },
+  devolucion_recibo:     { label: 'Devolución de recibo',  color: '#c0392b', icon: '⛔', defaultImp: 15.50 }
+};
+
 function renderVentasCentro(data) {
-  const { ventas, resumen } = data;
+  const { ventas, incidencias, resumen } = data;
   const chipsTipo = Object.entries(resumen.por_tipo).map(([k,v]) => {
     const t = VC_TIPOS[k] || VC_TIPOS.otros;
     return `<span style="display:inline-block;background:${t.color};color:#fff;padding:.25rem .65rem;border-radius:14px;font-size:.78rem;margin:.15rem .2rem .15rem 0">${t.icon} ${t.label}: ${v.toFixed(2)}€</span>`;
@@ -2832,21 +2837,36 @@ function renderVentasCentro(data) {
 
   $('vc-resumen').innerHTML = `
     <div class="panel" style="padding:1rem">
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-bottom:1rem">
-        <div style="background:linear-gradient(135deg,#5a4f75,#7c6f9c);color:#fff;padding:1rem;border-radius:10px">
-          <div style="font-size:.78rem;opacity:.9">VENTA TOTAL</div>
-          <div style="font-size:1.6rem;font-weight:700">${resumen.total.toFixed(2)} €</div>
-          <div style="font-size:.75rem;opacity:.85">${resumen.num} ventas</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:.7rem;margin-bottom:1rem">
+        <div style="background:linear-gradient(135deg,#5a4f75,#7c6f9c);color:#fff;padding:.85rem 1rem;border-radius:10px">
+          <div style="font-size:.72rem;opacity:.9">VENTA TOTAL</div>
+          <div style="font-size:1.45rem;font-weight:700">${resumen.total.toFixed(2)} €</div>
+          <div style="font-size:.7rem;opacity:.85">${resumen.num} ventas</div>
         </div>
-        <div style="background:linear-gradient(135deg,#27ae60,#16a085);color:#fff;padding:1rem;border-radius:10px">
-          <div style="font-size:.78rem;opacity:.9">DINERO NETO (base imp.)</div>
-          <div style="font-size:1.6rem;font-weight:700">${resumen.base.toFixed(2)} €</div>
-          <div style="font-size:.75rem;opacity:.85">lo que ingresas tras IVA</div>
+        <div style="background:linear-gradient(135deg,#c0392b,#e67e22);color:#fff;padding:.85rem 1rem;border-radius:10px">
+          <div style="font-size:.72rem;opacity:.9">IVA REPERCUTIDO</div>
+          <div style="font-size:1.45rem;font-weight:700">${resumen.iva.toFixed(2)} €</div>
+          <div style="font-size:.7rem;opacity:.85">a Hacienda</div>
         </div>
-        <div style="background:linear-gradient(135deg,#c0392b,#e67e22);color:#fff;padding:1rem;border-radius:10px">
-          <div style="font-size:.78rem;opacity:.9">IVA REPERCUTIDO</div>
-          <div style="font-size:1.6rem;font-weight:700">${resumen.iva.toFixed(2)} €</div>
-          <div style="font-size:.75rem;opacity:.85">a liquidar a Hacienda</div>
+        <div style="background:linear-gradient(135deg,#16a085,#27ae60);color:#fff;padding:.85rem 1rem;border-radius:10px">
+          <div style="font-size:.72rem;opacity:.9">BASE (sin IVA)</div>
+          <div style="font-size:1.45rem;font-weight:700">${resumen.base.toFixed(2)} €</div>
+          <div style="font-size:.7rem;opacity:.85">ingreso real bruto</div>
+        </div>
+        <div style="background:linear-gradient(135deg,#34495e,#2c3e50);color:#fff;padding:.85rem 1rem;border-radius:10px">
+          <div style="font-size:.72rem;opacity:.9">COMISIONES</div>
+          <div style="font-size:1.45rem;font-weight:700">-${resumen.comisiones.toFixed(2)} €</div>
+          <div style="font-size:.7rem;opacity:.85">TPV 0,20% + remesa 0,35€</div>
+        </div>
+        <div style="background:linear-gradient(135deg,#7b241c,#922b21);color:#fff;padding:.85rem 1rem;border-radius:10px">
+          <div style="font-size:.72rem;opacity:.9">INCIDENCIAS</div>
+          <div style="font-size:1.45rem;font-weight:700">-${resumen.incidencias.toFixed(2)} €</div>
+          <div style="font-size:.7rem;opacity:.85">${resumen.num_incidencias} eventos</div>
+        </div>
+        <div style="background:linear-gradient(135deg,#2980b9,#3498db);color:#fff;padding:.85rem 1rem;border-radius:10px">
+          <div style="font-size:.72rem;opacity:.9">NETO REAL</div>
+          <div style="font-size:1.45rem;font-weight:700">${resumen.neto.toFixed(2)} €</div>
+          <div style="font-size:.7rem;opacity:.85">tras IVA, comisiones e incidencias</div>
         </div>
       </div>
       <div style="border-top:1px solid var(--border);padding-top:.6rem">
@@ -2859,38 +2879,179 @@ function renderVentasCentro(data) {
       </div>
     </div>`;
 
+  // === TABLA DE VENTAS ===
+  let tablaVentas = '';
   if (!ventas.length) {
-    $('vc-tabla').innerHTML = '<div class="panel" style="padding:2rem;text-align:center;color:var(--text-light)">No hay ventas registradas este mes. Pulsa <b>+ Nueva venta</b> para empezar.</div>';
-    return;
+    tablaVentas = '<div class="panel" style="padding:2rem;text-align:center;color:var(--text-light)">No hay ventas registradas este mes. Pulsa <b>+ Nueva venta</b> para empezar.</div>';
+  } else {
+    const filas = ventas.map(v => {
+      const t = VC_TIPOS[v.tipo] || VC_TIPOS.otros;
+      const p = VC_PAGOS[v.metodo_pago] || {};
+      const fecha = new Date(v.fecha).toLocaleDateString('es-ES', {day:'2-digit',month:'2-digit'});
+      const com = parseFloat(v.comision || 0);
+      return `<tr>
+        <td style="white-space:nowrap;font-size:.85rem">${fecha}</td>
+        <td><span style="background:${t.color};color:#fff;padding:.15rem .5rem;border-radius:10px;font-size:.72rem">${t.icon} ${t.label}</span></td>
+        <td>${v.cliente_nombre ? `<b>${v.cliente_nombre}</b>` : '<span style="color:var(--text-light)">—</span>'}${v.descripcion?`<br><span style="font-size:.75rem;color:var(--text-light)">${v.descripcion}</span>`:''}</td>
+        <td><span style="font-size:.78rem">${p.icon||''} ${p.label||v.metodo_pago}</span></td>
+        <td style="text-align:right;font-size:.8rem;color:var(--text-light)">${parseFloat(v.base_imponible).toFixed(2)}€</td>
+        <td style="text-align:right;font-size:.8rem;color:var(--text-light)">${parseFloat(v.iva_importe).toFixed(2)}€<br><span style="font-size:.65rem">(${parseFloat(v.iva_pct).toFixed(0)}%)</span></td>
+        <td style="text-align:right;font-size:.8rem;color:${com>0?'#7b241c':'#bbb'}">${com>0?'-'+com.toFixed(2)+'€':'—'}${v.comision_descripcion?`<br><span style="font-size:.62rem;color:#888">${v.comision_descripcion}</span>`:''}</td>
+        <td style="text-align:right;font-weight:700">${parseFloat(v.importe_total).toFixed(2)}€</td>
+        <td style="text-align:right;white-space:nowrap">
+          <button class="btn btn-sm btn-outline" onclick="editarVentaCentro(${v.id})">✏️</button>
+          ${esSuperAdmin() ? `<button class="btn btn-sm btn-danger" onclick="eliminarVentaCentro(${v.id})">🗑</button>` : ''}
+        </td>
+      </tr>`;
+    }).join('');
+    tablaVentas = `<div class="panel"><div class="panel-body">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem">
+        <h3 style="margin:0;color:#5a4f75;font-size:1rem">📋 Ventas del mes</h3>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead><tr>
+            <th>Fecha</th><th>Servicio</th><th>Cliente / Descripción</th><th>Pago</th>
+            <th style="text-align:right">Base</th><th style="text-align:right">IVA</th>
+            <th style="text-align:right">Comisión</th>
+            <th style="text-align:right">Total</th><th></th>
+          </tr></thead>
+          <tbody>${filas}</tbody>
+        </table>
+      </div>
+    </div></div>`;
   }
 
-  const filas = ventas.map(v => {
-    const t = VC_TIPOS[v.tipo] || VC_TIPOS.otros;
-    const p = VC_PAGOS[v.metodo_pago] || {};
-    const fecha = new Date(v.fecha).toLocaleDateString('es-ES', {day:'2-digit',month:'2-digit'});
-    return `<tr>
-      <td style="white-space:nowrap;font-size:.85rem">${fecha}</td>
-      <td><span style="background:${t.color};color:#fff;padding:.15rem .5rem;border-radius:10px;font-size:.72rem">${t.icon} ${t.label}</span></td>
-      <td>${v.cliente_nombre ? `<b>${v.cliente_nombre}</b>` : '<span style="color:var(--text-light)">—</span>'}${v.descripcion?`<br><span style="font-size:.75rem;color:var(--text-light)">${v.descripcion}</span>`:''}</td>
-      <td><span style="font-size:.78rem">${p.icon||''} ${p.label||v.metodo_pago}</span></td>
-      <td style="text-align:right;font-size:.8rem;color:var(--text-light)">${parseFloat(v.base_imponible).toFixed(2)}€</td>
-      <td style="text-align:right;font-size:.8rem;color:var(--text-light)">${parseFloat(v.iva_importe).toFixed(2)}€<br><span style="font-size:.65rem">(${parseFloat(v.iva_pct).toFixed(0)}%)</span></td>
-      <td style="text-align:right;font-weight:700">${parseFloat(v.importe_total).toFixed(2)}€</td>
-      <td style="text-align:right;white-space:nowrap">
-        <button class="btn btn-sm btn-outline" onclick="editarVentaCentro(${v.id})">✏️</button>
-        ${esSuperAdmin() ? `<button class="btn btn-sm btn-danger" onclick="eliminarVentaCentro(${v.id})">🗑</button>` : ''}
-      </td>
-    </tr>`;
-  }).join('');
+  // === TABLA DE INCIDENCIAS ===
+  let tablaInc;
+  if (!incidencias?.length) {
+    tablaInc = `<div class="panel" style="padding:1rem;margin-top:1rem;background:#f9f9f9">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <h3 style="margin:0;color:#7b241c;font-size:.95rem">⛔ Incidencias del mes</h3>
+          <p style="margin:.2rem 0 0;font-size:.78rem;color:var(--text-light)">Rechazos de transferencia (3,50 €) y devoluciones de recibos (15,50 €)</p>
+        </div>
+        <button class="btn btn-sm" style="background:#922b21;color:#fff" onclick="abrirModalIncidencia()">+ Registrar incidencia</button>
+      </div>
+      <p style="text-align:center;color:var(--text-light);margin:1rem 0 0;font-size:.85rem">Sin incidencias este mes ✓</p>
+    </div>`;
+  } else {
+    const filasInc = incidencias.map(x => {
+      const ti = VC_INCIDENCIAS[x.tipo] || {};
+      const fecha = new Date(x.fecha).toLocaleDateString('es-ES', {day:'2-digit',month:'2-digit'});
+      return `<tr>
+        <td style="white-space:nowrap;font-size:.85rem">${fecha}</td>
+        <td><span style="background:${ti.color||'#888'};color:#fff;padding:.15rem .5rem;border-radius:10px;font-size:.72rem">${ti.icon||'⚠️'} ${ti.label||x.tipo}</span></td>
+        <td>${x.cliente_nombre || '<span style="color:#bbb">—</span>'}</td>
+        <td style="font-size:.78rem;color:#666">${x.notas || ''}</td>
+        <td style="text-align:right;font-weight:700;color:#7b241c">-${parseFloat(x.importe).toFixed(2)}€</td>
+        <td style="text-align:right">
+          <button class="btn btn-sm btn-outline" onclick="editarIncidencia(${x.id})">✏️</button>
+          ${esSuperAdmin() ? `<button class="btn btn-sm btn-danger" onclick="eliminarIncidencia(${x.id})">🗑</button>` : ''}
+        </td>
+      </tr>`;
+    }).join('');
+    tablaInc = `<div class="panel" style="margin-top:1rem;border:1px solid #f5b7b1;background:#fdf2f0"><div class="panel-body">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem">
+        <div>
+          <h3 style="margin:0;color:#7b241c;font-size:1rem">⛔ Incidencias del mes</h3>
+          <p style="margin:.2rem 0 0;font-size:.78rem;color:var(--text-light)">Rechazos de transferencia y devoluciones de recibos (descontados del neto real)</p>
+        </div>
+        <button class="btn btn-sm" style="background:#922b21;color:#fff" onclick="abrirModalIncidencia()">+ Registrar incidencia</button>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead><tr>
+            <th>Fecha</th><th>Tipo</th><th>Cliente</th><th>Notas</th>
+            <th style="text-align:right">Importe</th><th></th>
+          </tr></thead>
+          <tbody>${filasInc}</tbody>
+        </table>
+      </div>
+    </div></div>`;
+  }
 
-  $('vc-tabla').innerHTML = `<div class="panel"><div class="panel-body"><div class="table-wrapper">
-    <table>
-      <thead><tr>
-        <th>Fecha</th><th>Servicio</th><th>Cliente / Descripción</th><th>Pago</th>
-        <th style="text-align:right">Base</th><th style="text-align:right">IVA</th><th style="text-align:right">Total</th><th></th>
-      </tr></thead>
-      <tbody>${filas}</tbody>
-    </table></div></div></div>`;
+  $('vc-tabla').innerHTML = tablaVentas + tablaInc;
+}
+
+// ====== INCIDENCIAS ======
+async function abrirModalIncidencia(id) {
+  let i = { fecha: new Date().toISOString().slice(0,10), tipo:'rechazo_transferencia', cliente_nombre:'', notas:'', importe:'' };
+  if (id) {
+    const mes = $('vc-mes').value, anio = $('vc-anio').value;
+    const data = await API(`/api/ventas-centro?mes=${mes}&anio=${anio}`);
+    const found = (data.incidencias||[]).find(x => x.id === id);
+    if (found) {
+      i = { ...found };
+      i.fecha = new Date(i.fecha).toISOString().slice(0,10);
+    }
+  }
+  const opciones = Object.entries(VC_INCIDENCIAS).map(([k,t]) => `<option value="${k}" ${k===i.tipo?'selected':''} data-imp="${t.defaultImp}">${t.icon} ${t.label} (${t.defaultImp.toFixed(2)}€)</option>`).join('');
+  abrirModal(`
+    <div style="padding:1rem;max-width:480px">
+      <h2 style="color:#7b241c;margin-top:0">${id ? 'Editar' : 'Nueva'} incidencia</h2>
+      <p style="font-size:.85rem;color:#666;margin-bottom:.8rem">Los rechazos y devoluciones se descuentan del neto real del mes.</p>
+      <div style="display:grid;gap:.7rem">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem">
+          <div>
+            <label style="font-size:.85rem;color:#5a4f75;font-weight:600">Fecha</label>
+            <input id="inc-fecha" type="date" value="${i.fecha}" style="width:100%;padding:.55rem;border:1px solid #ddd;border-radius:6px;margin-top:.25rem">
+          </div>
+          <div>
+            <label style="font-size:.85rem;color:#5a4f75;font-weight:600">Tipo</label>
+            <select id="inc-tipo" onchange="incAutoImporte()" style="width:100%;padding:.55rem;border:1px solid #ddd;border-radius:6px;margin-top:.25rem">${opciones}</select>
+          </div>
+        </div>
+        <div>
+          <label style="font-size:.85rem;color:#5a4f75;font-weight:600">Cliente afectado (opcional)</label>
+          <input id="inc-cliente" value="${(i.cliente_nombre||'').replace(/"/g,'&quot;')}" placeholder="Nombre cliente" style="width:100%;padding:.55rem;border:1px solid #ddd;border-radius:6px;margin-top:.25rem">
+        </div>
+        <div>
+          <label style="font-size:.85rem;color:#5a4f75;font-weight:600">Importe (€)</label>
+          <input id="inc-importe" type="number" step="0.01" value="${i.importe || ''}" placeholder="por defecto: 3,50 o 15,50" style="width:100%;padding:.55rem;border:1px solid #ddd;border-radius:6px;margin-top:.25rem">
+        </div>
+        <div>
+          <label style="font-size:.85rem;color:#5a4f75;font-weight:600">Notas (opcional)</label>
+          <textarea id="inc-notas" rows="2" style="width:100%;padding:.55rem;border:1px solid #ddd;border-radius:6px;margin-top:.25rem;font-family:inherit;resize:vertical">${i.notas||''}</textarea>
+        </div>
+      </div>
+      <div style="display:flex;gap:.5rem;justify-content:flex-end;margin-top:1rem">
+        <button class="btn btn-outline" onclick="cerrarModal()">Cancelar</button>
+        <button class="btn" style="background:#922b21;color:#fff" onclick="guardarIncidencia(${id||'null'})">${id?'Guardar cambios':'Registrar'}</button>
+      </div>
+    </div>
+  `);
+}
+
+function incAutoImporte() {
+  const sel = $('inc-tipo');
+  const opt = sel.options[sel.selectedIndex];
+  const def = opt?.dataset?.imp;
+  if (def && !$('inc-importe').value) $('inc-importe').value = def;
+}
+
+async function guardarIncidencia(id) {
+  const body = {
+    fecha: $('inc-fecha').value,
+    tipo: $('inc-tipo').value,
+    cliente_nombre: $('inc-cliente').value.trim(),
+    importe: parseFloat($('inc-importe').value) || VC_INCIDENCIAS[$('inc-tipo').value]?.defaultImp,
+    notas: $('inc-notas').value.trim()
+  };
+  if (id) await PUT(`/api/ventas-centro/incidencias/${id}`, body);
+  else await POST('/api/ventas-centro/incidencias', body);
+  try { LOG(id?'editar':'crear', 'ventas-centro', `Incidencia ${body.tipo} ${body.importe}€`); } catch(e){}
+  cerrarModal();
+  cargarVentasCentro();
+}
+
+async function editarIncidencia(id) { abrirModalIncidencia(id); }
+
+async function eliminarIncidencia(id) {
+  if (!confirm('¿Eliminar esta incidencia?')) return;
+  await DEL(`/api/ventas-centro/incidencias/${id}`);
+  try { LOG('eliminar','ventas-centro',`Incidencia #${id}`); } catch(e){}
+  cargarVentasCentro();
 }
 
 async function abrirModalVentaCentro(id) {
