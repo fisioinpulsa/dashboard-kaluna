@@ -11,8 +11,6 @@
 - Centro: Centro de Pilates Kalüna
 - Domicilio social y del centro: **Calle Alameda del Río, 4**
 - Representada en este contrato por: Lydia Campillo (administradora)
-- IBAN: [IBAN DE FISIO INPULSA]
-- Régimen fiscal: [confirmar con gestoría — estimación directa / módulos]
 
 **Colaboradora**
 - Nombre: Inma [APELLIDOS]
@@ -30,7 +28,7 @@ Las partes acuerdan formalizar un **contrato de cuenta en participación** (arts
 - **Fisio Inpulsa S.L.** mantiene la titularidad íntegra del Centro Kalüna, sus contratos con clientes, marca, alquiler, instalaciones, mobiliario y permisos administrativos.
 - **Inma** aporta su trabajo personal para la gestión integral del centro (impartición de clases de Pilates y dirección operativa del día a día) a cambio de un porcentaje sobre el beneficio neto repartible.
 
-> **Nota para la gestoría**: confirmar idoneidad de esta figura frente a otras alternativas (TRADE con variable, sociedad civil, etc.) en función de la fiscalidad y obligaciones que mejor encajen.
+> **Nota para la gestoría**: confirmar si encaja mejor formalizarlo como **TRADE con tarifa variable** o como **contrato mercantil de cuenta en participación**.
 
 ---
 
@@ -83,12 +81,12 @@ BENEFICIO NETO REPARTIBLE:                        3.135,18 €
 
 #### Incidencias bancarias (rechazos y devoluciones)
 
-Aparte de las comisiones automáticas, el banco también cobra cuando una transacción falla. Estos cargos **se registran en el dashboard a título informativo** pero **NO se descuentan** del beneficio repartible (los asume íntegramente Fisio Inpulsa como titular del negocio):
+Aparte de las comisiones automáticas, el banco también cobra cuando una transacción falla. Estos cargos **se registran en el dashboard** y se **cubren con la partida de reserva de imprevistos del mes correspondiente** (ver apartado 4):
 
 - **Rechazo de transferencia**: 3,50 € por cada rechazo
 - **Devolución de recibo domiciliado**: 15,50 € por cada devolución
 
-> *Motivo*: estos cargos pueden ser puntuales y derivar de problemas con el cliente final. Quedan reflejados en la pestaña "Ventas del Centro" para que ambas partes los vean, pero no afectan al cálculo del reparto.
+> *Motivo*: para que estos eventos no distorsionen el reparto mensual, se imputan directamente al fondo de imprevistos. Si en algún mes las incidencias superan la reserva disponible, se decide caso a caso entre ambas partes.
 
 ### 3.2 Tabla de precios y neto real por bono y método de pago
 
@@ -150,10 +148,13 @@ Esta tabla muestra, para cada bono ofrecido por el centro, **cuánto paga el cli
 
 ### 3.3 Asunción de pérdidas
 
-[ELEGIR UNA OPCIÓN — preguntar a gestoría]:
-- **Opción A — Reparto simétrico**: si en algún mes el beneficio es negativo, Inma asume el 70% de la pérdida (cobra 0 y arrastra deuda para descontar de meses siguientes).
-- **Opción B — Solo participa en beneficios**: Inma cobra 0 los meses sin beneficio, sin arrastrar pérdidas.
-- **Opción C — Garantía mínima**: Fisio Inpulsa garantiza un mínimo de [X €] mensuales a Inma, pase lo que pase.
+Si en algún mes el resultado fuera negativo (es decir, los ingresos netos del centro no cubrieran los 1.800 € de gastos pactados):
+
+- **Las pérdidas se asumen al 50 % por cada parte** (Fisio Inpulsa S.L. e Inma).
+- En la práctica, esto significa que **los gastos del centro de ese mes los abona cada parte al 50 %** (900 € cada una).
+- Ese mes, Inma no percibe reparto. La cuota que le corresponde aportar se descuenta de la facturación del mes siguiente cuando el centro vuelva a generar beneficio.
+
+> *Motivo*: que tanto el beneficio como las pérdidas se compartan de forma equilibrada, alineando los intereses de ambas partes en la sostenibilidad del centro.
 
 #### 🟡 Excepción de inicio: junio 2026 (mes de incorporación)
 
@@ -279,7 +280,7 @@ Los **1.800 € mensuales** acordados se ingresan en una cuenta específica del 
 - Mantener el dashboard al día: clientes, plazas, ventas, lesiones.
 - Velar por el mantenimiento básico del material y la limpieza diaria.
 - Atender llamadas, WhatsApp y correos del centro en horario laboral.
-- Gestionar Meta Ads y leads entrantes.
+- **Atender los leads que Fisio Inpulsa le proporcione** (la gestión de campañas Meta Ads no corresponde a Inma).
 - Respetar el contrato de confidencialidad del equipo (ya firmado en su primer acceso al dashboard).
 
 ### Fisio Inpulsa S.L. (titularidad y supervisión)
@@ -309,15 +310,6 @@ Los **1.800 € mensuales** acordados se ingresan en una cuenta específica del 
 | Resumen anual | 390 + 200 | 390, 100 |
 | Retención IRPF en factura emitida | — (es S.L.) | [7 % / 15 % — confirmar] |
 | Cuota autónomos | — | A cargo de Inma |
-
-### Puntos a aclarar con la gestoría
-
-1. ¿Es viable la cuenta en participación con aportación únicamente de trabajo, o conviene formalizarlo como TRADE con tarifa variable?
-2. ¿Cómo se documenta la entrega del beneficio: como factura ordinaria de servicios profesionales o como "rendimiento de cuenta en participación"?
-3. ¿Qué retención IRPF aplica?
-4. Riesgos de inspección laboral por considerar la relación como laboral encubierta — ¿cómo blindarlo en el contrato?
-5. ¿Qué pasa con las bajas médicas, vacaciones, maternidad? ¿Hay derecho a alguna prestación o queda totalmente al margen?
-6. Coste adicional de gestoría por gestionar esta segunda autónoma y los pagos mensuales.
 
 ---
 
@@ -362,41 +354,6 @@ Las partes se comprometen a intentar resolver cualquier desacuerdo mediante diá
 - Anexo II: Compromiso del equipo Kalüna (confidencialidad, PIN, cámaras) — ya firmado por Inma vía dashboard
 - Anexo III: [opcional] Inventario de material del centro a fecha de inicio
 - Anexo IV: [opcional] Calendario semanal de clases pactado
-
----
-
-## ❓ Datos que aún necesito para cerrar el documento
-
-Cuando me los pases, los inserto y te dejo el documento final listo para gestoría y abogado:
-
-### Sobre Inma
-1. **Apellidos completos**
-2. **DNI** y **dirección**
-3. **IBAN** (para los pagos mensuales)
-4. **¿Está dada de alta como autónoma?** Si no, fecha prevista de alta
-
-### Sobre Fisio Inpulsa S.L.
-5. **IBAN de la sociedad** (para domiciliaciones y cobros)
-6. **Régimen fiscal de la S.L.** (estimación directa normal / módulos / etc. — lo sabe tu gestoría)
-
-### Acuerdos pendientes de decidir
-7. **Asunción de pérdidas** (Opción A, B o C del apartado 3.3)
-8. **Radio y duración del pacto de no competencia** post-contrato (típico: 5 km × 12 meses)
-9. **Ciudad** para jurisdicción en el apartado 10
-10. **Tema concreto adicional** que quieras incluir y que tu gestoría te haya planteado
-
-### Datos ya integrados
-- ✅ Titular: Fisio Inpulsa S.L. (B75589937)
-- ✅ Domicilio: Calle Alameda del Río, 4
-- ✅ Cierre mensual: último viernes
-- ✅ Pago reparto: día 1-5 del mes siguiente
-- ✅ Preavisos: 15 días por ambas partes
-- ✅ Duración: 1 año prorrogable
-- ✅ Periodo de prueba: 3 meses
-- ✅ Excepción de inicio: junio 100% Fisio Inpulsa + julio con gastos al 50%
-- ✅ Precios bonos: 4cl/50€ · 8cl/90€ · 12cl/120€ con tabla de neto por método de pago
-- ✅ Lista de gastos cerrada en 1.800€ con flexibilidad en limpieza/suministros/publicidad
-- ✅ Fondo de previsión: sobrante no se reparte, queda en cuenta del centro
 
 ---
 
