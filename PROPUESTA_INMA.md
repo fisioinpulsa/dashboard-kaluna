@@ -152,6 +152,17 @@ Esta tabla muestra, para cada bono ofrecido por el centro, **cuánto paga el cli
 - **Opción B — Solo participa en beneficios**: Inma cobra 0 los meses sin beneficio, sin arrastrar pérdidas.
 - **Opción C — Garantía mínima**: Lydia garantiza un mínimo de [X €] mensuales a Inma, pase lo que pase.
 
+#### 🟡 Excepción: mes de inicio (junio 2026)
+
+Dado que Inma se incorpora a **mediados de junio** y que durante ese mes solo se podrá cobrar **media mensualidad** a los clientes por la situación extraordinaria del arranque:
+
+- Los **gastos del centro de junio** los asume **íntegramente Fisio Inpulsa (Lydia)**.
+- Inma **no participa en gastos** durante ese primer mes (no se le descuenta nada).
+- Sí cobra su **70% sobre el neto generado** desde su incorporación, sin que se le aplique la deducción de los 1.800 € de gastos fijos ese mes.
+- A partir de **julio 2026** entra en vigor el reparto estándar descrito en los apartados 3.1, 3.2 y 4.
+
+> *Motivo*: no sería justo que Inma asuma gastos de un mes en el que el centro factura solo la mitad por su propia incorporación a mitad de mes. Este es un ajuste único y excepcional, no un precedente.
+
 ### 3.4 Periodicidad y forma de pago
 
 - **Cierre mensual**: el día [X] de cada mes Lydia entrega a Inma el desglose completo del mes anterior (ingresos, gastos, beneficio, reparto) extraído del dashboard.
@@ -187,12 +198,35 @@ Estos son los gastos fijos y variables que se descuentan ANTES del reparto de be
 | 15 | Reserva imprevistos | 89,90 € |
 | | **TOTAL MENSUAL FIJO** | **1.800,00 €** |
 
-### Cláusulas de la lista de gastos
+### 4.1 Cláusulas generales
 
-- **Inmodificable sin acuerdo**: ningún concepto se añade ni se quita sin acuerdo escrito de ambas partes.
-- **Reserva de imprevistos (89,90 €/mes)**: si no se usa, se acumula como fondo del centro para reparaciones, averías o eventos no previstos (decisión sobre uso: [¿conjunta?]).
-- **Gastos extraordinarios** (sustitución de máquina averiada, reforma, etc.): se decide caso a caso y se descuenta del fondo de reserva si lo cubre; si no, requiere acuerdo previo de las partes para descontarlo del reparto.
+- **Modificación de la lista**: ningún concepto se añade ni se quita sin acuerdo escrito de ambas partes.
+- **Gastos extraordinarios** (sustitución de máquina averiada, reforma, etc.): se decide caso a caso. Se descuenta del fondo de previsión (ver 4.3) si lo cubre; si no, requiere acuerdo previo de las partes.
 - **NO descontables**: el propio reparto, gastos personales de cualquiera de las partes, IVA (no es gasto real).
+
+### 4.2 Partidas con flexibilidad pactada
+
+Algunas partidas pueden modificarse de mutuo acuerdo según evolucione el centro:
+
+| Partida | Importe actual | Condición de flexibilidad |
+|---|---:|---|
+| **Limpieza** | 100,00 € | Se puede **eliminar** si Inma asume la limpieza del centro semanalmente. En ese caso, esos 100 € pasan al fondo de previsión (ver 4.3) o se reasignan a otra partida por acuerdo. |
+| **Suministros** (Luz 50 + Agua 67 + Internet 25 = 142 €) | 142,00 € | Son una **estimación**. Por eso se reserva el fondo de imprevistos: si en verano sube el consumo de aire acondicionado o varía cualquier suministro, se cubre con dicho fondo. No se renegocia mes a mes. |
+| **Publicidad (Meta Ads)** | 100,00 € | El presupuesto puede **dividirse en varias campañas**. Las campañas las administra Lydia, pero la estrategia y reparto es **acuerdo conjunto** entre ambas partes. |
+
+### 4.3 Fondo de previsión y destino del sobrante
+
+Los **1.800 € mensuales** acordados se ingresan en una cuenta específica del centro destinada exclusivamente a esa finalidad:
+
+- **Si en un mes los gastos reales son menores** que los presupuestados (ej: la luz sale 35 € en lugar de 50 €), la diferencia **NO se reparte como beneficio**.
+- El sobrante queda acumulado en esa cuenta como **fondo de previsión del centro**.
+- Este fondo se usa para:
+  - Cubrir desviaciones puntuales (suministros que suben en verano, reparaciones, averías de material, etc.).
+  - Renovación de equipamiento.
+  - Cualquier gasto extraordinario que requiera acuerdo de ambas partes.
+- **El fondo de previsión nunca se reparte** ni a Inma ni a Fisio Inpulsa. Es patrimonio del centro y queda destinado a su sostenibilidad y mantenimiento.
+
+> *Motivo*: garantizar la estabilidad económica del centro frente a imprevistos sin que dependa cada mes de decisiones de las partes ni afecte al reparto.
 
 ---
 
