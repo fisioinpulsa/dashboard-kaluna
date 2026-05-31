@@ -60,7 +60,7 @@ router.put('/:id/resolver', async (req, res) => {
 
 router.delete('/:id', async (req, res) => {
   try {
-    if (req.user.rol !== 'admin') return res.status(403).json({ error: 'Solo admin' });
+    if (req.user.rol !== 'admin' && req.user.rol !== 'colaboradora') return res.status(403).json({ error: 'Solo admin o colaboradora' });
     await query("DELETE FROM kaluna_avisos WHERE id = $1", [req.params.id]);
     res.json({ ok: true });
   } catch (err) {

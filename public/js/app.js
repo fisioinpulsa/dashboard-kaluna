@@ -2,6 +2,7 @@ let currentUser = null;
 const $ = id => document.getElementById(id);
 const esAdmin = () => currentUser?.rol === 'admin';
 const esSuperAdmin = () => currentUser?.rol === 'admin' && currentUser?.id === 1;
+const esColaboradora = () => currentUser?.rol === 'colaboradora';
 const API = path => fetch(path).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); });
 const POST = (path, body) => fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(r => r.json());
 const PUT = (path, body) => fetch(path, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(r => r.json());
@@ -14,21 +15,38 @@ async function init() {
     currentUser = await API('/api/auth/me');
     $('user-info').textContent = `${currentUser.nombre} (${currentUser.rol})`;
     const esAdmin = currentUser.rol === 'admin';
-    if (!esAdmin) {
+    const esColab = currentUser.rol === 'colaboradora';
+
+    if (esColab) {
+      // COLABORADORA: lista blanca → solo pestañas con clase colab-ok
+      document.querySelectorAll('.nav-item').forEach(el => {
+        if (!el.classList.contains('colab-ok')) el.style.display = 'none';
+      });
+      // Para sus pestañas, aunque tengan admin-only/superadmin-only, las muestra
+      document.querySelectorAll('.nav-item.colab-ok').forEach(el => { el.style.display = ''; });
+      // Sección inicial: Clientes
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      $('sec-clientes')?.classList.add('active');
+      document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+      document.querySelector('[data-section="clientes"]')?.classList.add('active');
+    } else if (!esAdmin) {
+      // TRABAJADORA: oculta admin-only y empieza en Diario
       document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
-      // Trabajadoras: empiezan en Diario, no ven Inicio
+      document.querySelectorAll('.superadmin-only').forEach(el => el.style.display = 'none');
       document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
       $('sec-diario').classList.add('active');
       document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
       document.querySelector('[data-section="diario"]').classList.add('active');
-    }
-    // Solo Lydia (id=1) ve secciones superadmin como IBAN
-    if (currentUser.id !== 1) {
-      document.querySelectorAll('.superadmin-only').forEach(el => el.style.display = 'none');
+    } else {
+      // ADMIN no superadmin: oculta superadmin-only
+      if (currentUser.id !== 1) {
+        document.querySelectorAll('.superadmin-only').forEach(el => el.style.display = 'none');
+      }
     }
     setupNav();
     $('fecha-hoy').textContent = new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-    if (esAdmin) cargarInicio();
+    if (esColab) cargarClientes();
+    else if (esAdmin) cargarInicio();
     else cargarDiario();
   } catch {
     window.location.href = '/login';

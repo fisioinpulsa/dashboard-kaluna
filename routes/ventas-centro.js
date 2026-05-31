@@ -5,11 +5,11 @@ const { verificarToken } = require('../middleware/auth');
 router.use(verificarToken);
 
 // Solo admin (titular y colaboradora) — no trabajadoras
-function soloAdmin(req, res, next) {
-  if (req.user.rol !== 'admin') return res.status(403).json({ error: 'Solo admin' });
+function soloAdminOColab(req, res, next) {
+  if (req.user.rol !== 'admin' && req.user.rol !== 'colaboradora') return res.status(403).json({ error: 'Solo admin o colaboradora' });
   next();
 }
-router.use(soloAdmin);
+router.use(soloAdminOColab);
 
 const TIPOS_VALIDOS = ['suscripcion', 'calcetines', 'bebida', 'clase_suelta', 'fianza', 'otros'];
 const PAGOS_VALIDOS = ['tarjeta', 'efectivo', 'domiciliacion'];

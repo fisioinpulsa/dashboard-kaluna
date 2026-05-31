@@ -2,15 +2,17 @@ const router = require('express').Router();
 const { query } = require('../db');
 const { verificarToken } = require('../middleware/auth');
 
-// Solo superadmin (Lydia, id=1) puede ver/editar
-function soloSuperAdmin(req, res, next) {
-  if (req.user.rol !== 'admin' || req.user.id !== 1) {
+// Superadmin (Lydia, id=1) o rol colaboradora pueden ver/editar
+function soloSuperAdminOColab(req, res, next) {
+  const esLydia = req.user.id === 1;
+  const esColab = req.user.rol === 'colaboradora';
+  if (!esLydia && !esColab) {
     return res.status(403).json({ error: 'Acceso restringido' });
   }
   next();
 }
 
-router.use(verificarToken, soloSuperAdmin);
+router.use(verificarToken, soloSuperAdminOColab);
 
 // Obtener todos los IBANs agrupados por días/semana
 router.get('/', async (req, res) => {
