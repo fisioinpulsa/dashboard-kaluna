@@ -87,20 +87,78 @@ Aparte de las comisiones automáticas, el banco también cobra cuando una transa
 
 > *Motivo*: estos cargos pueden ser puntuales y derivar de problemas con el cliente final. Quedan reflejados en la pestaña "Ventas del Centro" para que ambas partes los vean, pero no afectan al cálculo del reparto.
 
-### 3.2 Asunción de pérdidas
+### 3.2 Tabla de precios y neto real por bono y método de pago
+
+Esta tabla muestra, para cada bono ofrecido por el centro, **cuánto paga el cliente** y **cuánto queda realmente al centro** según el método de pago elegido. Es la referencia que ambas partes deben tener clara para calcular el reparto mensual.
+
+**Base de cálculo:**
+- IVA aplicado: 21 % (clases de Pilates no terapéutico)
+- Comisión TPV (tarjeta): 0,20 % del importe total
+- Comisión transferencia (domiciliación / remesa): 0,35 € fijo por recibo
+- Comisión efectivo: 0,00 €
+
+#### Bono 4 clases — **50,00 €** (precio al cliente)
+
+| Método de pago | Precio bruto | IVA 21 % | Base imponible | Comisión bancaria | **NETO REAL al centro** |
+|---|---:|---:|---:|---:|---:|
+| 💵 Efectivo | 50,00 € | −8,68 € | 41,32 € | 0,00 € | **41,32 €** |
+| 💳 Tarjeta (TPV) | 50,00 € | −8,68 € | 41,32 € | −0,10 € | **41,22 €** |
+| 🏦 Transferencia (remesa) | 50,00 € | −8,68 € | 41,32 € | −0,35 € | **40,97 €** |
+
+#### Bono 8 clases — **90,00 €** (precio al cliente)
+
+| Método de pago | Precio bruto | IVA 21 % | Base imponible | Comisión bancaria | **NETO REAL al centro** |
+|---|---:|---:|---:|---:|---:|
+| 💵 Efectivo | 90,00 € | −15,62 € | 74,38 € | 0,00 € | **74,38 €** |
+| 💳 Tarjeta (TPV) | 90,00 € | −15,62 € | 74,38 € | −0,18 € | **74,20 €** |
+| 🏦 Transferencia (remesa) | 90,00 € | −15,62 € | 74,38 € | −0,35 € | **74,03 €** |
+
+#### Bono 12 clases — **120,00 €** (precio al cliente)
+
+| Método de pago | Precio bruto | IVA 21 % | Base imponible | Comisión bancaria | **NETO REAL al centro** |
+|---|---:|---:|---:|---:|---:|
+| 💵 Efectivo | 120,00 € | −20,83 € | 99,17 € | 0,00 € | **99,17 €** |
+| 💳 Tarjeta (TPV) | 120,00 € | −20,83 € | 99,17 € | −0,24 € | **98,93 €** |
+| 🏦 Transferencia (remesa) | 120,00 € | −20,83 € | 99,17 € | −0,35 € | **98,82 €** |
+
+#### Lecturas clave de esta tabla
+
+- **El método de pago afecta poco al neto** (céntimos de diferencia), pero **a lo largo del mes suma**. Ejemplo: 50 transferencias × 0,35 € = 17,50 € menos al mes.
+- **El IVA es el descuento más grande** (≈ 17 % del precio bruto). No es pérdida, es dinero que se cobra para Hacienda y se ingresa trimestralmente.
+- **El neto real es la base sobre la que se calcula el reparto 70/30** una vez se descuentan los gastos del centro.
+
+#### Cómo se reflejan estos precios en el reparto mensual
+
+> Ejemplo mes con 100 % bonos de 8 clases pagados por tarjeta:
+>
+> - Si el centro vende **40 bonos de 8 clases** en el mes → **40 × 74,20 € = 2.968,00 €** netos
+> - Menos gastos del centro (1.800 €) = **1.168,00 €** de beneficio repartible
+> - **70 % Inma = 817,60 €** · **30 % Lydia = 350,40 €**
+
+> Mismo volumen pero pagado **todo en transferencia**:
+>
+> - 40 × 74,03 € = **2.961,20 €** netos
+> - − 1.800 € = **1.161,20 €** de beneficio
+> - 70 % Inma = 812,84 € · 30 % Lydia = 348,36 €
+>
+> Diferencia de unos **5 € por las 40 comisiones de remesa**. Para volúmenes mayores conviene priorizar efectivo o tarjeta.
+
+---
+
+### 3.3 Asunción de pérdidas
 
 [ELEGIR UNA OPCIÓN — preguntar a gestoría]:
 - **Opción A — Reparto simétrico**: si en algún mes el beneficio es negativo, Inma asume el 70% de la pérdida (cobra 0 y arrastra deuda para descontar de meses siguientes).
 - **Opción B — Solo participa en beneficios**: Inma cobra 0 los meses sin beneficio, sin arrastrar pérdidas.
 - **Opción C — Garantía mínima**: Lydia garantiza un mínimo de [X €] mensuales a Inma, pase lo que pase.
 
-### 3.3 Periodicidad y forma de pago
+### 3.4 Periodicidad y forma de pago
 
 - **Cierre mensual**: el día [X] de cada mes Lydia entrega a Inma el desglose completo del mes anterior (ingresos, gastos, beneficio, reparto) extraído del dashboard.
 - **Pago**: dentro de los [X] días siguientes al cierre, vía transferencia bancaria al IBAN de Inma.
 - **Factura de Inma**: Inma emite factura mensual a Lydia por el importe de su 70%, con IVA (21%) y retención IRPF según corresponda ([7% si está en los 2 primeros años de alta, 15% en adelante] — confirmar con gestoría).
 
-### 3.4 Derecho de información
+### 3.5 Derecho de información
 
 Inma tiene derecho a consultar en cualquier momento la contabilidad y los justificantes a través del dashboard (pestañas "Ventas del Centro" y "Gastos del Centro"). El dashboard registra automáticamente todos los movimientos.
 
