@@ -2840,8 +2840,11 @@ function renderVentasCentro(data) {
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:.7rem;margin-bottom:1rem">
         <div style="background:linear-gradient(135deg,#5a4f75,#7c6f9c);color:#fff;padding:.85rem 1rem;border-radius:10px">
           <div style="font-size:.72rem;opacity:.9">VENTA TOTAL</div>
-          <div style="font-size:1.45rem;font-weight:700">${resumen.total.toFixed(2)} €</div>
-          <div style="font-size:.7rem;opacity:.85">${resumen.num} ventas</div>
+          <div style="display:flex;align-items:baseline;gap:.4rem;flex-wrap:wrap">
+            <div style="font-size:1.45rem;font-weight:700">${resumen.total.toFixed(2)} €</div>
+            <div style="font-size:.95rem;opacity:.95">→ <b>${resumen.neto.toFixed(2)} €</b> neto</div>
+          </div>
+          <div style="font-size:.7rem;opacity:.85">${resumen.num} venta${resumen.num===1?'':'s'} · bruto → neto (sin IVA ni comisiones)</div>
         </div>
         <div style="background:linear-gradient(135deg,#c0392b,#e67e22);color:#fff;padding:.85rem 1rem;border-radius:10px">
           <div style="font-size:.72rem;opacity:.9">IVA REPERCUTIDO</div>
