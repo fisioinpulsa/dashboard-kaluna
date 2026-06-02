@@ -1,5 +1,5 @@
-# Propuesta de colaboración profesional — Centro Kalüna
-**Borrador para revisión de gestoría y posterior envío a la colaboradora**
+# Contrato mercantil de colaboración con autónoma — Centro Kalüna
+**Propuesta de colaboración profesional**
 
 ---
 
@@ -23,12 +23,12 @@
 
 ## 2. Naturaleza del acuerdo
 
-Las partes acuerdan formalizar un **contrato de cuenta en participación** (arts. 239-243 del Código de Comercio español) por el cual:
+Las partes acuerdan formalizar un **contrato mercantil de colaboración con autónoma** por el cual:
 
 - **Fisio Inpulsa S.L.** mantiene la titularidad íntegra del Centro Kalüna, sus contratos con clientes, marca, alquiler, instalaciones, mobiliario y permisos administrativos.
-- **Inma** aporta su trabajo personal para la gestión integral del centro (impartición de clases de Pilates y dirección operativa del día a día) a cambio de un porcentaje sobre el beneficio neto repartible.
+- **Inma**, en su condición de profesional autónoma, aporta su trabajo personal para la gestión integral del centro (impartición de clases de Pilates y dirección operativa del día a día) a cambio de un porcentaje sobre el beneficio neto repartible.
 
-> **Nota para la gestoría**: confirmar si encaja mejor formalizarlo como **TRADE con tarifa variable** o como **contrato mercantil de cuenta en participación**.
+Inma actúa con independencia jurídica y económica como autónoma, factura mensualmente a Fisio Inpulsa S.L. por sus servicios y no existe relación laboral entre las partes.
 
 ---
 
@@ -228,7 +228,7 @@ Estos son los gastos fijos y variables que se descuentan ANTES del reparto de be
 | 3 | Luz | 50,00 € |
 | 4 | Agua | 67,00 € |
 | 5 | Internet y móvil | 25,00 € |
-| 6 | Plataforma (software gestión) | 80,60 € |
+| 6 | Plataforma (software gestión) | 54,45 € |
 | 7 | Protección de datos (LOPD) | 5,50 € |
 | 8 | Spotify | 21,00 € |
 | 9 | Préstamo | 430,00 € |
@@ -237,7 +237,7 @@ Estos son los gastos fijos y variables que se descuentan ANTES del reparto de be
 | 12 | Calcetines (reposición material) | 30,00 € |
 | 13 | Publicidad (Meta Ads) | 100,00 € |
 | 14 | Limpieza | 100,00 € |
-| 15 | Reserva imprevistos | 89,90 € |
+| 15 | Reserva imprevistos | 116,05 € |
 | | **TOTAL MENSUAL FIJO** | **1.800,00 €** |
 
 ### 4.1 Cláusulas generales
@@ -297,6 +297,18 @@ Los **1.800 € mensuales** acordados se ingresan en una cuenta específica del 
 - Las franjas elegidas quedan fijadas en el calendario semanal del centro.
 - Cualquier **cambio posterior** (añadir, quitar o reubicar franjas) puede hacerse de mutuo acuerdo, con **15 días de preaviso** (apartado 9), siempre que no perjudique al funcionamiento del centro ni a los clientes ya asignados a esas franjas.
 - Las **vacaciones, ausencias programadas o días libres** se comunican también con un mínimo de 15 días de antelación.
+
+### Límites de actuación de Inma — decisiones reservadas a la titular
+
+Como Fisio Inpulsa S.L. es la titular del negocio y mantiene la responsabilidad jurídica y económica del centro, Inma **no puede unilateralmente**:
+
+- **Tomar decisiones que afecten al funcionamiento del centro** (cambios de precios, modificación de la oferta de servicios, alteraciones del horario fijado, cambios en proveedores, etc.) sin acuerdo previo de Fisio Inpulsa.
+- **Contratar personal** (ni laboral, ni autónomo, ni en prácticas) ni delegar tareas en terceros que no estén expresamente autorizados por Fisio Inpulsa.
+- **Dar acceso al centro a cualquier persona ajena** (familiares, conocidos, otras profesionales, comerciales, etc.) sin **comunicación previa y acuerdo escrito** de Fisio Inpulsa.
+- **Suscribir contratos, convenios o acuerdos** en nombre del centro o de Fisio Inpulsa S.L.
+- **Modificar la imagen de marca, comunicaciones públicas o presencia en redes** del centro sin aprobación.
+
+> Inma sí mantiene plena autonomía en la **gestión operativa diaria** (clases, atención a clientes, organización interna, sugerencias y propuestas de mejora). Lo anterior se refiere únicamente a decisiones de carácter estructural o que comprometan al centro frente a terceros.
 
 ---
 

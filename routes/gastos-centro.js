@@ -16,13 +16,14 @@ function soloAdminEscritura(req, res, next) {
 }
 router.use(lecturaAdminOColab);
 
-// GET listar por mes/año
+// GET listar por mes/año (con auto-creación de plantilla desde el mes anterior si está vacío)
 router.get('/', async (req, res) => {
   try {
     const now = new Date();
     const mes = parseInt(req.query.mes) || (now.getMonth() + 1);
     const anio = parseInt(req.query.anio) || now.getFullYear();
-    const { rows } = await query(
+
+    let { rows } = await query(
       `SELECT g.*, u.nombre as creado_por
        FROM kaluna_gastos_centro g
        LEFT JOIN kaluna_usuarios u ON u.id = g.created_by
@@ -30,6 +31,39 @@ router.get('/', async (req, res) => {
        ORDER BY g.orden NULLS LAST, g.id`,
       [mes, anio]
     );
+
+    // Si el mes está vacío, intentar autopoblarlo desde el mes anterior (plantilla fija)
+    if (rows.length === 0 && req.user.rol === 'admin') {
+      let mesAnt = mes - 1, anioAnt = anio;
+      if (mesAnt < 1) { mesAnt = 12; anioAnt = anio - 1; }
+      const origen = await query(
+        `SELECT concepto, importe, recurrente, categoria, notas, orden
+         FROM kaluna_gastos_centro
+         WHERE mes = $1 AND anio = $2
+         ORDER BY orden NULLS LAST, id`,
+        [mesAnt, anioAnt]
+      );
+      if (origen.rows.length) {
+        for (const g of origen.rows) {
+          await query(
+            `INSERT INTO kaluna_gastos_centro
+             (concepto, importe, mes, anio, recurrente, categoria, notas, orden, importe_real, created_by)
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,NULL,$9)`,
+            [g.concepto, g.importe, mes, anio, g.recurrente !== false, g.categoria || 'fijo', g.notas, g.orden, req.user.id]
+          );
+        }
+        const reload = await query(
+          `SELECT g.*, u.nombre as creado_por
+           FROM kaluna_gastos_centro g
+           LEFT JOIN kaluna_usuarios u ON u.id = g.created_by
+           WHERE g.mes = $1 AND g.anio = $2
+           ORDER BY g.orden NULLS LAST, g.id`,
+          [mes, anio]
+        );
+        rows = reload.rows;
+      }
+    }
+
     const totalPresupuesto = rows.reduce((s, g) => s + parseFloat(g.importe || 0), 0);
     const totalReal = rows.reduce((s, g) => s + parseFloat(g.importe_real || 0), 0);
     const diferencia = totalPresupuesto - totalReal;
