@@ -275,12 +275,12 @@ Los **1.800 € mensuales** acordados se ingresan en una cuenta específica del 
 ## 5. Responsabilidades de cada parte
 
 ### Inma (gestión operativa)
-- Impartir las clases de Pilates según calendario semanal acordado.
+- **La colaboradora organizará libremente su agenda profesional y las franjas horarias en las que prestará sus servicios**, coordinándose con Fisio Inpulsa S.L. únicamente para garantizar la correcta atención a los clientes del centro.
 - Atender a clientes en el centro, gestionar altas, bajas y cambios.
 - Mantener el dashboard al día: clientes, plazas, ventas, lesiones.
 - Velar por el mantenimiento básico del material y la limpieza diaria.
-- Atender llamadas, WhatsApp y correos del centro en horario laboral.
-- **Atender los leads que Fisio Inpulsa le proporcione** (la gestión de campañas Meta Ads no corresponde a Inma).
+- **Gestionar las comunicaciones con clientes relacionadas con los servicios que presta**, utilizando los canales habilitados por el centro.
+- **Atender los leads que Fisio Inpulsa le proporcione** (la gestión de campañas Meta Ads no corresponde a la colaboradora).
 - Respetar el contrato de confidencialidad del equipo (ya firmado en su primer acceso al dashboard).
 
 ### Fisio Inpulsa S.L. (titularidad y supervisión)
@@ -291,12 +291,14 @@ Los **1.800 € mensuales** acordados se ingresan en una cuenta específica del 
 - Llevar la contabilidad oficial con la gestoría.
 - Supervisar y resolver cualquier incidencia que requiera decisión de titular.
 
-### Horario de Inma — acordado entre ambas partes
-- El **horario de trabajo de Inma se acuerda conjuntamente** entre ambas partes.
-- Como punto de partida, Inma elige sus franjas dentro del **horario actualmente ofrecido por el centro** (mañanas y tardes de lunes a viernes según calendario vigente de clases en el dashboard).
-- Las franjas elegidas quedan fijadas en el calendario semanal del centro.
-- Cualquier **cambio posterior** (añadir, quitar o reubicar franjas) puede hacerse de mutuo acuerdo, con **15 días de preaviso** (apartado 9), siempre que no perjudique al funcionamiento del centro ni a los clientes ya asignados a esas franjas.
-- Las **vacaciones, ausencias programadas o días libres** se comunican también con un mínimo de 15 días de antelación.
+### Organización de la prestación de servicios
+
+- **Autonomía organizativa**: la colaboradora desarrollará su actividad con **plena autonomía organizativa y de criterio profesional**, sin estar sujeta a jornada laboral, control horario ni dependencia jerárquica respecto de Fisio Inpulsa S.L.
+- **Franjas horarias**: como punto de partida, la colaboradora elige sus franjas dentro del horario actualmente ofrecido por el centro (mañanas y tardes de lunes a viernes según calendario vigente de clases en el dashboard).
+- **Carácter orientativo**: las franjas inicialmente previstas tendrán **carácter orientativo** y podrán ser **modificadas por la colaboradora** en función de sus necesidades profesionales, comunicándolo con antelación razonable para garantizar la continuidad del servicio.
+- **Vacaciones y ausencias**: la colaboradora decidirá libremente sus periodos de descanso, vacaciones y ausencias, comprometiéndose únicamente a comunicarlos con una **antelación mínima de 15 días** para facilitar la organización del servicio.
+- **Sustitución temporal**: la colaboradora podrá **proponer la sustitución temporal** de sus servicios por otra profesional cualificada, previa comunicación a Fisio Inpulsa S.L., quien únicamente podrá oponerse por motivos objetivos relacionados con la cualificación profesional o el correcto funcionamiento del centro.
+- **Retribución vinculada a resultados**: la retribución de la colaboradora **está vinculada exclusivamente a los resultados económicos del centro** conforme al sistema de reparto pactado (apartado 3), **sin que exista salario fijo, garantía mínima de ingresos ni percepción periódica independiente** de los resultados obtenidos.
 
 ### Límites de actuación de Inma — decisiones reservadas a la titular
 
@@ -342,7 +344,7 @@ El centro dispone de cámaras de seguridad instaladas conforme a la LOPDGDD 3/20
 ## 9. Duración y extinción
 
 - **Duración**: **1 año natural**, **prorrogable** por periodos iguales salvo denuncia expresa de cualquiera de las partes con 15 días de antelación al vencimiento.
-- **Periodo de prueba**: los **primeros 3 meses** son periodo de prueba. Durante este tiempo cualquiera de las partes puede dar por terminado el contrato comunicándolo a la otra **con 15 días de preaviso**.
+- **Facultad de resolución anticipada (primeros 3 meses)**: durante los **tres primeros meses** de vigencia del acuerdo, cualquiera de las partes podrá **resolver el contrato comunicándolo a la otra con un preaviso de 15 días**, sin necesidad de justa causa ni indemnización. Esta facultad no constituye periodo de prueba laboral, dado el carácter mercantil de la relación.
 - **Preavisos durante la vigencia del contrato**: cualquier cambio relevante, abandono, periodo de vacaciones, ausencias programadas o terminación anticipada debe comunicarse **con un mínimo de 15 días de antelación por ambas partes**.
 - **Causas de extinción inmediata** (sin necesidad de preaviso):
   - Incumplimiento grave de cualquier punto del contrato.
@@ -350,7 +352,7 @@ El centro dispone de cámaras de seguridad instaladas conforme a la LOPDGDD 3/20
   - Fallecimiento o incapacidad permanente de la colaboradora.
   - Cese definitivo de actividad del centro por parte de Fisio Inpulsa S.L.
 
-A la extinción, se realiza cierre y reparto del mes en curso **prorrateado según los días trabajados**.
+A la extinción, se realiza cierre y reparto del mes en curso **prorrateado según los días efectivamente trabajados**.
 
 ---
 
